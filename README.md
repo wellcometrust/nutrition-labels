@@ -1,6 +1,6 @@
 # Data Nutrition Labels
 
-Project description here. 
+Project description here 
 
 ## Set up the virtual environment
 
