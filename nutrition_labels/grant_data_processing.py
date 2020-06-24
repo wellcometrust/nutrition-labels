@@ -1,5 +1,5 @@
 import pandas as pd
-
+import re
 # load data
 
 epmc_tags = pd.read_csv('data/raw/EPMC_relevant_tool_pubs_manual_edit.csv')
@@ -47,6 +47,13 @@ epmc_df = epmc_df[epmc_df['code'].isin([1,2,3])] # Only selecting useful codes
 
 # getting WT grant number
 
-grant_
+grant_ref = grant_data[['Internal ID','Description','Award Date']]
+grant_ref['grant_number'] = grant_data['Internal ID'].apply(lambda x: re.sub('/.*','',x))
+grant_ref = pd.merge(grant_ref,epmc_df, how = 'inner', on = 'grant_number')
+grant_ref['Description'] = grant_ref['Description'].apply(lambda x: re.sub('\<.*\>{1:}','',x))
+grant_ref = grant_ref.drop_duplicates(subset=['Description','grant_number','pmid'])
+grant_duplicates = grant_ref[grant_ref.duplicated(subset=['pmid','grant_number'], keep = False)]
 
+
+no_ref = epmc_df[~epmc_df['grant_number'].isin(grant_ref['grant_number'].to_list())]
 # cleaning
