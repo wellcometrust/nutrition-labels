@@ -1,5 +1,6 @@
 import pandas as pd
 import re
+from bs4 import BeautifulSoup
 # load data
 
 epmc_tags = pd.read_csv('data/raw/EPMC_relevant_tool_pubs_manual_edit.csv')
@@ -50,22 +51,65 @@ def remove_useless_string(string):
     '''
     this function cleans the grant descriptions of artifacts such as <br />
     :param string:
-    :return:
+    :return: clean string
     '''
-    string = re.sub('\<.\w*\>{1,}','',string)
-    string = re.sub('\<\w*..\>{1,}','',string)
-    string = re.sub('\&nbsp;+',' ',string)
-    string = re.sub('  ',' ',string)
-    string = string.strip('\n')
+
+    soup = BeautifulSoup(string)
+    string_out = soup.get_text()
+    string_out = string_out.strip('\n')
+    string_out = string_out.strip('\xa0')
+    string_out = re.sub('  ','',string_out)
+    return(string_out)
+
+def only_text(string):
+    string = re.sub(' |\W','',string)
     return(string)
+
 
 grant_ref = grant_data[['Grant Programme:Title','Internal ID','Description','Award Date']]
 grant_ref['grant_number'] = grant_data['Internal ID'].apply(lambda x: re.sub('/.*','',x))
 grant_ref = pd.merge(grant_ref,epmc_df, how = 'inner', on = 'grant_number')
 grant_ref['Description'] = grant_ref['Description'].apply(remove_useless_string)
+grant_ref['Description'] = grant_ref['Description'].apply(only_text)
 grant_ref = grant_ref.drop_duplicates(subset=['Description','grant_number','pmid'])
+
 # get remaining entrys with the same pmid grant number but different description
 grant_duplicates = grant_ref[grant_ref.duplicated(subset=['pmid','grant_number'], keep = False)]
-# sort remove list from duplicates (find public funding and amendments, then the later grant numbers and delete the entrys from grant ref)
+remove_rows = grant_duplicates.index.tolist()
+
+# sort remove list from duplicates (the later grants)
+grant_duplicates = grant_duplicates.sort_values('Award Date').drop_duplicates(subset = ['grant_number','pmid'])
+remove_rows = [i for i in remove_rows if i not in grant_duplicates.index.tolist()]
+grant_ref = grant_ref.drop(remove_rows)
+
 # finding abstract without a matching code
 no_ref = epmc_df[~epmc_df['grant_number'].isin(grant_ref['grant_number'].to_list())]
+no_ref = no_ref[~no_ref['pmid'].isin(grant_ref['pmid'].to_list())]
+missing_abstracts = epmc_tags[epmc_tags['pmid'].isin(no_ref['pmid'].to_list())] #I cant find where this grant is at all
+
+# get list
+code_list = grant_ref[['Internal ID','code','pmid']]
+
+# get rf data
+rf_useful = rf_tags[rf_tags['code '].isin([1,2,3])]
+rf_useful = rf_useful[['code ','Grant Reference','Name']]
+rf_useful = rf_useful.rename({'code ':'code','Grant Reference':'Internal ID','Name':'pmid'}, axis = 1)
+
+# merge abstract and rfs
+code_list = pd.concat([code_list,rf_useful])
+code_list.loc[:,'Internal ID'] = code_list['Internal ID'].str.strip(' ')
+code_list_final = pd.merge(grant_data[['Internal ID','Title','Description']],code_list, how = 'inner', on = 'Internal ID')
+rf_not_in = code_list[~code_list['Internal ID'].isin(code_list_final['Internal ID'])] # six codes arent in the wellcome data
+
+# getting control data from wellcome grant data
+# 3== not that relevent 4==not at all relevent
+needed_cols = ['Internal ID','Title','Description','tool relevent ']
+grant_code_3 = grant_tags[needed_cols][grant_tags['tool relevent '] == 3].sample(frac = 1,random_state=4)
+grant_code_4 = grant_tags[needed_cols][grant_tags['tool relevent '] == 4].sample(frac = 1,random_state=4)
+grant_code = pd.concat([grant_code_3.iloc[:50,:],grant_code_4.iloc[:50,:]])
+grant_code['tool relevent '] = 4
+grant_code = grant_code.rename({'tool relevent ':'code'},axis = 1)
+
+# final list
+code_list_final = pd.concat([code_list_final,grant_code])
+code_list_final.to_csv('data/processed/training_data.csv', index = False)
