@@ -46,14 +46,26 @@ epmc_df = pd.DataFrame(epmc_list)
 epmc_df = epmc_df[epmc_df['code'].isin([1,2,3])] # Only selecting useful codes
 
 # getting WT grant number
+def remove_useless_string(string):
+    '''
+    this function cleans the grant descriptions of artifacts such as <br />
+    :param string:
+    :return:
+    '''
+    string = re.sub('\<.\w*\>{1,}','',string)
+    string = re.sub('\<\w*..\>{1,}','',string)
+    string = re.sub('\&nbsp;+',' ',string)
+    string = re.sub('  ',' ',string)
+    string = string.strip('\n')
+    return(string)
 
-grant_ref = grant_data[['Internal ID','Description','Award Date']]
+grant_ref = grant_data[['Grant Programme:Title','Internal ID','Description','Award Date']]
 grant_ref['grant_number'] = grant_data['Internal ID'].apply(lambda x: re.sub('/.*','',x))
 grant_ref = pd.merge(grant_ref,epmc_df, how = 'inner', on = 'grant_number')
-grant_ref['Description'] = grant_ref['Description'].apply(lambda x: re.sub('\<.*\>{1:}','',x))
+grant_ref['Description'] = grant_ref['Description'].apply(remove_useless_string)
 grant_ref = grant_ref.drop_duplicates(subset=['Description','grant_number','pmid'])
+# get remaining entrys with the same pmid grant number but different description
 grant_duplicates = grant_ref[grant_ref.duplicated(subset=['pmid','grant_number'], keep = False)]
-
-
+# sort remove list from duplicates (find public funding and amendments, then the later grant numbers and delete the entrys from grant ref)
+# finding abstract without a matching code
 no_ref = epmc_df[~epmc_df['grant_number'].isin(grant_ref['grant_number'].to_list())]
-# cleaning
