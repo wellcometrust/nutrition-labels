@@ -1,15 +1,14 @@
 import pandas as pd
 import re
 from bs4 import BeautifulSoup
-# load data
 
+# load data
 epmc_tags = pd.read_csv('data/raw/EPMC_relevant_tool_pubs_manual_edit.csv')
 rf_tags = pd.read_csv('data/raw/ResearchFish/research_fish_manual_edit.csv')
 grant_tags = pd.read_csv('data/raw/wellcome-grants-awarded-2005-2019_manual_edit.csv')
 grant_data = pd.read_csv('data/raw/wellcome-grants-awarded-2005-2019.csv')
 
 # clean data
-
 rf_tags = rf_tags.dropna(subset = ['code '])
 epmc_tags = epmc_tags.dropna(subset = ['code','WTgrants'])
 grant_tags = grant_tags.dropna(subset = ['tool relevent '])
@@ -49,8 +48,8 @@ epmc_df = epmc_df[epmc_df['code'].isin([1,2,3])] # Only selecting useful codes
 # getting WT grant number
 def remove_useless_string(string):
     '''
-    this function cleans the grant descriptions of artifacts such as <br />
-    :param string:
+    cleans the grant descriptions of artifacts such as <br />
+    :param string: description string
     :return: clean string
     '''
 
@@ -62,6 +61,11 @@ def remove_useless_string(string):
     return(string_out)
 
 def only_text(string):
+    '''
+    removes non-alphanumeric characters and spaces to increase matching
+    :param string: description string
+    :return: clean string
+    '''
     string = re.sub(' |\W','',string)
     return(string)
 
