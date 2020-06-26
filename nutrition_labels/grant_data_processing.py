@@ -76,15 +76,7 @@ grant_ref = pd.merge(grant_ref,epmc_df, how = 'inner', on = 'grant_number')
 grant_ref['Description'] = grant_ref['Description'].apply(remove_useless_string)
 grant_ref['Description'] = grant_ref['Description'].apply(only_text)
 grant_ref = grant_ref.drop_duplicates(subset=['Description','grant_number','pmid'])
-
-# get remaining entrys with the same pmid grant number but different description
-grant_duplicates = grant_ref[grant_ref.duplicated(subset=['pmid','grant_number'], keep = False)]
-remove_rows = grant_duplicates.index.tolist()
-
-# sort remove list from duplicates (the later grants)
-grant_duplicates = grant_duplicates.sort_values('Award Date').drop_duplicates(subset = ['grant_number','pmid'])
-remove_rows = [i for i in remove_rows if i not in grant_duplicates.index.tolist()]
-grant_ref = grant_ref.drop(remove_rows)
+grant_ref2  = grant_ref.sort_values('Award Date', ascending=False).drop_duplicates(subset = ['grant_number', 'pmid'])
 
 # finding abstract without a matching code
 no_ref = epmc_df[~epmc_df['grant_number'].isin(grant_ref['grant_number'].to_list())]
@@ -99,21 +91,27 @@ rf_useful = rf_tags[rf_tags['code '].isin([1,2,3])]
 rf_useful = rf_useful[['code ','Grant Reference','Name']]
 rf_useful = rf_useful.rename({'code ':'code','Grant Reference':'Internal ID','Name':'pmid'}, axis = 1)
 
+print("Grants flagged as relevant in EPMC publications not found in grants data: ")
+print(set(epmc_df['grant_number']).difference(set(grant_ref['grant_number'])))
+print("PMIDs flagged as relevant in Wellcome EPMC publications but not found to link to any grants in the grants data: ")
+print(set(epmc_df['pmid']).difference(set(grant_ref['pmid'])))
+
 # merge abstract and rfs
 code_list = pd.concat([code_list,rf_useful])
-code_list.loc[:,'Internal ID'] = code_list['Internal ID'].str.strip(' ')
+code_list['Internal ID'] = code_list['Internal ID'].str.strip(' ')
 code_list_final = pd.merge(grant_data[['Internal ID','Title','Description']],code_list, how = 'inner', on = 'Internal ID')
 rf_not_in = code_list[~code_list['Internal ID'].isin(code_list_final['Internal ID'])] # six codes arent in the wellcome data
 
+print("Grants flagged as relevant in RF data not found in grants data: ")
+print(set(code_list['Internal ID']).difference(set(code_list_final['Internal ID'])))
 # getting control data from wellcome grant data
 # 3== not that relevent 4==not at all relevent
 needed_cols = ['Internal ID','Title','Description','tool relevent ']
-grant_code_3 = grant_tags[needed_cols][grant_tags['tool relevent '] == 3].sample(frac = 1,random_state=4)
-grant_code_4 = grant_tags[needed_cols][grant_tags['tool relevent '] == 4].sample(frac = 1,random_state=4)
-grant_code = pd.concat([grant_code_3.iloc[:50,:],grant_code_4.iloc[:50,:]])
+grant_code = grant_tags.loc[(grant_tags['tool relevent ']==4.0) | (grant_tags['tool relevent ']==3.0)]
 grant_code['tool relevent '] = 4
 grant_code = grant_code.rename({'tool relevent ':'code'},axis = 1)
 
 # final list
 code_list_final = pd.concat([code_list_final,grant_code])
+code_list_final = code_list_final.drop_duplicates('Internal ID')
 code_list_final.to_csv('data/processed/training_data.csv', index = False)
