@@ -54,3 +54,23 @@ jupyter notebook
 ├── nutrition_labels
 │   A place to put scripts
 ```
+
+## Raw Data Codes 
+
+Each entry in the raw data sets have been given a code to identify them as useful entries 
+They are:
+EPMC_relevant_tools_pubs_manual_edit and research_fish_manual_edit
+* 1 = medical data set tool
+* 2 = medical data set model
+* 3 = medical data set tool
+* 4 = maybe relavent need more info
+* 5 = not relevent 
+* 6 = edge case 
+
+wellcome-grants-awarded-2005-2019_manual_edit
+* 1 = Relevent medical data set, tool or model
+* 2 = Possibly relevent medical data set, tool or model
+* 3 = Not relevent medical data set, tool or model
+* 4 = Not relevent medical data set, tool or model
+
+
