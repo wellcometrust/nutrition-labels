@@ -48,7 +48,7 @@ class GrantTagger():
         # word_list = vectorizer.get_feature_names();    
         # count_list = X_vect.toarray().sum(axis=0)    
         # dict(zip(word_list,count_list))
-        X_train, X_test, y_train, y_test = train_test_split(X_vect, y, test_size=self.test_size, random_state=42)
+        X_train, X_test, y_train, y_test = train_test_split(self.X_vect, y, test_size=self.test_size, random_state=42)
 
         return X_train, X_test, y_train, y_test
 
