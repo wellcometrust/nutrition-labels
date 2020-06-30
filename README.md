@@ -17,16 +17,13 @@ source build/virtualenv/bin/activate
 
 ## Download the data
 
-Sync the data from S3 by running:
+Download the data for this project from 
 ```
-make sync_data_from_s3
+https://wellcomecloud.sharepoint.com/:f:/r/sites/DataLabs/Machine%20Learning/Nutrition%20Labels/data?csf=1&web=1&e=XHFn6n
 ```
+you will need to have been granted access to access this folder.
 
-And if you want to upload new data to the S3 location for this project run:
-```
-make sync_data_to_s3
-```
-which will sync every file in the `data/` folder.
+Make sure to upload any processed data to this folder too.
 
 ## Jupyter notebooks
 
