@@ -25,7 +25,7 @@ def remove_useless_string(string):
     return(string_out)
 
 class GrantTagger():
-    def __init__(self, sample_4s=50, ngram_range=(1,2), test_size=0.25,random_state):
+    def __init__(self, sample_4s=50, ngram_range=(1,2), test_size=0.25,random_state = 4):
         self.sample_4s = sample_4s
         self.ngram_range = ngram_range
         self.test_size = test_size
