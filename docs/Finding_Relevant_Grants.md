@@ -23,8 +23,8 @@ The first step was reading the grant descriptions and trying to discern if they 
 *To do: explain the filtering*
 
 873 of these grants were tagged as
-- 1 = 
-- 2 = 
+- 1 = Definitely relevant
+- 2 = Possibly relevent
 - 3 = not relevant but initially looked relevant 
 - 4 = really not relevant
 
@@ -40,11 +40,11 @@ Using the ResearchFish platform we've asked our grantholders over the last coupl
 - Other Outputs & Knowledge/Future Steps (fortytwo table: `OtherOutputsAndKnowledge`)
 
 This yielded 1264 outcome reports, all these outcome descriptions were read and tagged as being
-- 1 =
-- 2 =
-- 3 =
-- 4 =
-- 5 =
+- 1 = Relevant tool
+- 2 = Relevant model
+- 3 = Relevant data set
+- 4 = More information needed
+- 5 = Not relevant
 
 This tagged data is in `data/raw/ResearchFish/research_fish_manual_edit.csv`.
 
@@ -57,12 +57,12 @@ The list of keywords used to filter this data is:
 
 This yielded 3129 publications. 619 of these were tagged as being
 
-- 1 =
-- 2 =
-- 3 =
-- 4 =
-- 5 =
-- 6 = 
+- 1 = Relevant tool
+- 2 = Relevant model
+- 3 = Relevant data set
+- 4 = More information needed
+- 5 = Not relevant
+- 6 = Edge case
 
 This tagged data is in `data/raw/EPMC_relevant_tool_pubs_manual_edit.csv`.
 
@@ -78,19 +78,18 @@ This dataset comprises of a grant reference, the grant title and description and
 
 | Tag code | Meaning | Number of grants |
 |---|---|--- | 
-| 1 |   | 41 |
-| 2 |   | 14 |
-| 3 |   | 13 |
-| 4 |   | 791 |
+| 1 | Relevant tool | 41 |
+| 2 | Relevant model | 14 |
+| 3 | Relevant dataset | 13 |
+| 4 | Not relevant | 791 |
 
 
 ## `grant_tagger.py`
 
 
 In `grant_tagger.py` we train a model to predict whether a grant is relevant or not. For this we collapsed the classification into binary, where 
-- 1 = class was relevant tool (1), relevant model (2)
-- 0 = class was not relevant but initially looked relevant (3) or really not relevant (4)
+- 1 = class was relevant tool (1), relevant model (2) or relevant dataset (3)
+- 0 = class was not relevant (4)
 
-*to check - I'm not sure if "relevant tool (1), relevant model (2)" were the correct codes?*
 
 
