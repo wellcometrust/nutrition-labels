@@ -33,15 +33,15 @@ class GrantTagger():
 
     def transform(self, data):
 
-        equal_data = data.loc[data['code'] != 4.0]
+        equal_data = data.loc[data['code'] != 5.0]
         equal_data = pd.concat([equal_data,
-                                data.loc[data['code'] == 4.0].sample(n = self.sample_4s, random_state= self.random_state)])
+                                data.loc[data['code'] == 5.0].sample(n = self.sample_4s, random_state= self.random_state)])
 
         # resetting index to remove index from non-sampled data
         equal_data = equal_data.reset_index(drop = True)
 
         # Meaningful if 1,2,3 -> reset to 1
-        equal_data['code'] = [int(i) for i in (equal_data['code'] != 4.0).tolist()]
+        equal_data['code'] = [int(i) for i in (equal_data['code'] != 5.0).tolist()]
 
         self.X = [remove_useless_string(i) for i in equal_data['Description'].tolist()]
         y = equal_data['code']
