@@ -87,18 +87,12 @@ class GrantTagger():
         print(classification_report(y, y_predict))
         print(confusion_matrix(y, y_predict))
 
-    def return_mislabeled_data(self,y_test,y_pred):
-        X_test = [self.X[i] for i in self.test_indices]
-        X_test_df = pd.DataFrame({'Description': X_test,
-                                'True_label':y_test,
+    def return_mislabeled_data(self, y_actual, y_pred, X_indices):
+        X_text = [self.X[i] for i in X_indices]
+        X_text_df = pd.DataFrame({'Description': X_text,
+                                'True_label':y_actual,
                                 'Predicted_label':y_pred})
-        mislabeled = X_test_df[X_test_df['True_label'] != X_test_df['Predicted_label']]
-        return(mislabeled)
-
-
-    def inverse_transform(self,X):
-        return self.vectorizer.inverse_transform(X)
-
+        return X_text_df
 
 
 if __name__ == '__main__':
@@ -113,8 +107,15 @@ if __name__ == '__main__':
     grant_tagger.evaluate(X_train, y_train)
     print("Evaluate test data")
     grant_tagger.evaluate(X_test, y_test)
+    print('Training descriptions')
+    print(grant_tagger.return_mislabeled_data(y_train, grant_tagger.predict(X_train), grant_tagger.train_indices))
+    print('Test description')
+    test_descriptions = grant_tagger.return_mislabeled_data(y_test,
+                                                            grant_tagger.predict(X_test),
+                                                            grant_tagger.test_indices)
+    print(test_descriptions)
     print("Mislabled Grant descriptions")
-    print(grant_tagger.return_mislabeled_data(y_test, grant_tagger.predict(X_test)))
+    print(test_descriptions[test_descriptions['True_label'] != test_descriptions['Predicted_label']])
 
 ######
 
