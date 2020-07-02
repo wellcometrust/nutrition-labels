@@ -6,7 +6,17 @@ Thus, we will create a model to predict whether a grant was likely to contribute
 
 ## Relevant grants
 
-*to do: write a bit about the current state of what constitutes a 'relevant' grant (tool, model, dataset), list assumptions*
+### Definitions 
+
+- Tool: Any peice of code or script that is used on a medical data set to process it for further analysis. Tasks that this includes can be, cleaning data, linking two data sets, annotating data or a platform or web resource for data
+- Model: Any machine learning or statistical model that can be translated to a clinical enviroment, not to offer further insight for scientific research 
+- Medical Data Set: a data set containing at least in part medical data such as genetic data linked with a specific disease, electronic health records or imaging data 
+
+### Assumptions 
+
+- Tools or models that created a normal or healthy model of medical data such as a healthy (human) MRI scan or ECG were defined as tool 
+- Tools that annotated genetic regions were not included as tools unless they were linking them specifically to a human disease 
+- Code lists for determining patients with diseases in electronic health records were labeled as tools 
 
 ## Raw data
 
@@ -20,13 +30,14 @@ There were three possible data sources we looked at when tagging whether a grant
 
 The first step was reading the grant descriptions and trying to discern if they were relevant or not. It became clear that a really small proportion were relevant. The grants were filtered first to speed up this process, the filters applied were:
 
-*To do: explain the filtering*
+The grant descriptions were filtered if the following key words were found in the grant description: 
+['platform','software','library','mining','web resouce','data management','pipeline','tool','biobank','health data','medical records']
+
+It should be noted that when searching for these words there was no space put before mining so it returned grant descriptions with words like determining etc. 
 
 873 of these grants were tagged as
-- 1 = Definitely relevant
-- 2 = Possibly relevent
-- 3 = not relevant but initially looked relevant 
-- 4 = really not relevant
+- 1 = Relevant
+- 5 = Not Relevant
 
 This tagged data is in `data/raw/wellcome-grants-awarded-2005-2019_manual_edit.csv`.
 
@@ -55,6 +66,7 @@ A final source to find relevant grants was to look for certain keywords in Wellc
 The list of keywords used to filter this data is:
 ["platform", "software", "web resource", "pipeline", "toolbox", "data linkage", "database linkage", "record linkage", "linkage algorithm", "python package", "r module", "python script", "web tool", "web based tool"]
 
+
 This yielded 3129 publications. 619 of these were tagged as being
 
 - 1 = Relevant tool
@@ -81,15 +93,14 @@ This dataset comprises of a grant reference, the grant title and description and
 | 1 | Relevant tool | 41 |
 | 2 | Relevant model | 14 |
 | 3 | Relevant dataset | 13 |
-| 4 | Not relevant | 791 |
+| 5 | Not relevant | 791 |
 
 
 ## `grant_tagger.py`
 
-
 In `grant_tagger.py` we train a model to predict whether a grant is relevant or not. For this we collapsed the classification into binary, where 
 - 1 = class was relevant tool (1), relevant model (2) or relevant dataset (3)
-- 0 = class was not relevant (4)
+- 0 = class was not relevant (5)
 
 
 
