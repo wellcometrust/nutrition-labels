@@ -25,23 +25,23 @@ def remove_useless_string(string):
     return(string_out)
 
 class GrantTagger():
-    def __init__(self, sample_4s=50, ngram_range=(1,2), test_size=0.25,random_state = 4):
-        self.sample_4s = sample_4s
+    def __init__(self, sample_not_relevant=50, ngram_range=(1,2), test_size=0.25,random_state = 4):
+        self.sample_not_relevant = sample_not_relevant
         self.ngram_range = ngram_range
         self.test_size = test_size
         self.random_state = random_state
 
     def transform(self, data):
 
-        equal_data = data.loc[data['code'] != 4.0]
+        equal_data = data.loc[data['code'] != 5.0]
         equal_data = pd.concat([equal_data,
-                                data.loc[data['code'] == 4.0].sample(n = self.sample_4s, random_state= self.random_state)])
+                                data.loc[data['code'] == 5.0].sample(n = self.sample_not_relevant, random_state= self.random_state)])
 
         # resetting index to remove index from non-sampled data
         equal_data = equal_data.reset_index(drop = True)
 
         # Meaningful if 1,2,3 -> reset to 1
-        equal_data['code'] = [int(i) for i in (equal_data['code'] != 4.0).tolist()]
+        equal_data['code'] = [int(i) for i in (equal_data['code'] != 5.0).tolist()]
 
         self.X = [remove_useless_string(i) for i in equal_data['Description'].tolist()]
         y = equal_data['code']
@@ -99,7 +99,7 @@ if __name__ == '__main__':
     
     data = pd.read_csv('data/processed/training_data.csv')
 
-    grant_tagger = GrantTagger(sample_4s=50, ngram_range=(1,2), test_size=0.25, random_state= 4)
+    grant_tagger = GrantTagger(sample_not_relevant=50, ngram_range=(1,2), test_size=0.25, random_state= 4)
     X_train, X_test, y_train, y_test = grant_tagger.transform(data)
     grant_tagger.fit(X_train, y_train)
 

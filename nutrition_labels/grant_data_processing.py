@@ -107,8 +107,7 @@ print(set(code_list['Internal ID']).difference(set(code_list_final['Internal ID'
 # getting control data from wellcome grant data
 # 3== not that relevent 4==not at all relevent
 needed_cols = ['Internal ID','Title','Description','tool relevent ']
-grant_code = grant_tags.loc[(grant_tags['tool relevent ']==4.0) | (grant_tags['tool relevent ']==3.0)]
-grant_code['tool relevent '] = 4
+grant_code = grant_tags.loc[grant_tags['tool relevent ']==5.0,needed_cols]
 grant_code = grant_code.rename({'tool relevent ':'code'},axis = 1)
 
 # final list
