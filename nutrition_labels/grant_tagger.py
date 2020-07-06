@@ -1,4 +1,4 @@
-from sklearn.feature_extraction.text import CountVectorizer
+from sklearn.feature_extraction.text import CountVectorizer, TfidfVectorizer
 from sklearn.naive_bayes import MultinomialNB
 from sklearn.pipeline import Pipeline
 from sklearn.model_selection import train_test_split
@@ -42,11 +42,12 @@ def pretty_confusion_matrix(y, y_predict, labels=[0,1]):
 
     
 class GrantTagger():
-    def __init__(self, sample_not_relevant=50, ngram_range=(1,2), test_size=0.25,random_state = 4):
+    def __init__(self, sample_not_relevant=50, ngram_range=(1,2), test_size=0.25,random_state = 4, vectorizer_type='count'):
         self.sample_not_relevant = sample_not_relevant
         self.ngram_range = ngram_range
         self.test_size = test_size
         self.random_state = random_state
+        self.vectorizer_type = vectorizer_type
 
     def transform(self, data):
 
@@ -73,7 +74,12 @@ class GrantTagger():
         self.X = [remove_useless_string(i) for i in equal_data['Description'].tolist()]
         y = equal_data['code']
 
-        self.vectorizer = CountVectorizer(analyzer='word', token_pattern=r'(?u)\b\w+\b', ngram_range=self.ngram_range)
+        if self.vectorizer_type == 'count':
+            self.vectorizer = CountVectorizer(analyzer='word', token_pattern=r'(?u)\b\w+\b', ngram_range=self.ngram_range)
+        elif self.vectorizer_type == 'tfidf':
+            self.vectorizer = TfidfVectorizer(analyzer='word', token_pattern=r'(?u)\b\w+\b', ngram_range=self.ngram_range)
+        else:
+            print('Vectorizer type not recognised')
         X_vect = self.vectorizer.fit_transform(self.X)
         # vectorizer.get_feature_names()
         # X_vect.toarray()
@@ -91,11 +97,6 @@ class GrantTagger():
         return X_train, X_test, y_train, y_test
 
     def fit(self, X, y):
-
-        # model = Pipeline([
-        #         ('vectorizer', CountVectorizer(analyzer='word', token_pattern=r'(?u)\b\w+\b')),
-        #         ('bayes', MultinomialNB())
-        #     ])
 
         bayes = MultinomialNB()
         self.model = bayes.fit(X, y)
