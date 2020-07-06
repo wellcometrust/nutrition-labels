@@ -2,7 +2,7 @@ from sklearn.feature_extraction.text import CountVectorizer
 from sklearn.naive_bayes import MultinomialNB
 from sklearn.pipeline import Pipeline
 from sklearn.model_selection import train_test_split
-from sklearn.metrics import accuracy_score, classification_report, confusion_matrix
+from sklearn.metrics import accuracy_score, classification_report, confusion_matrix, f1_score, precision_score, recall_score
 
 import pandas as pd
 
@@ -104,15 +104,22 @@ class GrantTagger():
     def predict(self, X):
         return self.model.predict(X)
 
-    def evaluate(self, X, y):
+    def evaluate(self, X, y, print_results=True):
 
         y_predict = self.model.predict(X)
 
-        accuracy = accuracy_score(y, y_predict)
+        scores = {
+            'accuracy': accuracy_score(y, y_predict),
+            'f1': f1_score(y, y_predict),
+            'precision_score': precision_score(y, y_predict),
+            'recall_score': recall_score(y, y_predict)}
 
-        print(accuracy)
-        print(classification_report(y, y_predict))
-        print(pretty_confusion_matrix(y, y_predict))
+        if print_results:
+            print(scores)
+            print(classification_report(y, y_predict))
+            print(pretty_confusion_matrix(y, y_predict))
+
+        return scores
 
     def return_mislabeled_data(self, y_actual, y_pred, X_indices):
         X_text = [self.X[i] for i in X_indices]
