@@ -89,7 +89,7 @@ class GrantTagger():
 
 
         X_train, X_test, y_train, y_test = train_test_split(X_vect, y, test_size=self.test_size,
-                                                            random_state=42)
+                                                            random_state=self.random_state)
         self.train_indices = y_train.index.to_list()
         y_train = y_train.to_list()
         self.test_indices = y_test.index.to_list()
