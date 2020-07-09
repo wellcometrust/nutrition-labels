@@ -1,6 +1,8 @@
 import re
-import x
+import pandas as pd
 from bs4 import BeautifulSoup
+from sklearn.metrics import confusion_matrix
+
 
 def remove_useless_string(string):
     '''
@@ -9,7 +11,7 @@ def remove_useless_string(string):
     :return: clean string
     '''
 
-    soup = BeautifulSoup(string)
+    soup = BeautifulSoup(string, features="lxml")
     string_out = soup.get_text()
     string_out = string_out.strip('\n')
     string_out = string_out.strip('\xa0')
