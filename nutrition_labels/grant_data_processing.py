@@ -56,7 +56,7 @@ grant_ref = pd.merge(grant_ref,epmc_df, how = 'inner', on = 'grant_number')
 grant_ref['Description'] = grant_ref['Description'].apply(remove_useless_string)
 grant_ref['Description'] = grant_ref['Description'].apply(only_text)
 grant_ref = grant_ref.drop_duplicates(subset=['Description','grant_number','pmid'])
-grant_ref2 = grant_ref.sort_values('Award Date', ascending=False).drop_duplicates(subset = ['grant_number', 'pmid'])
+grant_ref = grant_ref.sort_values('Award Date', ascending=False).drop_duplicates(subset = ['grant_number', 'pmid'])
 
 # finding abstract without a matching code
 no_ref = epmc_df[~epmc_df['grant_number'].isin(grant_ref['grant_number'].to_list())]
