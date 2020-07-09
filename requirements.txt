@@ -4,3 +4,4 @@ numpy
 pandas
 sklearn
 beautifulsoup4
+lxml
