@@ -131,8 +131,8 @@ class GrantTagger():
         scores = {
             'accuracy': accuracy_score(y, y_predict),
             'f1': f1_score(y, y_predict),
-            'precision_score': precision_score(y, y_predict),
-            'recall_score': recall_score(y, y_predict)}
+            'precision_score': precision_score(y, y_predict, zero_division=0),
+            'recall_score': recall_score(y, y_predict, zero_division=0)}
 
         if print_results:
             print(scores)
