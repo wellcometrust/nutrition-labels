@@ -42,11 +42,19 @@ def pretty_confusion_matrix(y, y_predict, labels=[0,1]):
 
     
 class GrantTagger():
-    def __init__(self, sample_not_relevant=50, ngram_range=(1,2), test_size=0.25,random_state = 4, vectorizer_type='count'):
+    def __init__(
+        self, sample_not_relevant=50,
+        ngram_range=(1,2),
+        test_size=0.25,
+        irrelevant_sample_seed = 4,
+        split_seed = 4,
+        vectorizer_type='count'
+        ):
         self.sample_not_relevant = sample_not_relevant
         self.ngram_range = ngram_range
         self.test_size = test_size
-        self.random_state = random_state
+        self.irrelevant_sample_seed = irrelevant_sample_seed
+        self.split_seed = split_seed
         self.vectorizer_type = vectorizer_type
 
     def transform(self, data):
@@ -63,7 +71,10 @@ class GrantTagger():
             sample_size = min(len(irrelevant_data), self.sample_not_relevant)
 
         equal_data = pd.concat([equal_data,
-                                irrelevant_data.sample(n = sample_size, random_state= self.random_state)])
+                                irrelevant_data.sample(
+                                    n=sample_size,
+                                    random_state=self.irrelevant_sample_seed
+                                    )])
 
         # resetting index to remove index from non-sampled data
         equal_data = equal_data.reset_index(drop = True)
@@ -75,9 +86,17 @@ class GrantTagger():
         y = equal_data['code']
 
         if self.vectorizer_type == 'count':
-            self.vectorizer = CountVectorizer(analyzer='word', token_pattern=r'(?u)\b\w+\b', ngram_range=self.ngram_range)
+            self.vectorizer = CountVectorizer(
+                analyzer='word',
+                token_pattern=r'(?u)\b\w+\b',
+                ngram_range=self.ngram_range
+                )
         elif self.vectorizer_type == 'tfidf':
-            self.vectorizer = TfidfVectorizer(analyzer='word', token_pattern=r'(?u)\b\w+\b', ngram_range=self.ngram_range)
+            self.vectorizer = TfidfVectorizer(
+                analyzer='word',
+                token_pattern=r'(?u)\b\w+\b',
+                ngram_range=self.ngram_range
+                )
         else:
             print('Vectorizer type not recognised')
         X_vect = self.vectorizer.fit_transform(self.X)
@@ -89,7 +108,7 @@ class GrantTagger():
 
 
         X_train, X_test, y_train, y_test = train_test_split(X_vect, y, test_size=self.test_size,
-                                                            random_state=self.random_state)
+                                                            random_state=self.split_seed)
         self.train_indices = y_train.index.to_list()
         y_train = y_train.to_list()
         self.test_indices = y_test.index.to_list()
@@ -134,7 +153,13 @@ if __name__ == '__main__':
     
     data = pd.read_csv('data/processed/training_data.csv')
 
-    grant_tagger = GrantTagger(sample_not_relevant=50, ngram_range=(1,2), test_size=0.25, random_state= 4)
+    grant_tagger = GrantTagger(
+        sample_not_relevant=50,
+        ngram_range=(1,2),
+        test_size=0.25,
+        irrelevant_sample_seed=4,
+        split_seed= 4
+        )
     X_train, X_test, y_train, y_test = grant_tagger.transform(data)
     grant_tagger.fit(X_train, y_train)
 
