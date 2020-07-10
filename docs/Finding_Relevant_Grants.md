@@ -16,7 +16,10 @@ Thus, we will create a model to predict whether a grant was likely to contribute
 
 - Tools or models that created a normal or healthy model of medical data such as a healthy (human) MRI scan or ECG were defined as tool 
 - Tools that annotated genetic regions were not included as tools unless they were linking them specifically to a human disease 
-- Code lists for determining patients with diseases in electronic health records were labeled as tools 
+- Code lists for determining patients with diseases in electronic health records were labeled as tools
+- In tagging publication abstracts: mention of producing a particularly novel piece of software/model but only broadly related to humans (e.g. genetics), not a specific human disease, is still ok to include as a tool or model
+- In tagging publication abstracts: a publication specifically about clinical trial results will often mention data collection, but we won't tag this as being about a dataset since it was created as a byproduct of investigating something else, not an end in itself
+
 
 ## Raw data
 
@@ -61,13 +64,14 @@ This tagged data is in `data/raw/ResearchFish/research_fish_manual_edit.csv`.
 
 ### 3. EPMC publication abstracts
 
+#### Query 1
 A final source to find relevant grants was to look for certain keywords in Wellcome acknowledged EPMC publication abstracts. This data was again from fortytwo (`FortyTwo_Denormalised.[EPMC].[PublicationFull]`).
 
 The list of keywords used to filter this data is:
 ["platform", "software", "web resource", "pipeline", "toolbox", "data linkage", "database linkage", "record linkage", "linkage algorithm", "python package", "r module", "python script", "web tool", "web based tool"]
 
 
-This yielded 3129 publications. 619 of these were tagged as being
+This yielded 3129 publications outputted in `EPMC_relevant_tool_pubs.csv`. 619 of these were tagged as being
 
 - 1 = Relevant tool
 - 2 = Relevant model
@@ -77,6 +81,23 @@ This yielded 3129 publications. 619 of these were tagged as being
 - 6 = Edge case
 
 This tagged data is in `data/raw/EPMC_relevant_tool_pubs_manual_edit.csv`.
+
+#### Query 2
+
+After tagging some of the above grants, we decided to do another query of the EPMC data with the lists:
+```
+list1 = ['machine learning', 'model', 'data driven', 'web tool', 'web platform']
+list2 = ['diagnosis', 'disease', 'clinical', 'drug discovery']
+list3 = [
+    'electronic health records', 'electronic medical records',
+    'electronic patient records', 'biobank'
+    ]
+cap_list = ['EHR', 'EMR']
+```
+We would include a publication if the abstract contained words from `list1` and `list2`, or anything from `list3`, or anything from list `cap_list` (which is case sensitive).
+We didn't include publications already found from the first query.
+
+This yielded 9709 publications outputted in `EPMC_relevant_pubs_query2.csv`.
 
 ## Compiling the training data
 
