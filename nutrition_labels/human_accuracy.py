@@ -1,4 +1,5 @@
 import pandas as pd
+from sklearn.metrics import confusion_matrix
 
 if __name__ == '__main__':
 
@@ -31,3 +32,17 @@ if __name__ == '__main__':
         )]
     print(len(soft_agree)/len(both_labelled))
     print(soft_agree[['Nonie code', 'Liz code']])
+
+    # find what got labelled as what
+    conf_matrix = pd.DataFrame(confusion_matrix(both_labelled['Nonie code'], both_labelled['Liz code']),
+                               columns=list(range(1, 7)),
+                               index=list(range(1, 7)))
+    print('confusion matrix of Liz labels and Nonie lables')
+    print(conf_matrix)
+
+    # Nonie relabelling of grant data
+    grant_relabeling = pd.read_csv('data/raw/wellcome-grants-awarded-2005-2019_manual_edit_relabeling.csv')
+
+    # get only labelled data
+    grant_relabeling = grant_relabeling.dropna(subset = ['tool relevent ','double_check '])
+
