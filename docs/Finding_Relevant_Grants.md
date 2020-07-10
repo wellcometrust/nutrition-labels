@@ -16,7 +16,10 @@ Thus, we will create a model to predict whether a grant was likely to contribute
 
 - Tools or models that created a normal or healthy model of medical data such as a healthy (human) MRI scan or ECG were defined as tool 
 - Tools that annotated genetic regions were not included as tools unless they were linking them specifically to a human disease 
-- Code lists for determining patients with diseases in electronic health records were labeled as tools 
+- Code lists for determining patients with diseases in electronic health records were labeled as tools
+- In tagging publication abstracts: mention of producing a particularly novel piece of software/model but only broadly related to humans (e.g. genetics), not a specific human disease, is still ok to include as a tool or model
+- In tagging publication abstracts: a publication specifically about clinical trial results will often mention data collection, but we won't tag this as being about a dataset since it was created as a byproduct of investigating something else, not an end in itself
+
 
 ## Raw data
 
