@@ -1,8 +1,6 @@
 import pandas as pd
 import re
-from bs4 import BeautifulSoup
-from nutrition_labels.useful_functions import remove_useless_string
-from nutrition_labels.useful_functions import only_text
+from nutrition_labels.useful_functions import remove_useless_string, only_text
 
 # load data
 epmc_tags = pd.read_csv('data/raw/EPMC_relevant_tool_pubs_manual_edit.csv')
