@@ -1,6 +1,6 @@
 import pandas as pd
 import re
-from bs4 import BeautifulSoup
+from nutrition_labels.useful_functions import remove_useless_string, only_text
 
 # load data
 epmc_tags = pd.read_csv('data/raw/EPMC_relevant_tool_pubs_manual_edit.csv')
@@ -46,28 +46,6 @@ epmc_df = pd.DataFrame(epmc_list)
 epmc_df = epmc_df[epmc_df['code'].isin([1,2,3])] # Only selecting useful codes
 
 # getting WT grant number
-def remove_useless_string(string):
-    '''
-    cleans the grant descriptions of artifacts such as <br />
-    :param string: description string
-    :return: clean string
-    '''
-
-    soup = BeautifulSoup(string)
-    string_out = soup.get_text()
-    string_out = string_out.strip('\n')
-    string_out = string_out.strip('\xa0')
-    string_out = re.sub('  ','',string_out)
-    return(string_out)
-
-def only_text(string):
-    '''
-    removes non-alphanumeric characters and spaces to increase matching
-    :param string: description string
-    :return: clean string
-    '''
-    string = re.sub(' |\W','',string)
-    return(string)
 
 
 grant_ref = grant_data[['Grant Programme:Title','Internal ID','Description','Award Date']]
@@ -76,7 +54,7 @@ grant_ref = pd.merge(grant_ref,epmc_df, how = 'inner', on = 'grant_number')
 grant_ref['Description'] = grant_ref['Description'].apply(remove_useless_string)
 grant_ref['Description'] = grant_ref['Description'].apply(only_text)
 grant_ref = grant_ref.drop_duplicates(subset=['Description','grant_number','pmid'])
-grant_ref2  = grant_ref.sort_values('Award Date', ascending=False).drop_duplicates(subset = ['grant_number', 'pmid'])
+grant_ref = grant_ref.sort_values('Award Date', ascending=False).drop_duplicates(subset = ['grant_number', 'pmid'])
 
 # finding abstract without a matching code
 no_ref = epmc_df[~epmc_df['grant_number'].isin(grant_ref['grant_number'].to_list())]
