@@ -61,13 +61,14 @@ This tagged data is in `data/raw/ResearchFish/research_fish_manual_edit.csv`.
 
 ### 3. EPMC publication abstracts
 
+#### Query 1
 A final source to find relevant grants was to look for certain keywords in Wellcome acknowledged EPMC publication abstracts. This data was again from fortytwo (`FortyTwo_Denormalised.[EPMC].[PublicationFull]`).
 
 The list of keywords used to filter this data is:
 ["platform", "software", "web resource", "pipeline", "toolbox", "data linkage", "database linkage", "record linkage", "linkage algorithm", "python package", "r module", "python script", "web tool", "web based tool"]
 
 
-This yielded 3129 publications. 619 of these were tagged as being
+This yielded 3129 publications outputted in `EPMC_relevant_tool_pubs.csv`. 619 of these were tagged as being
 
 - 1 = Relevant tool
 - 2 = Relevant model
@@ -77,6 +78,23 @@ This yielded 3129 publications. 619 of these were tagged as being
 - 6 = Edge case
 
 This tagged data is in `data/raw/EPMC_relevant_tool_pubs_manual_edit.csv`.
+
+#### Query 2
+
+After tagging some of the above grants, we decided to do another query of the EPMC data with the lists:
+```
+list1 = ['machine learning', 'model', 'data driven', 'web tool', 'web platform']
+list2 = ['diagnosis', 'disease', 'clinical', 'drug discovery']
+list3 = [
+    'electronic health records', 'electronic medical records',
+    'electronic patient records', 'biobank'
+    ]
+cap_list = ['EHR', 'EMR']
+```
+We would include a publication if the abstract contained words from `list1` and `list2`, or anything from `list3`, or anything from list `cap_list` (which is case sensitive).
+We didn't include publications already found from the first query.
+
+This yielded 9709 publications outputted in `EPMC_relevant_pubs_query2.csv`.
 
 ## Compiling the training data
 
