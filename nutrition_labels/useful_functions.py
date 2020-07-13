@@ -27,7 +27,7 @@ def only_text(string):
     string = re.sub(' |\W','',string)
     return(string)
 
-def pretty_confusion_matrix(y, y_predict, labels=[0,1]):
+def pretty_confusion_matrix(y, y_predict, labels=[0,1], text=['actual', 'predicted']):
     '''
     sklearn's confusion matrix doesn't give informative row and col labels
     Confusion matrix whose i-th row and j-th column entry indicates
@@ -35,9 +35,14 @@ def pretty_confusion_matrix(y, y_predict, labels=[0,1]):
     '''
 
     cm = pd.DataFrame(confusion_matrix(y, y_predict, labels = labels))
-
-    cm.rename(
-        index={0:'Actually not relevant', 1:'Actually relevant'},
-        columns={0:'Predicted not relevant', 1:'Predicted relevant'},
-        inplace=True)
+    if text:
+        cm.rename(
+            index={i:f'{text[0]} tag {label}' for i, label in enumerate(labels)},
+            columns={i:f'{text[1]} tag {label}' for i, label in enumerate(labels)},
+            inplace=True)
+    else:
+        cm.rename(
+            index={0:'Actually not relevant', 1:'Actually relevant'},
+            columns={0:'Predicted not relevant', 1:'Predicted relevant'},
+            inplace=True)
     return cm
