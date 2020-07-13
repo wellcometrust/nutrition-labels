@@ -1,6 +1,9 @@
 import pandas as pd
 from sklearn.metrics import confusion_matrix
 
+def clean_codes(data, col_name):
+    return [str(int(a)) if not pd.isnull(a) else a for a in data[col_name]]
+
 if __name__ == '__main__':
 
     liz_add_epmc = pd.read_csv(
@@ -8,8 +11,8 @@ if __name__ == '__main__':
         encoding = "latin"
         )
 
-    str_codes = [str(int(a)) if not pd.isnull(a) else a for a in liz_add_epmc['code']]
-    liz_add_epmc['Nonie code'] = [a if a!='55' else '5' for a in str_codes]
+    liz_add_epmc['Nonie code'] = clean_codes(liz_add_epmc, 'code')
+    liz_add_epmc['Liz code'] = clean_codes(liz_add_epmc, 'Liz code')
 
     print("Nonie labelled:")
     print(liz_add_epmc.groupby(['Nonie code'])['Nonie code'].count())
@@ -17,6 +20,8 @@ if __name__ == '__main__':
     print("Liz labelled:")
     print(liz_add_epmc.groupby(['Liz code'])['Liz code'].count())
 
+    liz_add_epmc.replace('4', '5', inplace=True)
+    liz_add_epmc.replace('6', '5', inplace=True)
     both_labelled = liz_add_epmc.dropna(subset=['Nonie code', 'Liz code'])
 
     print("Proportion of times we exactly agree on tool, dataset, model, not relevant")
@@ -35,8 +40,8 @@ if __name__ == '__main__':
 
     # find what got labelled as what
     conf_matrix = pd.DataFrame(confusion_matrix(both_labelled['Nonie code'], both_labelled['Liz code']),
-                               columns=list(range(1, 7)),
-                               index=list(range(1, 7)))
+                               columns=list(range(1, 5)),
+                               index=list(range(1, 5)))
     print('confusion matrix of Liz labels and Nonie lables')
     print(conf_matrix)
 
