@@ -1,5 +1,6 @@
 import pandas as pd
-from sklearn.metrics import confusion_matrix
+
+from useful_functions import pretty_confusion_matrix
 
 def clean_codes(data, col_name):
     return [str(int(a)) if not pd.isnull(a) else a for a in data[col_name]]
@@ -20,10 +21,16 @@ if __name__ == '__main__':
     print("Liz labelled:")
     print(liz_add_epmc.groupby(['Liz code'])['Liz code'].count())
 
-    liz_add_epmc.replace('4', '5', inplace=True)
-    liz_add_epmc.replace('6', '5', inplace=True)
     both_labelled = liz_add_epmc.dropna(subset=['Nonie code', 'Liz code'])
 
+    print(pretty_confusion_matrix(
+        both_labelled['Nonie code'],
+        both_labelled['Liz code'], labels=[str(i) for i in range(1, 7)], text=['Nonie', 'Liz'])
+    )
+
+    both_labelled.replace('4', '5', inplace=True)
+    both_labelled.replace('6', '5', inplace=True)
+    
     print("Proportion of times we exactly agree on tool, dataset, model, not relevant")
     hard_agree = both_labelled[both_labelled['Nonie code']==both_labelled['Liz code']]
     print(len(hard_agree)/len(both_labelled))
@@ -37,13 +44,6 @@ if __name__ == '__main__':
         )]
     print(len(soft_agree)/len(both_labelled))
     print(soft_agree[['Nonie code', 'Liz code']])
-
-    # find what got labelled as what
-    conf_matrix = pd.DataFrame(confusion_matrix(both_labelled['Nonie code'], both_labelled['Liz code']),
-                               columns=list(range(1, 5)),
-                               index=list(range(1, 5)))
-    print('confusion matrix of Liz labels and Nonie lables')
-    print(conf_matrix)
 
     # Nonie relabelling of grant data
     grant_relabeling = pd.read_csv('data/raw/wellcome-grants-awarded-2005-2019_manual_edit_relabeling.csv')
@@ -71,11 +71,11 @@ if __name__ == '__main__':
     print(len(full_agree)/len(grant_relabeling))
 
     # Confusion matrix
-    grant_conf_matrix = pd.DataFrame(confusion_matrix(grant_relabeling['first_label'], grant_relabeling['second_label']),
-                               columns=[1,5],
-                               index=[1,5])
     print('confusion matrix of first and second labels of grant data')
-    print(grant_conf_matrix)
-
+    print(pretty_confusion_matrix(
+        grant_relabeling['first_label'],
+        grant_relabeling['second_label'],
+        labels=[1, 5], text=['First', 'Second'])
+    )
 
 
