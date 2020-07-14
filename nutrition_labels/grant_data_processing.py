@@ -1,21 +1,28 @@
 import pandas as pd
 import re
+import numpy as np
 from nutrition_labels.useful_functions import remove_useless_string, only_text
 
 # load data
-epmc_tags = pd.read_csv('data/raw/EPMC_relevant_tool_pubs_manual_edit.csv')
+epmc_tags = pd.read_csv('data/raw/EPMC_relevant_tool_pubs_manual_edit_Lizadditions.csv')
 rf_tags = pd.read_csv('data/raw/ResearchFish/research_fish_manual_edit.csv')
-grant_tags = pd.read_csv('data/raw/wellcome-grants-awarded-2005-2019_manual_edit.csv')
+grant_tags = pd.read_csv('data/raw/wellcome-grants-awarded-2005-2019_manual_edit_relabeling.csv')
 grant_data = pd.read_csv('data/raw/wellcome-grants-awarded-2005-2019.csv')
+epmc_tags_query_two = pd.read_csv('data/raw/EPMC_relevant_pubs_query2_manual_edit.csv')
 
 # clean data
 rf_tags = rf_tags.dropna(subset = ['code '])
-epmc_tags = epmc_tags.dropna(subset = ['code','WTgrants'])
 grant_tags = grant_tags.dropna(subset = ['tool relevent '])
+
+# clean abstract data
+epmc_tags['code'] = epmc_tags[['code','Liz code']].apply(lambda x: x[1] if np.isnan(x[0]) else x[0], axis = 1)
+epmc_tags_full = pd.concat([epmc_tags,epmc_tags_query_two])
+epmc_tags_full = epmc_tags.dropna(subset = ['code','WTgrants'])
+
 
 epmc_cols = ['pmid','code']
 epmc_list = []
-for i,row in epmc_tags.iterrows():
+for i,row in epmc_tags_full.iterrows():
     grant_num = row['WTgrants']
     if len(grant_num) == 5:
         grant_num = ['0' + grant_num]
@@ -46,7 +53,6 @@ epmc_df = pd.DataFrame(epmc_list)
 epmc_df = epmc_df[epmc_df['code'].isin([1,2,3])] # Only selecting useful codes
 
 # getting WT grant number
-
 
 grant_ref = grant_data[['Grant Programme:Title','Internal ID','Description','Award Date']]
 grant_ref['grant_number'] = grant_data['Internal ID'].apply(lambda x: re.sub('/.*','',x))
