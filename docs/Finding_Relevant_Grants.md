@@ -116,6 +116,12 @@ This dataset comprises of a grant reference, the grant title and description and
 | 3 | Relevant dataset | 13 |
 | 5 | Not relevant | 791 |
 
+### Training data summary - 15th July 2020 
+
+| Tag code | Meaning | Number of grants |
+|---|---|--- | 
+| 1 | Relevant | 292 |
+| 0 | Not relevant | 989 |
 
 ## `grant_tagger.py`
 
