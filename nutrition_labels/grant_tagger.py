@@ -9,7 +9,6 @@ import pandas as pd
 from bs4 import BeautifulSoup
 import re
 
-from nutrition_labels.useful_functions import remove_useless_string
 from nutrition_labels.useful_functions import pretty_confusion_matrix
 
 
@@ -31,9 +30,9 @@ class GrantTagger():
 
     def transform(self, data):
 
-        equal_data = data.loc[data['code'] != 5.0]
-        irrelevant_data = data.loc[data['code'] == 5.0]
-        if not self.sample_not_relevant:
+        equal_data = data.loc[data['Relevance code'] == 1]
+        irrelevant_data = data.loc[data['Relevance code'] == 0]
+        if not self.sample_not_relevant and self.sample_not_relevant != 0:
             # If you don't specify sample_not_relevant
             # then use all the not relevant data points
             sample_size = len(irrelevant_data)
@@ -51,11 +50,8 @@ class GrantTagger():
         # resetting index to remove index from non-sampled data
         equal_data = equal_data.reset_index(drop = True)
 
-        # Meaningful if 1,2,3 -> reset to 1
-        equal_data['code'] = [int(i) for i in (equal_data['code'] != 5.0).tolist()]
-
-        self.X = [remove_useless_string(i) for i in equal_data['Description'].tolist()]
-        y = equal_data['code']
+        self.X = equal_data['Description'].tolist()
+        y = equal_data['Relevance code']
 
         if self.vectorizer_type == 'count':
             self.vectorizer = CountVectorizer(
@@ -72,12 +68,6 @@ class GrantTagger():
         else:
             print('Vectorizer type not recognised')
         X_vect = self.vectorizer.fit_transform(self.X)
-        # vectorizer.get_feature_names()
-        # X_vect.toarray()
-        # word_list = vectorizer.get_feature_names();    
-        # count_list = X_vect.toarray().sum(axis=0)    
-        # dict(zip(word_list,count_list)))
-
 
         X_train, X_test, y_train, y_test = train_test_split(X_vect, y, test_size=self.test_size,
                                                             random_state=self.split_seed)
@@ -96,15 +86,15 @@ class GrantTagger():
     def predict(self, X):
         return self.model.predict(X)
 
-    def evaluate(self, X, y, print_results=True):
+    def evaluate(self, X, y, print_results=True, average='binary'):
 
         y_predict = self.model.predict(X)
 
         scores = {
             'accuracy': accuracy_score(y, y_predict),
-            'f1': f1_score(y, y_predict),
-            'precision_score': precision_score(y, y_predict, zero_division=0),
-            'recall_score': recall_score(y, y_predict, zero_division=0)}
+            'f1': f1_score(y, y_predict, average=average),
+            'precision_score': precision_score(y, y_predict, zero_division=0, average=average),
+            'recall_score': recall_score(y, y_predict, zero_division=0, average=average)}
 
         if print_results:
             print(scores)
@@ -126,7 +116,7 @@ if __name__ == '__main__':
     data = pd.read_csv('data/processed/training_data.csv')
 
     grant_tagger = GrantTagger(
-        sample_not_relevant=50,
+        sample_not_relevant=300,
         ngram_range=(1,2),
         test_size=0.25,
         irrelevant_sample_seed=4,
