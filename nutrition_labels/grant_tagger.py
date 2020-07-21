@@ -3,7 +3,8 @@ from sklearn.naive_bayes import MultinomialNB
 from sklearn.pipeline import Pipeline
 from sklearn.model_selection import train_test_split
 from sklearn.metrics import accuracy_score, classification_report, confusion_matrix, f1_score, precision_score, recall_score
-
+from wellcomeml.ml.bert_vectorizer import BertVectorizer
+from sklearn.preprocessing import MinMaxScaler
 import pandas as pd
 
 from bs4 import BeautifulSoup
@@ -37,7 +38,7 @@ class GrantTagger():
             # then use all the not relevant data points
             sample_size = len(irrelevant_data)
         else:
-            # If the inputted sample size is larger than the number of 
+            # If the inputted sample size is larger than the number of
             # data points, then just use all the data points
             sample_size = min(len(irrelevant_data), self.sample_not_relevant)
 
@@ -65,9 +66,15 @@ class GrantTagger():
                 token_pattern=r'(?u)\b\w+\b',
                 ngram_range=self.ngram_range
                 )
+        elif self.vectorizer_type == 'bert':
+            self.vectorizer = BertVectorizer()
         else:
             print('Vectorizer type not recognised')
         X_vect = self.vectorizer.fit_transform(self.X)
+
+        if self.vectorizer_type == 'bert':
+            scaler = MinMaxScaler()
+            X_vect = scaler.fit_transform(X_vect)
 
         X_train, X_test, y_train, y_test = train_test_split(X_vect, y, test_size=self.test_size,
                                                             random_state=self.split_seed)
@@ -112,7 +119,7 @@ class GrantTagger():
 
 
 if __name__ == '__main__':
-    
+
     data = pd.read_csv('data/processed/training_data.csv')
 
     grant_tagger = GrantTagger(
