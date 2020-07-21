@@ -120,7 +120,8 @@ if __name__ == '__main__':
         ngram_range=(1,2),
         test_size=0.25,
         irrelevant_sample_seed=4,
-        split_seed= 4
+        split_seed= 4,
+        vectorizer_type='tfidf'
         )
     X_train, X_test, y_train, y_test = grant_tagger.transform(data)
     grant_tagger.fit(X_train, y_train)
