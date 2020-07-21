@@ -5,7 +5,10 @@ from sklearn.model_selection import train_test_split
 from sklearn.metrics import accuracy_score, classification_report, confusion_matrix, f1_score, precision_score, recall_score
 from wellcomeml.ml.bert_vectorizer import BertVectorizer
 from sklearn.preprocessing import MinMaxScaler
+from sklearn.linear_model import LogisticRegression
+from sklearn.svm import SVC
 import pandas as pd
+
 
 from bs4 import BeautifulSoup
 import re
@@ -20,7 +23,8 @@ class GrantTagger():
         test_size=0.25,
         irrelevant_sample_seed = 4,
         split_seed = 4,
-        vectorizer_type='count'
+        vectorizer_type='count',
+        model_type ='naive_bayes'
         ):
         self.sample_not_relevant = sample_not_relevant
         self.ngram_range = ngram_range
@@ -28,7 +32,7 @@ class GrantTagger():
         self.irrelevant_sample_seed = irrelevant_sample_seed
         self.split_seed = split_seed
         self.vectorizer_type = vectorizer_type
-
+        self.model_type = model_type
     def transform(self, data):
 
         equal_data = data.loc[data['Relevance code'] == 1]
@@ -72,7 +76,7 @@ class GrantTagger():
             print('Vectorizer type not recognised')
         X_vect = self.vectorizer.fit_transform(self.X)
 
-        if self.vectorizer_type == 'bert':
+        if self.vectorizer_type == 'bert' and self.model_type == 'naive_bayes':
             scaler = MinMaxScaler()
             X_vect = scaler.fit_transform(X_vect)
 
@@ -85,10 +89,15 @@ class GrantTagger():
         return X_train, X_test, y_train, y_test
 
     def fit(self, X, y):
-
-        bayes = MultinomialNB()
-        self.model = bayes.fit(X, y)
-
+        if self.model_type == 'naive_bayes':
+            model = MultinomialNB()
+        elif self.model_type == 'SVM':
+            model = SVC()
+        elif self.model_type == 'log_reg':
+            model = LogisticRegression()
+        else:
+            print('Model type not recognised')
+        self.model = model.fit(X, y)
 
     def predict(self, X):
         return self.model.predict(X)
@@ -127,7 +136,8 @@ if __name__ == '__main__':
         ngram_range=(1,2),
         test_size=0.25,
         irrelevant_sample_seed=4,
-        split_seed= 4
+        split_seed= 4,
+        vectorizer_type='bert'
         )
     X_train, X_test, y_train, y_test = grant_tagger.transform(data)
     grant_tagger.fit(X_train, y_train)
@@ -148,3 +158,56 @@ if __name__ == '__main__':
 
 ######
 
+    grant_tagger = GrantTagger(
+        sample_not_relevant=300,
+        ngram_range=(1,2),
+        test_size=0.25,
+        irrelevant_sample_seed=4,
+        split_seed= 4,
+        vectorizer_type='bert',
+        model_type='SVM'
+        )
+    X_train, X_test, y_train, y_test = grant_tagger.transform(data)
+    grant_tagger.fit(X_train, y_train)
+
+    print("\nEvaluate training data")
+    grant_tagger.evaluate(X_train, y_train)
+    print("\nEvaluate test data")
+    grant_tagger.evaluate(X_test, y_test)
+    print('\nTraining descriptions')
+    print(grant_tagger.return_mislabeled_data(y_train, grant_tagger.predict(X_train), grant_tagger.train_indices))
+    print('\nTest description')
+    test_descriptions = grant_tagger.return_mislabeled_data(y_test,
+                                                            grant_tagger.predict(X_test),
+                                                            grant_tagger.test_indices)
+    print(test_descriptions)
+    print("\nMislabled Grant descriptions")
+    print(test_descriptions[test_descriptions['True_label'] != test_descriptions['Predicted_label']])
+
+######
+
+    grant_tagger = GrantTagger(
+        sample_not_relevant=300,
+        ngram_range=(1, 2),
+        test_size=0.25,
+        irrelevant_sample_seed=4,
+        split_seed=4,
+        vectorizer_type='bert',
+        model_type='log_reg'
+    )
+    X_train, X_test, y_train, y_test = grant_tagger.transform(data)
+    grant_tagger.fit(X_train, y_train)
+
+    print("\nEvaluate training data")
+    grant_tagger.evaluate(X_train, y_train)
+    print("\nEvaluate test data")
+    grant_tagger.evaluate(X_test, y_test)
+    print('\nTraining descriptions')
+    print(grant_tagger.return_mislabeled_data(y_train, grant_tagger.predict(X_train), grant_tagger.train_indices))
+    print('\nTest description')
+    test_descriptions = grant_tagger.return_mislabeled_data(y_test,
+                                                            grant_tagger.predict(X_test),
+                                                            grant_tagger.test_indices)
+    print(test_descriptions)
+    print("\nMislabled Grant descriptions")
+    print(test_descriptions[test_descriptions['True_label'] != test_descriptions['Predicted_label']])
