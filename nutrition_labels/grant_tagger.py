@@ -167,6 +167,6 @@ if __name__ == '__main__':
 
     grant_tagger_experiment(vectorizer_type='bert')
     grant_tagger_experiment(vectorizer_type='bert',model_type='SVM')
-    grant_tagger_experiment(vectorizer_type='bert',model_type='logreg')
+    grant_tagger_experiment(vectorizer_type='bert',model_type='log_reg')
 
 
