@@ -141,6 +141,7 @@ def grant_tagger_experiment(
         vectorizer_type= vectorizer_type,
         model_type=model_type
     )
+
     X_train, X_test, y_train, y_test = grant_tagger.transform(data)
     grant_tagger.fit(X_train, y_train)
     print('\nNot relevent sample size: ' + str(sample_not_relevent))
