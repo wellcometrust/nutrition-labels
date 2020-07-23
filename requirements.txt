@@ -5,3 +5,4 @@ pandas
 sklearn
 beautifulsoup4
 lxml
+wellcomeml[deep-learning]
