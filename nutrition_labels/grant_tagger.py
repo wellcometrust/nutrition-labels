@@ -80,6 +80,9 @@ class GrantTagger():
             scaler = MinMaxScaler()
             X_vect = scaler.fit_transform(X_vect)
 
+        return X_vect, y
+
+    def split_data(self, X_vect,y):
         X_train, X_test, y_train, y_test = train_test_split(X_vect, y, test_size=self.test_size,
                                                             random_state=self.split_seed)
         self.train_indices = y_train.index.to_list()
