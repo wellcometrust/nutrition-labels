@@ -83,6 +83,7 @@ class GrantTagger():
         return X_vect, y
 
     def split_data(self, X_vect,y):
+
         X_train, X_test, y_train, y_test = train_test_split(X_vect, y, test_size=self.test_size,
                                                             random_state=self.split_seed)
         self.train_indices = y_train.index.to_list()
@@ -144,8 +145,8 @@ def grant_tagger_experiment(
         vectorizer_type= vectorizer_type,
         model_type=model_type
     )
-
-    X_train, X_test, y_train, y_test = grant_tagger.transform(data)
+    X_vect, y = grant_tagger.transform(data)
+    X_train, X_test, y_train, y_test = grant_tagger.split_data(X_vect,y)
     grant_tagger.fit(X_train, y_train)
     print('\nNot relevent sample size: ' + str(sample_not_relevent))
     print('\nVectorizer type: ' + vectorizer_type)
