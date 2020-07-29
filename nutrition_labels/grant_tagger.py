@@ -62,9 +62,9 @@ class GrantTagger():
 
         relevant_sample_index = [ind for ind,x in enumerate(y) if x != 0]
         irrelevant_sample_index = [ind for ind, x in enumerate(y) if x == 0]
-        irrelevant_sample_size = abs(len(relevant_sample_index) * self.sample_not_relevant)
+        irrelevant_sample_size = int(round((len(relevant_sample_index) * self.sample_not_relevant)))
 
-        if not self.sample_not_relevant and self.sample_not_relevant != 0:
+        if not self.sample_not_relevant and self.sample_not_relevant != 0 :
             # If you don't specify sample_not_relevant
             # then use all the not relevant data points
             sample_size = len(irrelevant_sample_index)
@@ -76,9 +76,11 @@ class GrantTagger():
         if sample_size < len(irrelevant_sample_index):
             seed(irrelevant_sample_seed)
             sample_index = relevant_sample_index + sample(irrelevant_sample_index,sample_size)
-            X_vect = [X_vect[i] for i in sample_index]
             y = y[sample_index]
-
+            if self.vectorizer_type == 'bert':
+                X_vect = [X_vect[i] for i in sample_index]
+            else:
+                X_vect = X_vect[sample_index]
         # resetting index to remove index from non-sampled data
 
         X_train, X_test, y_train, y_test = train_test_split(X_vect, y, test_size=self.test_size,
@@ -174,3 +176,13 @@ if __name__ == '__main__':
     grant_tagger_experiment(vectorizer_type='bert',model_type='SVM')
     grant_tagger_experiment(vectorizer_type='bert',model_type='log_reg')
 
+grant_tagger = GrantTagger()
+X_vect, y = grant_tagger.transform(data)
+X_train, X_test, y_train, y_test = grant_tagger.split_data(
+    X_vect,
+    y,
+    sample_not_relevant=1,
+    irrelevant_sample_seed=4,
+    split_seed=4)
+
+fit = grant_tagger.fit(X_train,y_train)
