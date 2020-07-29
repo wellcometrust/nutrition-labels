@@ -134,14 +134,16 @@ class GrantTagger():
 def grant_tagger_experiment(
         sample_not_relevent =1,
         vectorizer_type = 'count',
-        model_type ='naive_bayes'
+        model_type ='naive_bayes',
+        bert_type = 'bert'
         ):
 
     grant_tagger = GrantTagger(
         ngram_range=(1, 2),
         test_size=0.25,
         vectorizer_type= vectorizer_type,
-        model_type=model_type
+        model_type=model_type,
+        bert_type = bert_type
     )
     X_vect, y = grant_tagger.transform(data)
     X_train, X_test, y_train, y_test = grant_tagger.split_data(
@@ -177,4 +179,7 @@ if __name__ == '__main__':
     grant_tagger_experiment(vectorizer_type='bert')
     grant_tagger_experiment(vectorizer_type='bert',model_type='SVM')
     grant_tagger_experiment(vectorizer_type='bert',model_type='log_reg')
+    grant_tagger_experiment(vectorizer_type='bert',bert_type= 'scibert')
+    grant_tagger_experiment(vectorizer_type='bert', model_type='SVM',bert_type= 'scibert')
+    grant_tagger_experiment(vectorizer_type='bert', model_type='log_reg',bert_type= 'scibert')
 
