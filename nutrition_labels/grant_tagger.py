@@ -22,12 +22,14 @@ class GrantTagger():
         ngram_range=(1,2),
         test_size=0.25,
         vectorizer_type='count',
-        model_type ='naive_bayes'
+        model_type ='naive_bayes',
+        bert_type = 'bert'
         ):
         self.ngram_range = ngram_range
         self.test_size = test_size
         self.vectorizer_type = vectorizer_type
         self.model_type = model_type
+        self.bert_type = bert_type
     def transform(self, data):
 
         self.X = data['Description'].tolist()
@@ -46,7 +48,7 @@ class GrantTagger():
                 ngram_range=self.ngram_range
                 )
         elif self.vectorizer_type == 'bert':
-            self.vectorizer = BertVectorizer()
+            self.vectorizer = BertVectorizer(pretrained=self.bert_type)
         else:
             print('Vectorizer type not recognised')
         X_vect = self.vectorizer.fit_transform(self.X)
@@ -176,13 +178,3 @@ if __name__ == '__main__':
     grant_tagger_experiment(vectorizer_type='bert',model_type='SVM')
     grant_tagger_experiment(vectorizer_type='bert',model_type='log_reg')
 
-grant_tagger = GrantTagger()
-X_vect, y = grant_tagger.transform(data)
-X_train, X_test, y_train, y_test = grant_tagger.split_data(
-    X_vect,
-    y,
-    sample_not_relevant=1,
-    irrelevant_sample_seed=4,
-    split_seed=4)
-
-fit = grant_tagger.fit(X_train,y_train)
