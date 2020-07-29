@@ -59,9 +59,10 @@ class GrantTagger():
 
     def split_data(self, X_vect,y, sample_not_relevant, irrelevant_sample_seed,split_seed):
         self.sample_not_relevant = sample_not_relevant
+
         relevant_sample_index = [ind for ind,x in enumerate(y) if x != 0]
         irrelevant_sample_index = [ind for ind, x in enumerate(y) if x == 0]
-        irrelevant_sample_size = len(relevant_sample_index) * self.sample_not_relevant
+        irrelevant_sample_size = abs(len(relevant_sample_index) * self.sample_not_relevant)
 
         if not self.sample_not_relevant and self.sample_not_relevant != 0:
             # If you don't specify sample_not_relevant
@@ -127,7 +128,7 @@ class GrantTagger():
         return X_text_df
 
 def grant_tagger_experiment(
-        sample_not_relevent =300,
+        sample_not_relevent =1,
         vectorizer_type = 'count',
         model_type ='naive_bayes'
         ):
@@ -139,7 +140,13 @@ def grant_tagger_experiment(
         model_type=model_type
     )
     X_vect, y = grant_tagger.transform(data)
-    X_train, X_test, y_train, y_test = grant_tagger.split_data(X_vect,y)
+    X_train, X_test, y_train, y_test = grant_tagger.split_data(
+        X_vect,
+        y,
+        sample_not_relevant = 1,
+        irrelevant_sample_seed = 4,
+        split_seed=4)
+
     grant_tagger.fit(X_train, y_train)
     print('\nNot relevent sample size: ' + str(sample_not_relevent))
     print('\nVectorizer type: ' + vectorizer_type)
@@ -167,51 +174,3 @@ if __name__ == '__main__':
     grant_tagger_experiment(vectorizer_type='bert',model_type='SVM')
     grant_tagger_experiment(vectorizer_type='bert',model_type='log_reg')
 
-grant_tagger = GrantTagger(
-        ngram_range=(1, 2),
-        test_size=0.25,
-        vectorizer_type= 'count',
-        model_type='naive_bayes')
-
-X_vect,y = grant_tagger.transform(data)
-X = data['Description'].tolist()
-
-sample_not_relevant = 1
-irrelevant_sample_seed = 4
-split_seed = 4
-test_size = 0.25
-
-relevant_sample_index = [ind for ind,x in enumerate(y) if x != 0]
-irrelevant_sample_index = [ind for ind, x in enumerate(y) if x == 0]
-irrelevant_sample_size = len(relevant_sample_index) * sample_not_relevant
-
-
-if not sample_not_relevant and sample_not_relevant != 0:
-    # If you don't specify sample_not_relevant
-    # then use all the not relevant data points
-    sample_size = len(irrelevant_sample_index)
-else:
-    # If the inputted sample size is larger than the number of
-    # data points, then just use all the data points
-    sample_size = min(len(irrelevant_sample_index), irrelevant_sample_size)
-
-if sample_size < len(irrelevant_sample_index):
-    seed(irrelevant_sample_seed)
-    sample_index = relevant_sample_index + sample(irrelevant_sample_index,sample_size)
-    X_vect2 = [X_vect[i] for i in sample_index]
-    y2 = y[sample_index]
-    X2 = [X[i] for i in sample_index]
-
-
-# resetting index to remove index from non-sampled data
-
-X_train, X_test, y_train, y_test = train_test_split(X_vect2, y2, test_size=test_size,
-                                                    random_state=split_seed)
-train_indices = y_train.index.to_list()
-y_train = y_train.to_list()
-test_indices = y_test.index.to_list()
-y_test = y_test.to_list()
-
-data_sample = data.loc[sample_index,['Description','Relevance code']]
-data_test = pd.DataFrame({'Description':X,'Relevance code':y})
-data_final = pd.merge(data, data_test, how = 'outer',on = ['Description','Relevance code'])
