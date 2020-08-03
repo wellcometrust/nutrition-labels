@@ -1,62 +1,36 @@
 from sklearn.feature_extraction.text import CountVectorizer, TfidfVectorizer
 from sklearn.naive_bayes import MultinomialNB
-from sklearn.pipeline import Pipeline
 from sklearn.model_selection import train_test_split
-from sklearn.metrics import accuracy_score, classification_report, confusion_matrix, f1_score, precision_score, recall_score
+from sklearn.metrics import accuracy_score, classification_report,  f1_score, precision_score, recall_score
 from wellcomeml.ml.bert_vectorizer import BertVectorizer
 from sklearn.preprocessing import MinMaxScaler
 from sklearn.linear_model import LogisticRegression
 from sklearn.svm import SVC
 import pandas as pd
+from random import sample, seed
 
-
-from bs4 import BeautifulSoup
-import re
 
 from nutrition_labels.useful_functions import pretty_confusion_matrix
 
 
 class GrantTagger():
     def __init__(
-        self, sample_not_relevant=50,
+        self,
         ngram_range=(1,2),
         test_size=0.25,
-        irrelevant_sample_seed = 4,
-        split_seed = 4,
         vectorizer_type='count',
-        model_type ='naive_bayes'
+        model_type ='naive_bayes',
+        bert_type = 'bert'
         ):
-        self.sample_not_relevant = sample_not_relevant
         self.ngram_range = ngram_range
         self.test_size = test_size
-        self.irrelevant_sample_seed = irrelevant_sample_seed
-        self.split_seed = split_seed
         self.vectorizer_type = vectorizer_type
         self.model_type = model_type
+        self.bert_type = bert_type
     def transform(self, data):
 
-        equal_data = data.loc[data['Relevance code'] == 1]
-        irrelevant_data = data.loc[data['Relevance code'] == 0]
-        if not self.sample_not_relevant and self.sample_not_relevant != 0:
-            # If you don't specify sample_not_relevant
-            # then use all the not relevant data points
-            sample_size = len(irrelevant_data)
-        else:
-            # If the inputted sample size is larger than the number of
-            # data points, then just use all the data points
-            sample_size = min(len(irrelevant_data), self.sample_not_relevant)
-
-        equal_data = pd.concat([equal_data,
-                                irrelevant_data.sample(
-                                    n=sample_size,
-                                    random_state=self.irrelevant_sample_seed
-                                    )])
-
-        # resetting index to remove index from non-sampled data
-        equal_data = equal_data.reset_index(drop = True)
-
-        self.X = equal_data['Description'].tolist()
-        y = equal_data['Relevance code']
+        self.X = data['Description'].tolist()
+        y = data['Relevance code']
 
         if self.vectorizer_type == 'count':
             self.vectorizer = CountVectorizer(
@@ -71,7 +45,7 @@ class GrantTagger():
                 ngram_range=self.ngram_range
                 )
         elif self.vectorizer_type == 'bert':
-            self.vectorizer = BertVectorizer()
+            self.vectorizer = BertVectorizer(pretrained=self.bert_type)
         else:
             print('Vectorizer type not recognised')
         X_vect = self.vectorizer.fit_transform(self.X)
@@ -80,8 +54,26 @@ class GrantTagger():
             scaler = MinMaxScaler()
             X_vect = scaler.fit_transform(X_vect)
 
+        return X_vect, y
+
+    def split_data(self, X_vect,y, relevant_sample_ratio, irrelevant_sample_seed,split_seed):
+
+        relevant_sample_index = [ind for ind,x in enumerate(y) if x != 0]
+        irrelevant_sample_index = [ind for ind, x in enumerate(y) if x == 0]
+        sample_size = int(round(len(relevant_sample_index) * relevant_sample_ratio))
+
+        if sample_size < len(irrelevant_sample_index):
+            seed(irrelevant_sample_seed)
+            sample_index = relevant_sample_index + sample(irrelevant_sample_index,sample_size)
+            y = y[sample_index]
+            if self.vectorizer_type == 'bert':
+                X_vect = [X_vect[i] for i in sample_index]
+            else:
+                X_vect = X_vect[sample_index]
+        # resetting index to remove index from non-sampled data
+
         X_train, X_test, y_train, y_test = train_test_split(X_vect, y, test_size=self.test_size,
-                                                            random_state=self.split_seed)
+                                                            random_state=split_seed)
         self.train_indices = y_train.index.to_list()
         y_train = y_train.to_list()
         self.test_indices = y_test.index.to_list()
@@ -127,24 +119,30 @@ class GrantTagger():
         return X_text_df
 
 def grant_tagger_experiment(
-        sample_not_relevent =300,
+        data,
+        relevant_sample_ratio =1,
         vectorizer_type = 'count',
-        model_type ='naive_bayes'
+        model_type ='naive_bayes',
+        bert_type = 'bert'
         ):
 
     grant_tagger = GrantTagger(
-        sample_not_relevant=sample_not_relevent,
         ngram_range=(1, 2),
         test_size=0.25,
-        irrelevant_sample_seed=4,
-        split_seed=4,
         vectorizer_type= vectorizer_type,
-        model_type=model_type
+        model_type=model_type,
+        bert_type = bert_type
     )
+    X_vect, y = grant_tagger.transform(data)
+    X_train, X_test, y_train, y_test = grant_tagger.split_data(
+        X_vect,
+        y,
+        relevant_sample_ratio = relevant_sample_ratio,
+        irrelevant_sample_seed = 4,
+        split_seed=4)
 
-    X_train, X_test, y_train, y_test = grant_tagger.transform(data)
     grant_tagger.fit(X_train, y_train)
-    print('\nNot relevent sample size: ' + str(sample_not_relevent))
+    print('\nNot relevent sample size: ' + str(relevant_sample_ratio))
     print('\nVectorizer type: ' + vectorizer_type)
     print('\nModel type: ' + model_type)
     print("\nEvaluate training data")
@@ -166,8 +164,10 @@ if __name__ == '__main__':
 
     data = pd.read_csv('data/processed/training_data.csv')
 
-    grant_tagger_experiment(vectorizer_type='bert')
-    grant_tagger_experiment(vectorizer_type='bert',model_type='SVM')
-    grant_tagger_experiment(vectorizer_type='bert',model_type='log_reg')
-
+    grant_tagger_experiment(data,vectorizer_type='bert')
+    grant_tagger_experiment(data,vectorizer_type='bert',model_type='SVM')
+    grant_tagger_experiment(data,vectorizer_type='bert',model_type='log_reg')
+    grant_tagger_experiment(data,vectorizer_type='bert',bert_type= 'scibert')
+    grant_tagger_experiment(data,vectorizer_type='bert', model_type='SVM',bert_type= 'scibert')
+    grant_tagger_experiment(data,vectorizer_type='bert', model_type='log_reg',bert_type= 'scibert')
 
