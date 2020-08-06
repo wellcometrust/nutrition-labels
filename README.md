@@ -33,6 +33,17 @@ source build/virtualenv/bin/activate
 jupyter notebook
 ```
 
+## grant_tagger.py
+
+You can train and save a model to classify grants as being to do with tech or not (see definitions for this in `Finding_Relevant_Grants.md`) by running:
+
+```
+python nutrition_labels/grant_tagger.py --training_data_file 'data/processed/training_data.csv' --vectorizer_type 'count' --relevant_sample_ratio 1 --model_type naive_bayes --bert_type 'bert'
+```
+
+where `vectorizer_type` can be 'count', 'tfidf' or 'bert', `model_type` can be 'naive_bayes', 'SVM' and 'log_reg', and `bert_type` (if using bert) can be 'bert' and 'scibert'.
+
+
 ## Project structure
 
 ```

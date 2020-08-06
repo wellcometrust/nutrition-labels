@@ -7,8 +7,12 @@ from sklearn.preprocessing import MinMaxScaler
 from sklearn.linear_model import LogisticRegression
 from sklearn.svm import SVC
 import pandas as pd
-from random import sample, seed
 
+from random import sample, seed
+from argparse import ArgumentParser
+import pickle
+from datetime import datetime
+import os
 
 from nutrition_labels.useful_functions import pretty_confusion_matrix
 
@@ -118,12 +122,22 @@ class GrantTagger():
                                 'Predicted_label':y_pred})
         return X_text_df
 
+    def save_model(self, model_path):
+        with open(model_path, 'wb') as f:
+            pickle.dump(self.model, f)
+
+    def load_model(self, model_path):
+        with open(model_path, 'rb') as f:
+            self.model = pickle.load(f)
+
+
 def grant_tagger_experiment(
         data,
         relevant_sample_ratio =1,
         vectorizer_type = 'count',
         model_type ='naive_bayes',
-        bert_type = 'bert'
+        bert_type = 'bert',
+        print_output = True
         ):
 
     grant_tagger = GrantTagger(
@@ -142,32 +156,92 @@ def grant_tagger_experiment(
         split_seed=4)
 
     grant_tagger.fit(X_train, y_train)
-    print('\nNot relevent sample size: ' + str(relevant_sample_ratio))
-    print('\nVectorizer type: ' + vectorizer_type)
-    print('\nModel type: ' + model_type)
-    print("\nEvaluate training data")
-    grant_tagger.evaluate(X_train, y_train)
-    print("\nEvaluate test data")
-    grant_tagger.evaluate(X_test, y_test)
-    print('\nTraining descriptions')
-    print(grant_tagger.return_mislabeled_data(y_train, grant_tagger.predict(X_train), grant_tagger.train_indices))
-    print('\nTest description')
-    test_descriptions = grant_tagger.return_mislabeled_data(y_test,
-                                                            grant_tagger.predict(X_test),
-                                                            grant_tagger.test_indices)
-    print(test_descriptions)
-    print("\nMislabled Grant descriptions")
-    print(test_descriptions[test_descriptions['True_label'] != test_descriptions['Predicted_label']])
 
+    if print_output:
+        print('\nNot relevent sample size: ' + str(relevant_sample_ratio))
+        print('\nVectorizer type: ' + vectorizer_type)
+        print('\nModel type: ' + model_type)
+        print("\nEvaluate training data")
+        grant_tagger.evaluate(X_train, y_train)
+        print("\nEvaluate test data")
+        grant_tagger.evaluate(X_test, y_test)
+        print('\nTraining descriptions')
+        print(grant_tagger.return_mislabeled_data(y_train, grant_tagger.predict(X_train), grant_tagger.train_indices))
+        print('\nTest description')
+        test_descriptions = grant_tagger.return_mislabeled_data(y_test,
+                                                                grant_tagger.predict(X_test),
+                                                                grant_tagger.test_indices)
+        print(test_descriptions)
+        print("\nMislabled Grant descriptions")
+        print(test_descriptions[test_descriptions['True_label'] != test_descriptions['Predicted_label']])
+
+    return grant_tagger
+
+def create_argparser():
+
+    parser = ArgumentParser()
+    parser.add_argument(
+        '--training_data_file',
+        help='Path to the training data csv',
+        default='data/processed/training_data.csv'
+    )
+    parser.add_argument(
+        '--vectorizer_type',
+        help="Which vectorizer to use, options are 'count', 'tfidf' or 'bert'",
+        default='count'
+    )
+    parser.add_argument(
+        '--relevant_sample_ratio',
+        help='There is more not-relevant data in the training data, so this is the ratio \
+        of relevant to not-relevant data to sample, e.g. 1 means equal numbers of\
+        both, 0.5 means use half the amount of not-relevant compared to relevant',
+        default=1,
+        type=float
+    )
+    parser.add_argument(
+        '--model_type',
+        help="Which model type to use, options are 'naive_bayes', 'SVM' and 'log_reg'",
+        default='naive_bayes'
+    )
+    parser.add_argument(
+        '--bert_type',
+        help="If you are using the bert vectoriser then which type do you want,\
+        options are 'bert' and 'scibert', this doesn't need to be defined if you\
+        aren't using bert",
+        default=None
+    )
+
+    return parser
 
 if __name__ == '__main__':
 
-    data = pd.read_csv('data/processed/training_data.csv')
+    parser = create_argparser()
+    args = parser.parse_args()
 
-    grant_tagger_experiment(data,vectorizer_type='bert')
-    grant_tagger_experiment(data,vectorizer_type='bert',model_type='SVM')
-    grant_tagger_experiment(data,vectorizer_type='bert',model_type='log_reg')
-    grant_tagger_experiment(data,vectorizer_type='bert',bert_type= 'scibert')
-    grant_tagger_experiment(data,vectorizer_type='bert', model_type='SVM',bert_type= 'scibert')
-    grant_tagger_experiment(data,vectorizer_type='bert', model_type='log_reg',bert_type= 'scibert')
+    data = pd.read_csv(args.training_data_file)
+
+    grant_tagger = grant_tagger_experiment(
+        data,
+        relevant_sample_ratio=args.relevant_sample_ratio,
+        vectorizer_type=args.vectorizer_type,
+        model_type=args.model_type,
+        bert_type=args.bert_type
+        )
+    
+    outout_name = '_'.join(
+        [args.vectorizer_type, str(args.relevant_sample_ratio), args.model_type]
+        )
+    if args.bert_type and args.vectorizer_type=='bert':
+        outout_name = '_'.join([outout_name, args.bert_type])
+    
+    datestamp = datetime.now().date().strftime('%y%m%d')
+    outout_name = '_'.join([outout_name, datestamp])
+
+    grant_tagger.save_model(os.path.join('models', outout_name))
+
+    # grant_tagger_experiment(data,vectorizer_type='bert',model_type='SVM')
+    # grant_tagger_experiment(data,vectorizer_type='bert',model_type='log_reg')
+    # grant_tagger_experiment(data,vectorizer_type='bert',bert_type= 'scibert')
+    # grant_tagger_experiment(data,vectorizer_type='bert', model_type='SVM',bert_type= 'scibert')
+    # grant_tagger_experiment(data,vectorizer_type='bert', model_type='log_reg',bert_type= 'scibert')
 
