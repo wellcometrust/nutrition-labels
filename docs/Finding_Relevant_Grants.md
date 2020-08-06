@@ -142,4 +142,7 @@ In `grant_tagger.py` we train a model to predict whether a grant is relevant or 
 | 200806 | (1,2) | 0.25 | bert | naive_bayes | bert | 1.0 | 438 | 146 | 0.754 | 0.667 |
 | 200806 | (1,2) | 0.25 | bert | SVM | bert | 1.0 | 438 | 146 | 0.850 | 0.794 |
 | 200806 | (1,2) | 0.25 | bert | log_reg | bert | 1.0 | 438 | 146 | 0.993 | 0.819 |
+| 200806 | (1,2) | 0.25 | bert | naive_bayes | scibert | 1.0 | 438 | 146 | 0.809 | 0.735 |
+| 200806 | (1,2) | 0.25 | bert | SVM | scibert | 1.0 | 438 | 146 | 0.821 | 0.738 |
+| 200806 | (1,2) | 0.25 | bert | log_reg | scibert | 1.0 | 438 | 146 | 0.998 | 0.814 |
 
