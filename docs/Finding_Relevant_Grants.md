@@ -6,16 +6,16 @@ Thus, we will create a model to predict whether a grant was likely to contribute
 
 ## Relevant grants
 
-### Definitions 
+### Definitions
 
 - Tool: Any peice of code or script that is used on a medical data set to process it for further analysis. Tasks that this includes can be, cleaning data, linking two data sets, annotating data or a platform or web resource for data
-- Model: Any machine learning or statistical model that can be translated to a clinical enviroment, not to offer further insight for scientific research 
-- Medical Data Set: a data set containing at least in part medical data such as genetic data linked with a specific disease, electronic health records or imaging data 
+- Model: Any machine learning or statistical model that can be translated to a clinical enviroment, not to offer further insight for scientific research
+- Medical Data Set: a data set containing at least in part medical data such as genetic data linked with a specific disease, electronic health records or imaging data
 
-### Assumptions 
+### Assumptions
 
-- Tools or models that created a normal or healthy model of medical data such as a healthy (human) MRI scan or ECG were defined as tool 
-- Tools that annotated genetic regions were not included as tools unless they were linking them specifically to a human disease 
+- Tools or models that created a normal or healthy model of medical data such as a healthy (human) MRI scan or ECG were defined as tool
+- Tools that annotated genetic regions were not included as tools unless they were linking them specifically to a human disease
 - Code lists for determining patients with diseases in electronic health records were labeled as tools
 - In tagging publication abstracts: mention of producing a particularly novel piece of software/model but only broadly related to humans (e.g. genetics), not a specific human disease, is still ok to include as a tool or model
 - In tagging publication abstracts: a publication specifically about clinical trial results will often mention data collection, but we won't tag this as being about a dataset since it was created as a byproduct of investigating something else, not an end in itself
@@ -33,10 +33,10 @@ There were three possible data sources we looked at when tagging whether a grant
 
 The first step was reading the grant descriptions and trying to discern if they were relevant or not. It became clear that a really small proportion were relevant. The grants were filtered first to speed up this process, the filters applied were:
 
-The grant descriptions were filtered if the following key words were found in the grant description: 
+The grant descriptions were filtered if the following key words were found in the grant description:
 ['platform','software','library','mining','web resouce','data management','pipeline','tool','biobank','health data','medical records']
 
-It should be noted that when searching for these words there was no space put before mining so it returned grant descriptions with words like determining etc. 
+It should be noted that when searching for these words there was no space put before mining so it returned grant descriptions with words like determining etc.
 
 873 of these grants were tagged as
 - 1 = Relevant
@@ -107,27 +107,37 @@ Not all the tagged data from ResearchFish (5 grants) or the EPMC publications (7
 
 This dataset comprises of a grant reference, the grant title and description and also the tagged code.
 
-### Training data summary - 30th June 2020 
+### Training data summary - 30th June 2020
 
 | Tag code | Meaning | Number of grants |
-|---|---|--- | 
+|---|---|--- |
 | 1 | Relevant tool | 41 |
 | 2 | Relevant model | 14 |
 | 3 | Relevant dataset | 13 |
 | 5 | Not relevant | 791 |
 
-### Training data summary - 15th July 2020 
+### Training data summary - 15th July 2020
 
 | Tag code | Meaning | Number of grants |
-|---|---|--- | 
+|---|---|--- |
 | 1 | Relevant | 292 |
 | 0 | Not relevant | 989 |
 
 ## `grant_tagger.py`
 
-In `grant_tagger.py` we train a model to predict whether a grant is relevant or not. For this we collapsed the classification into binary, where 
+In `grant_tagger.py` we train a model to predict whether a grant is relevant or not. For this we collapsed the classification into binary, where
 - 1 = class was relevant tool (1), relevant model (2) or relevant dataset (3)
 - 0 = class was not relevant (5)
 
+## Model Results
 
-
+| Date | ngram range | Test proportion | Vectorizer type | Model type | Bert type (if relevant) | Not relevent sample size | Train size | Test size | Train F1 | Test F1 |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| 200806 | (1,2) | 0.25 | count | log_reg | - | 1.0 | 438 | 146 | 0.998 | 0.778 |
+| 200806 | (1,2) | 0.25 | count | naive_bayes | - | 1.0 | 438 | 146 | 0.998 | 0.829 |
+| 200806 | (1,2) | 0.25 | count | SVM | - | 1.0 | 438 | 146 | 0.982 | 0.803 |
+| 200806 | (1,2) | 0.25 | tfidf | log_reg | - | 1.0 | 438 | 146 | 0.998 | 0.828 |
+| 200806 | (1,2) | 0.25 | tfidf | naive_bayes | - | 1.0 | 438 | 146 | 0.991 | 0.718 |
+| 200806 | (1,2) | 0.25 | tfidf | SVM | - | 1.0 | 438 | 146 | 0.998 | 0.759 |
+| 200806 | (1,2) | 0.25 | bert | naive_bayes | bert | 1.0 | 438 | 146 | 0.754 | 0.667 |
+| 200806 | (1,2) | 0.25 | bert | SVM | bert | 1.0 | 438 | 146 | 0.85 | 0.794 |

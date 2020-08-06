@@ -261,6 +261,14 @@ if __name__ == '__main__':
     # y = data['Relevance code']
     # grant_tagger_loaded.evaluate(X_vect, y, print_results=True, average='binary')
 
+    # # Split the train and test and evaluate
+    # X_train, X_test, y_train, y_test = grant_tagger_loaded.split_data(
+    #     X_vect,
+    #     y,
+    #     relevant_sample_ratio=args.relevant_sample_ratio,
+    #     irrelevant_sample_seed=4,
+    #     split_seed=4)
 
-
+    # grant_tagger_loaded.evaluate(X_train, y_train, print_results=True)
+    # grant_tagger_loaded.evaluate(X_test, y_test, print_results=True)
 
