@@ -146,6 +146,7 @@ if __name__ == '__main__':
 
     # Clean grant descriptions of html and remove any duplicates
     grant_data['Description'] = grant_data['Description'].apply(remove_useless_string)
+    grant_data = grant_data[grant_data['Description'] != 'Not available']
     grant_data.dropna(subset=['Description'], inplace=True)
     grant_data.drop_duplicates('Internal ID', inplace=True)
     grant_data['Internal ID 6 digit'] = grant_data['Internal ID'].apply(lambda x: re.sub('/.*','',x))
@@ -192,6 +193,11 @@ if __name__ == '__main__':
     # Map the final codes onto whether the grant is 'relevant' (1) or not (0)
     relevance_dict = {1:1, 2:1, 3:1, 5:0}
     grant_data['Relevance code'] = [relevance_dict[int(c)] for c in code]
+
+    # It seems like some descriptions have some spaces deleted, which means
+    # they are classed as different but should really be the same
+    grant_data['Description to deduplicate with'] = grant_data['Description'].str.replace(r'\W','')
+    grant_data = grant_data.drop_duplicates(['Internal ID 6 digit', 'Description to deduplicate with'])
 
     num_irrelevant = len([i for i in grant_data['Relevance code'] if i==0])
     print(num_irrelevant)
