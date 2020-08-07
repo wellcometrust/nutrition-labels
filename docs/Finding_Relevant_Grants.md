@@ -123,6 +123,15 @@ This dataset comprises of a grant reference, the grant title and description and
 | 1 | Relevant | 292 |
 | 0 | Not relevant | 989 |
 
+### Training data summary - 7th August 2020
+
+| Tag code | Meaning | Number of grants |
+|---|---|--- |
+| 1 | Relevant | 214 |
+| 0 | Not relevant | 883 |
+
+
+
 ## `grant_tagger.py`
 
 In `grant_tagger.py` we train a model to predict whether a grant is relevant or not. For this we collapsed the classification into binary, where
@@ -147,17 +156,25 @@ These results are just from running one training of the model using a specific t
 | 200806 | (1,2) | 0.25 | bert | naive_bayes | scibert | 1.0 | 438 | 146 | 0.809 | 0.735 |
 | 200806 | (1,2) | 0.25 | bert | SVM | scibert | 1.0 | 438 | 146 | 0.821 | 0.738 |
 | 200806 | (1,2) | 0.25 | bert | log_reg | scibert | 1.0 | 438 | 146 | 0.998 | 0.814 |
-| 200807 | (1,2) | 0.25 | count | log_reg | - | 1.0 | 438 | 146 | 0.998 | 0.770 |
-| 200807 | (1,2) | 0.25 | count | naive_bayes | - | 1.0 | 438 | 146 | 0.998 | 0.818 |
-| 200807 | (1,2) | 0.25 | count | SVM | - | 1.0 | 438 | 146 | 0.980 | 0.788 |
-| 200807 | (1,2) | 0.25 | tfidf | log_reg | - | 1.0 | 438 | 146 | 0.998 | 0.828 |
-| 200807 | (1,2) | 0.25 | tfidf | naive_bayes | - | 1.0 | 438 | 146 | 0.991 | 0.734 |
-| 200807 | (1,2) | 0.25 | tfidf | SVM | - | 1.0 | 438 | 146 | 0.998 | 0.814 |
-| 200807 | (1,2) | 0.25 | bert | log_reg | bert | 1.0 | 438 | 146 | 0.996 | 0.797 |
+| 200807 | (1,2) | 0.25 | count | log_reg | - | 1.0 | 321 | 107 | 1.0 | 0.804 |
+| 200807 | (1,2) | 0.25 | count | naive_bayes | - | 1.0 | 321 | 107 | 1.0 | 0.867 |
+| 200807 | (1,2) | 0.25 | count | SVM | - | 1.0 | 321 | 107 | 0.975 | 0.745 |
+| 200807 | (1,2) | 0.25 | tfidf | log_reg | - | 1.0 | 321 | 107 | 1.0 | 0.811 |
+| 200807 | (1,2) | 0.25 | tfidf | naive_bayes | - | 1.0 | 321 | 107 | 1.0 | 0.862 |
+| 200807 | (1,2) | 0.25 | tfidf | SVM | - | 1.0 | 321 | 107 | 1.0 | 0.729 |
+| 200807 | (1,2) | 0.25 | bert | naive_bayes | bert | 1.0 | 321 | 107 | 0.679 | 0.758 |
+| 200807 | (1,2) | 0.25 | bert | SVM | bert | 1.0 | 321 | 107 | 0.793 | 0.817 |
+| 200807 | (1,2) | 0.25 | bert | log_reg | bert | 1.0 | 321 | 107 | 1.0 | 0.814 |
+| 200807 | (1,2) | 0.25 | bert | naive_bayes | scibert | 1.0 | 321 | 107 | 0.740 | 0.835 |
+| 200807 | (1,2) | 0.25 | bert | SVM | scibert | 1.0 | 321 | 107 | 0.738 | 0.796 |
+| 200807 | (1,2) | 0.25 | bert | log_reg | scibert | 1.0 | 321 | 107 | 1.0 | 0.867 |
 
 
 ### Changes made
 
-200807: Add title and grant type to X data.
+200807:
+- Add a few new EPMC tags
+- Add title and grant type to X data.
+- Take out grants with no descriptions, and remove duplicates where the 6 digit grant number is the same and the description is the same
 
-
+I expect the changes to the training data made most of the difference, but adding the title and grant types did contribute a little to the increases seen (I tested without these and the scores were slightly smaller).
