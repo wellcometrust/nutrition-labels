@@ -5,19 +5,29 @@ import numpy as np
 
 from useful_functions import remove_useless_string, only_text
 
-def merge_tags(data, nonie_col_name, liz_col_name):
-    # If Nonie and Liz have labelled it use Nonies
-    data = data.dropna(subset=[nonie_col_name, liz_col_name], how='all').reset_index(drop=True)
-    data['Merged code'] = [row[liz_col_name] if pd.isnull(row[nonie_col_name]) else row[nonie_col_name] for _, row in data.iterrows()]
+def merge_tags(data, person_cols_list):
+    # person_cols_list: A list of the column names of people tagging
+    #                       in order of preference.
+    # e.g. If person [0] and person [1] have labelled the same row then use person [0]'s label
+    data = data.dropna(subset=person_cols_list, how='all').reset_index(drop=True)
+
+    merged_codes = []
+    for _, row in data.iterrows():
+        for person_col in person_cols_list:
+            if pd.notnull(row[person_col]):
+                merged_codes.append(row[person_col])
+                break
+
+    data['Merged code'] = merged_codes
     
     return data
 
 def process_epmc(epmc_tags_query_one, epmc_tags_query_two, epmc_code_dict):
 
     # Merge EPMC data and normalise the codes
-    # If Nonie and Liz have labelled it use Nonies
+    # Order of truth (if same row has been labelled): Becky > Nonie > Liz > Aoife
     epmc_tags = pd.concat([epmc_tags_query_one, epmc_tags_query_two], ignore_index=True)
-    epmc_tags = merge_tags(epmc_tags, 'code', 'Liz code')
+    epmc_tags = merge_tags(epmc_tags, ['Becky code', 'Nonie code', 'Liz code', 'Aoife code'])
     epmc_tags['Normalised code'] = [epmc_code_dict[str(int(code))] for code in epmc_tags['Merged code']]
 
     # No need to include tags if no grant number is given or you don't want to include
@@ -86,7 +96,7 @@ def process_RF(rf_tags, rf_code_dict):
 def process_grants(grant_tags, grants_code_dict):
 
     # If Nonie and Liz have labelled it use Nonies
-    grant_tags = merge_tags(grant_tags, 'tool relevent ', 'Liz code')
+    grant_tags = merge_tags(grant_tags, ['tool relevent ', 'Liz code'])
     grant_tags['Normalised code'] = [grants_code_dict[str(int(code))] for code in grant_tags['Merged code']]
 
     # No need to include tags if you don't want to include
@@ -109,8 +119,8 @@ def process_grants(grant_tags, grants_code_dict):
 if __name__ == '__main__':
     
     # load data
-    epmc_tags_query_one = pd.read_csv('data/raw/EPMC_relevant_tool_pubs_manual_edit_Lizadditions.csv', encoding = "latin")
-    epmc_tags_query_two = pd.read_csv('data/raw/EPMC_relevant_pubs_query2_manual_edit.csv')
+    epmc_tags_query_one = pd.read_csv('data/raw/EPMC_relevant_tool_pubs_3082020.csv', encoding = "latin")
+    epmc_tags_query_two = pd.read_csv('data/raw/EPMC_relevant_pubs_query2_3082020.csv')
     rf_tags = pd.read_csv('data/raw/ResearchFish/research_fish_manual_edit.csv')
     grant_tags = pd.read_csv('data/raw/wellcome-grants-awarded-2005-2019_manual_edit_Lizadditions.csv')
     grant_data = pd.read_csv('data/raw/wellcome-grants-awarded-2005-2019.csv')
@@ -183,6 +193,9 @@ if __name__ == '__main__':
     relevance_dict = {1:1, 2:1, 3:1, 5:0}
     grant_data['Relevance code'] = [relevance_dict[int(c)] for c in code]
 
+    num_irrelevant = len([i for i in grant_data['Relevance code'] if i==0])
+    print(num_irrelevant)
+    print(len(grant_data) - num_irrelevant)
     grant_data = grant_data[[
         'Internal ID', 'RF question', 'RF Name', 'pmid', 'Relevance code',
         'Normalised code - RF', 'Normalised code - grants', 'Normalised code - EPMC',
