@@ -11,3 +11,7 @@ dist
 # File types
 *.xlsx
 *.csv
+*.png
+
+# Folders
+**/models/*

@@ -131,6 +131,8 @@ In `grant_tagger.py` we train a model to predict whether a grant is relevant or 
 
 ## Model Results
 
+These results are just from running one training of the model using a specific train/test split specified by default random number seeds. Thus there will be variation in the results if different seeds are used.
+
 | Date | ngram range | Test proportion | Vectorizer type | Model type | Bert type (if relevant) | Not relevent sample size | Train size | Test size | Train F1 | Test F1 |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
 | 200806 | (1,2) | 0.25 | count | log_reg | - | 1.0 | 438 | 146 | 0.998 | 0.778 |
@@ -145,4 +147,17 @@ In `grant_tagger.py` we train a model to predict whether a grant is relevant or 
 | 200806 | (1,2) | 0.25 | bert | naive_bayes | scibert | 1.0 | 438 | 146 | 0.809 | 0.735 |
 | 200806 | (1,2) | 0.25 | bert | SVM | scibert | 1.0 | 438 | 146 | 0.821 | 0.738 |
 | 200806 | (1,2) | 0.25 | bert | log_reg | scibert | 1.0 | 438 | 146 | 0.998 | 0.814 |
+| 200807 | (1,2) | 0.25 | count | log_reg | - | 1.0 | 438 | 146 | 0.998 | 0.770 |
+| 200807 | (1,2) | 0.25 | count | naive_bayes | - | 1.0 | 438 | 146 | 0.998 | 0.818 |
+| 200807 | (1,2) | 0.25 | count | SVM | - | 1.0 | 438 | 146 | 0.980 | 0.788 |
+| 200807 | (1,2) | 0.25 | tfidf | log_reg | - | 1.0 | 438 | 146 | 0.998 | 0.828 |
+| 200807 | (1,2) | 0.25 | tfidf | naive_bayes | - | 1.0 | 438 | 146 | 0.991 | 0.734 |
+| 200807 | (1,2) | 0.25 | tfidf | SVM | - | 1.0 | 438 | 146 | 0.998 | 0.814 |
+| 200807 | (1,2) | 0.25 | bert | log_reg | bert | 1.0 | 438 | 146 | 0.996 | 0.797 |
+
+
+### Changes made
+
+200807: Add title and grant type to X data.
+
 
