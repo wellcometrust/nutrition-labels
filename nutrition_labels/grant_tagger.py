@@ -34,7 +34,10 @@ class GrantTagger():
 
     def transform(self, data):
 
-        self.X = data['Description'].tolist()
+        data['Grant texts'] = data[['Title', 'Grant Programme:Title', 'Description']].agg(
+            '. '.join, axis=1
+            )
+        self.X = data['Grant texts'].tolist()
         y = data['Relevance code']
 
         if self.vectorizer_type == 'count':
@@ -139,7 +142,7 @@ class GrantTagger():
                 f.write('\ntest_size: ' + str(self.test_size))
                 f.write('\nVectorizer type: ' + self.vectorizer_type)
                 f.write('\nModel type: ' + self.model_type)
-                f.write('\nBert type (if relevant): ' + self.bert_type)
+                f.write('\nBert type (if relevant): ' + str(self.bert_type))
                 f.write('\nNot relevent sample size: ' + str(self.relevant_sample_ratio))
                 for key, value in evaluation_results.items():
                     f.write('\n' + key + ': ' + str(value))
