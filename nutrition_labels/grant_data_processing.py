@@ -3,7 +3,7 @@ import re
 import pandas as pd
 import numpy as np
 
-from useful_functions import remove_useless_string, only_text
+from nutrition_labels.useful_functions import remove_useless_string, only_text
 
 def merge_tags(data, person_cols_list):
     # person_cols_list: A list of the column names of people tagging
@@ -21,6 +21,18 @@ def merge_tags(data, person_cols_list):
     data['Merged code'] = merged_codes
     
     return data
+
+def clean_grants_data(grant_data):
+    """
+    Clean grant descriptions of html and remove any duplicates
+    """
+    grant_data['Description'] = grant_data['Description'].apply(remove_useless_string)
+    grant_data = grant_data[grant_data['Description'] != 'Not available']
+    grant_data.dropna(subset=['Description'], inplace=True)
+    grant_data.drop_duplicates('Internal ID', inplace=True)
+    grant_data['Internal ID 6 digit'] = grant_data['Internal ID'].apply(lambda x: re.sub('/.*','',x))
+
+    return grant_data
 
 def process_epmc(epmc_tags_query_one, epmc_tags_query_two, epmc_code_dict):
 
@@ -144,12 +156,7 @@ if __name__ == '__main__':
     print('Tagged data to include from grant descriptions:')
     print(len(grants_df))
 
-    # Clean grant descriptions of html and remove any duplicates
-    grant_data['Description'] = grant_data['Description'].apply(remove_useless_string)
-    grant_data = grant_data[grant_data['Description'] != 'Not available']
-    grant_data.dropna(subset=['Description'], inplace=True)
-    grant_data.drop_duplicates('Internal ID', inplace=True)
-    grant_data['Internal ID 6 digit'] = grant_data['Internal ID'].apply(lambda x: re.sub('/.*','',x))
+    grant_data = clean_grants_data(grant_data)
 
     # Link with RF data (which uses 13 digit)
     grant_data = pd.merge(grant_data, rf_df, how = 'left', on = 'Internal ID')
