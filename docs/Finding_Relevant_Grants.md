@@ -161,7 +161,7 @@ Proportion of times we agree on relevant/not relevent: 0.82 out of 51 we both la
 |Nonie tag 3          |1          |0          |1          |0|
 
 
-### Evaluation for Nonie's second go at grants tags 
+### Evaluation for Nonie's second go at grants tags
 
 Proportion of times there was agreement: 0.93 out of 533 relabeled grants.
 
@@ -173,6 +173,7 @@ Proportion of times there was agreement: 0.93 out of 533 relabeled grants.
 ### Evaluation between Liz and Nonie's grants tags
 
 Proportion of times there was agreement: 1.0 out of 27 relabeled grants.
+
 |               |Liz tag 1.0  |Liz tag 5.0|
 |---|---|---|
 |Nonie tag 1.0            |4            |0|
@@ -180,13 +181,12 @@ Proportion of times there was agreement: 1.0 out of 27 relabeled grants.
 
 ### Evaluation between Liz/Nonie and Becky's grants tags
 
-Proportion of times there was agreement: 0.62 out of 76 relabeled grants.
-|                   |Becky tag 1.0  |Becky tag 4.0  |Becky tag 5.0|
-|---|---|---|---|
-|Nonie/Liz tag 1.0             |28              |0              |2|
-|Nonie/Liz tag 4.0             |10              |0              |6|
-|Nonie/Liz tag 5.0             |11              |0             |19|
+Proportion of times there was agreement: 0.70 out of 76 relabeled grants.
 
+|                   |Becky tag 1.0  |Becky tag 5.0|
+|---|---|---|
+|Nonie/Liz tag 1.0             |28              |2|
+|Nonie/Liz tag 5.0             |21             |25|
 
 ## `grant_tagger.py`
 

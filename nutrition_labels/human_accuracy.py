@@ -60,6 +60,7 @@ def evaluation_grants(data, first_label, second_label, name_1="Nonie's original"
         print(len(data.dropna(subset=[second_label])))
         print(data.groupby(second_label)[second_label].count())
 
+    data.replace('4', '5', inplace=True)
     # get only relabelled data
     data = data.dropna(subset = [first_label,second_label])
 
@@ -80,6 +81,7 @@ def evaluation_grants(data, first_label, second_label, name_1="Nonie's original"
 def incorporate_beckys_grants_tags(liz_add_grants, becky_grants):
 
     grant_tags = merge_tags(liz_add_grants, ['tool relevent ', 'Liz code'])
+    grant_tags.replace(4, 5, inplace=True)
     grant_tags = grant_tags.join(becky_grants[['Internal ID', 'Becky code']].set_index('Internal ID'), on='Internal ID') 
 
     return grant_tags
