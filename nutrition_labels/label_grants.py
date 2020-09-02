@@ -57,14 +57,12 @@ def label_grants (model_name, grant_data, training_data, write_out = False):
         relevant_grants.to_csv(f'data/processed/{model_name}_relevant_grant_list.csv')
         grant_data_out.to_csv(f'data/processed/{model_name}_all_grant_list.csv')
 
-    print(relevant_grants['Internal ID'].tolist())
     return grant_data_out
 
 
 def get_test_results(file,f1_cutoff = 0,precision_cutoff = 0,recall_cutoff = 0):
-    f = open('models/' + file + "/training_information.txt", "r")
-    lines = f.readlines()
-    f.close()
+    with open('models/' + file + "/training_information.txt", "r") as f:
+        lines = f.readlines()
     results = lines[7]
     results = re.sub('Test scores: ', '', results)
     results_dict = ast.literal_eval(results)
@@ -79,24 +77,26 @@ if __name__ == '__main__':
     grant_data = pd.read_csv('data/raw/wellcome-grants-awarded-2005-2019.csv')
 
     model_dirs = os.listdir('models')
+    model_dirs.remove('.DS_Store')
 
     useful_models = [i for i in model_dirs if get_test_results(i,0.8,0.82,0.82)]
 
-    model_results = [label_grants(i,grant_data,training_data) for i in useful_models]
+    print(f'{len(useful_models)} useful models found')
 
     cutoff = len(useful_models)
 
-    for indx,i in enumerate(model_results):
-        df = i[['Internal ID','Final label', 'Found by']]
+    for indx,i in enumerate(useful_models):
+        df = label_grants(i,grant_data,training_data)
+        df = df[['Internal ID','Final label', 'Found by']]
         df = df.rename(columns = {'Final label': useful_models[indx]})
         if indx == 0:
             results_df = df
         else:
             results_df = pd.merge(results_df,df, how = 'outer', on = ['Internal ID','Found by'])
 
-    results_df['Ensamble'] = results_df[useful_models].sum(axis = 1)
-    results_cutoff = results_df[results_df['Ensamble'] >= cutoff]
-    results_cutoff.to_csv('data/processed/ensamble_results.csv', index = False)
+    results_df['Ensemble'] = results_df[useful_models].sum(axis = 1)
+    results_cutoff = results_df[results_df['Ensemble'] >= cutoff]
+    results_cutoff.to_csv('data/processed/ensemble_results.csv', index = False)
 
 
 
