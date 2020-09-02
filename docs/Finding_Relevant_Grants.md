@@ -130,7 +130,63 @@ This dataset comprises of a grant reference, the grant title and description and
 | 1 | Relevant | 214 |
 | 0 | Not relevant | 883 |
 
+## Human accuracy
 
+Using the EPMC data from 3082020 which includes tags from Nonie, Liz, Becky and Aoife (the data that went into the 7th August training data), and using the grants tagged data from 14th July, and some extra grants data Becky labelled and Nonie re-labelled, we ran:
+```
+python nutrition_labels.human_accuracy.py
+```
+to compare the tagging amongst different people.
+
+We compare our tagging on EMPC data and the grants data separately.
+
+### Evaluation between Nonie and Liz's EPMC tags
+
+Proportion of times we exactly agree on tool, dataset, model, not relevant: 0.76 out of 51 we both labelled.
+
+|             |Liz tag 5  |Liz tag 1  |Liz tag 2  |Liz tag 3|
+|---|---|---|---|---|
+|Nonie tag 5         |30          |2          |5          |0|
+|Nonie tag 1          |1          |9          |1          |0|
+|Nonie tag 2          |1          |0          |0          |0|
+|Nonie tag 3          |0          |1          |1          |0|
+
+Proportion of times we agree on relevant/not relevent: 0.82 out of 51 we both labelled.
+
+|             |Liz tag 2  |Liz tag 5  |Liz tag 1  |Liz tag 3|
+|---|---|---|---|---|
+|Nonie tag 2          |0          |0          |0          |0|
+|Nonie tag 5          |0         |30          |0          |0|
+|Nonie tag 1          |1          |0          |9          |0|
+|Nonie tag 3          |1          |0          |1          |0|
+
+
+### Evaluation for Nonie's second go at grants tags
+
+Proportion of times there was agreement: 0.93 out of 533 relabeled grants.
+
+|                          |Nonie's second tag 1  |Nonie's second tag 0|
+|---|---|---|
+|Nonie's original tag 1                      |41                      |24|
+|Nonie's original tag 0                      |13                     |455|
+
+### Evaluation between Liz and Nonie's grants tags
+
+Proportion of times there was agreement: 1.0 out of 27 relabeled grants.
+
+|               |Liz tag 1.0  |Liz tag 5.0|
+|---|---|---|
+|Nonie tag 1.0            |4            |0|
+|Nonie tag 5.0            |0           |23|
+
+### Evaluation between Liz/Nonie and Becky's grants tags
+
+Proportion of times there was agreement: 0.70 out of 76 relabeled grants.
+
+|                   |Becky tag 1.0  |Becky tag 5.0|
+|---|---|---|
+|Nonie/Liz tag 1.0             |28              |2|
+|Nonie/Liz tag 5.0             |21             |25|
 
 ## `grant_tagger.py`
 
