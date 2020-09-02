@@ -87,9 +87,17 @@ if __name__ == '__main__':
     cutoff = len(useful_models)
 
     for indx,i in enumerate(model_results):
+        df = i[['Internal ID','Final label', 'Found by']]
+        df = df.rename(columns = {'Final label': useful_models[indx]})
         if indx == 0:
-            results_df = i[['Internal ID','Final label', 'Found by']]
-            results_df = results_df.rename()
+            results_df = df
+        else:
+            results_df = pd.merge(results_df,df, how = 'outer', on = ['Internal ID','Found by'])
+
+    results_df['Ensamble'] = results_df[useful_models].sum(axis = 1)
+    results_cutoff = results_df[results_df['Ensamble'] >= cutoff]
+    results_cutoff.to_csv('data/processed/ensamble_results.csv', index = False)
+
 
 
 
