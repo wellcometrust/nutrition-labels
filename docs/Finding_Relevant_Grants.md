@@ -234,3 +234,30 @@ These results are just from running one training of the model using a specific t
 - Take out grants with no descriptions, and remove duplicates where the 6 digit grant number is the same and the description is the same
 
 I expect the changes to the training data made most of the difference, but adding the title and grant types did contribute a little to the increases seen (I tested without these and the scores were slightly smaller).
+
+## Ensemble model 
+We took the top performing models, labeled the grant data with each model and defined a grant as containing  a tool only if all three models agreed. 
+
+Criteria for chosing models: 
+F1 >= 0.8 
+Precision >= 0.82
+Recall >= 0.82 
+
+This returned 3 models: bert_log_reg_scibert_200807, bert_naive_bayes_scibert_200807, count_naive_bayes_200807
+
+It found 2163 grants
+
+test results:
+
+| Model | f1 | precision_score | recall_score |
+| --- | --- | --- | --- |
+| bert_log_reg_scibert_200807 |	0.866666667 | 0.825396825 | 0.912280702 |
+| bert_naive_bayes_scibert_200807 | 0.834782609	|0.827586207 | 0.842105263 |
+| count_naive_bayes_200807 | 0.866666667 | 0.825396825 | 0.912280702 |
+| Ensemble (mean) | 0.856038647 | 0.826126619 | 0.888888889 |
+
+
+
+
+
+
