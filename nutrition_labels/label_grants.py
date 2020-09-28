@@ -66,6 +66,7 @@ def get_test_results(file,f1_cutoff = 0,precision_cutoff = 0,recall_cutoff = 0):
     results = lines[7]
     results = re.sub('Test scores: ', '', results)
     results_dict = ast.literal_eval(results)
+    return (results_dict)
     if (results_dict['f1'] >= f1_cutoff and results_dict['precision_score'] >= precision_cutoff and results_dict['recall_score'] >= recall_cutoff):
         return True
     else:
@@ -97,8 +98,5 @@ if __name__ == '__main__':
     results_df['Ensemble'] = results_df[useful_models].sum(axis = 1)
     results_cutoff = results_df[results_df['Ensemble'] >= cutoff]
     results_cutoff.to_csv('data/processed/ensemble_results.csv', index = False)
-
-
-
 
 
