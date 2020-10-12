@@ -1,22 +1,22 @@
 import json
 import pandas as pd
 
-if __name__ == '__main__'
+if __name__ == '__main__':
 
     # Read in data
 
-    data = []
+    reference_data = []
     for row in open('data/processed/tech_grants_references_dict_2020-09-16.json', "r"):
-       data.append(json.loads(row))
+       reference_data.append(json.loads(row))
 
 
     with open('data/processed/tech_grants_reference_ids_counter_2020-09-16.json') as json_file:
         count = json.load(json_file)
 
 
-    references_df = pd.DataFrame(data)
+    references_df = pd.DataFrame(reference_data)
 
-    count_df = pd.DataFrame({'id':[k for k,v in count.items()],'count':[v for k,v in count.items()]},)
+    count_df  = pd.DataFrame(count.items(), columns=['id', 'count'])
 
     # merge references with count
 
