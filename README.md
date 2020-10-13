@@ -64,6 +64,15 @@ python nutrition_labels/finding_most_common_references.py
 
 This uses the EPMC client to find the number of citations each paper has and returns only the ones since 2015. 
 
+The results are: 
+
+-UK biobank: an open access resource for identifying the causes of a wide range of complex diseases of middle and old age.
+-Cohort Profile: the 'children of the 90s'--the index offspring of the Avon Longitudinal Study of Parents and Children
+-Data Resource Profile: Clinical Practice Research Datalink (CPRD).
+-Cohort Profile: the Avon Longitudinal Study of Parents and Children: ALSPAC mothers cohort.
+-Cohort profile: 1958 British birth cohort (National Child Development Study).
+-Cohort Profile: the Whitehall II study.
+
 
 ## Project structure
 
