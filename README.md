@@ -43,6 +43,27 @@ python nutrition_labels/grant_tagger.py --training_data_file data/processed/trai
 
 where `vectorizer_type` can be 'count', 'tfidf' or 'bert', `model_type` can be 'naive_bayes', 'SVM' and 'log_reg', and `bert_type` (if using bert) can be 'bert' and 'scibert'.
 
+## finding_most_common_cohort.py / finding_most_common_references.py 
+
+To find the most common health data sets first run:
+
+```
+python nutrition_labels/finding_most_common_cohort.py
+```
+
+This uses data extracted from EPMC which has all the citations from all the papers produced from tech grants. 
+
+This then produces a list of most cited papers which have been manually filtered to find only the health data set papers. 
+
+To find the 5 most cited health data sets in the last five years run: 
+
+
+```
+python nutrition_labels/finding_most_common_references.py
+```
+
+This uses the EPMC client to find the number of citations each paper has and returns only the ones since 2015. 
+
 
 ## Project structure
 
