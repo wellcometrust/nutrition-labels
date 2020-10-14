@@ -73,13 +73,16 @@ python nutrition_labels/finding_most_common_cohort.py
 This uses the EPMC client to find the number of citations each paper in the 'health_data_sets_list_manual_edit.csv' dataset above has and returns only the ones since 2015. 
 
 The results are: 
-|Study|Total citations| Recent citations|
-|UK biobank: an open access resource for identifying the causes of a wide range of complex diseases of middle and old age.|814|	814|
-|Cohort Profile: the 'children of the 90s'--the index offspring of the Avon Longitudinal Study of Parents and Children|903|734|
-|Data Resource Profile: Clinical Practice Research Datalink (CPRD).|664|664|
-|Cohort Profile: the Avon Longitudinal Study of Parents and Children: ALSPAC mothers cohort.|609|518|
-|Cohort profile: 1958 British birth cohort (National Child Development Study).|418|176|
-|Cohort Profile: the Whitehall II study.|378|146|
+
+
+| Study | Total citations| Recent citations |
+|---|---|--- |
+| UK biobank: an open access resource for identifying the causes of a wide range of complex diseases of middle and old age. | 814 | 814 |
+| Cohort Profile: the 'children of the 90s'--the index offspring of the Avon Longitudinal Study of Parents and Children | 903 | 734 |
+| Data Resource Profile: Clinical Practice Research Datalink (CPRD). | 664 | 664 |
+| Cohort Profile: the Avon Longitudinal Study of Parents and Children: ALSPAC mothers cohort. | 609 | 518 |
+| Cohort profile: 1958 British birth cohort (National Child Development Study). | 418 | 176 |
+| Cohort Profile: the Whitehall II study. | 378 | 146 |
 
 
 ## Project structure
