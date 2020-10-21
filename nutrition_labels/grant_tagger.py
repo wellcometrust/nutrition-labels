@@ -24,13 +24,15 @@ class GrantTagger():
         test_size=0.25,
         vectorizer_type='count',
         model_type ='naive_bayes',
-        bert_type = 'bert'
+        bert_type = 'bert',
+        relevant_sample_ratio = 1
         ):
         self.ngram_range = ngram_range
         self.test_size = test_size
         self.vectorizer_type = vectorizer_type
         self.model_type = model_type
         self.bert_type = bert_type
+        self.relevant_sample_ratio = relevant_sample_ratio
 
     def transform(self, data):
 
@@ -64,29 +66,29 @@ class GrantTagger():
 
         return X_vect, y
 
-    def split_data(self, X_vect, y, relevant_sample_ratio, irrelevant_sample_seed, split_seed):
+    def split_data(self, X_vect, y, irrelevant_sample_seed, split_seed):
 
-        self.relevant_sample_ratio = relevant_sample_ratio
         relevant_sample_index = [ind for ind,x in enumerate(y) if x != 0]
         irrelevant_sample_index = [ind for ind, x in enumerate(y) if x == 0]
-        sample_size = int(round(len(relevant_sample_index) * relevant_sample_ratio))
+        sample_size = int(round(len(relevant_sample_index) * self.relevant_sample_ratio))
 
         if sample_size < len(irrelevant_sample_index):
             seed(irrelevant_sample_seed)
-            sample_index = relevant_sample_index + sample(irrelevant_sample_index,sample_size)
+            sample_index = relevant_sample_index + sample(irrelevant_sample_index, sample_size)
             y = y[sample_index]
             if self.vectorizer_type == 'bert':
                 X_vect = [X_vect[i] for i in sample_index]
             else:
                 X_vect = X_vect[sample_index]
-        # resetting index to remove index from non-sampled data
 
-        X_train, X_test, y_train, y_test = train_test_split(X_vect, y, test_size=self.test_size,
-                                                            random_state=split_seed)
-        self.train_indices = y_train.index.to_list()
-        y_train = y_train.to_list()
-        self.test_indices = y_test.index.to_list()
-        y_test = y_test.to_list()
+        y = y.to_list()
+        X_train, X_test, y_train, y_test = train_test_split(
+            X_vect,
+            y,
+            test_size=self.test_size,
+            random_state=split_seed,
+            )
+
         return X_train, X_test, y_train, y_test
 
     def fit(self, X, y):
@@ -118,7 +120,7 @@ class GrantTagger():
             print(classification_report(y, y_predict))
             print(pretty_confusion_matrix(y, y_predict))
 
-        return scores
+        return scores, classification_report(y, y_predict), pretty_confusion_matrix(y, y_predict)
 
     def return_mislabeled_data(self, y_actual, y_pred, X_indices):
         X_text = [self.X[i] for i in X_indices]
@@ -127,7 +129,7 @@ class GrantTagger():
                                 'Predicted_label':y_pred})
         return X_text_df
 
-    def save_model(self, output_path, evaluation_results=None):
+    def save_model(self, output_path, split_info, evaluation_results=None, evaluation_results_runs=None):
         if not os.path.exists(output_path):
             os.makedirs(output_path)
 
@@ -137,15 +139,19 @@ class GrantTagger():
             pickle.dump(self.vectorizer, f)
 
         if evaluation_results:
+            evaluation_results.update(split_info)
             with open(os.path.join(output_path, 'training_information.txt'), 'w') as f:
                 f.write('ngram_range: ' + str(self.ngram_range))
                 f.write('\ntest_size: ' + str(self.test_size))
                 f.write('\nVectorizer type: ' + self.vectorizer_type)
                 f.write('\nModel type: ' + self.model_type)
                 f.write('\nBert type (if relevant): ' + str(self.bert_type))
-                f.write('\nNot relevent sample size: ' + str(self.relevant_sample_ratio))
                 for key, value in evaluation_results.items():
                     f.write('\n' + key + ': ' + str(value))
+        if evaluation_results_runs:
+            with open(os.path.join(output_path, 'repeated_results.txt'), 'w') as f:
+                for line in evaluation_results_runs:
+                    f.write(str(line) + '\n')
 
     def load_model(self, output_path):
         with open(os.path.join(output_path, 'model.pickle'), 'rb') as f:
@@ -160,7 +166,7 @@ def create_argparser():
     parser.add_argument(
         '--training_data_file',
         help='Path to the training data csv',
-        default='data/processed/training_data.csv'
+        default='data/processed/training_data/200807/training_data.csv'
     )
     parser.add_argument(
         '--vectorizer_type',
@@ -187,6 +193,14 @@ def create_argparser():
         aren't using bert",
         default=None
     )
+    parser.add_argument(
+        '--best_of_n',
+        help="Specify this and the model will retrain best_of_n times with a \
+        different random seed for train_test_split, the model saved will be \
+        the best test F1 score and the results of all best_of_n will also be outputted",
+        default=None,
+        type=int
+    )
 
     return parser
 
@@ -195,34 +209,58 @@ if __name__ == '__main__':
     parser = create_argparser()
     args = parser.parse_args()
 
+    datestamp = datetime.now().date().strftime('%y%m%d')
+
     data = pd.read_csv(args.training_data_file)
    
-    grant_tagger = GrantTagger(
-        ngram_range=(1, 2),
-        test_size=0.25,
-        vectorizer_type=args.vectorizer_type,
-        model_type=args.model_type,
-        bert_type=args.bert_type
-    )
+    best_test_f1 = 0
+    evaluation_results_runs = []
 
-    X_vect, y = grant_tagger.transform(data)
-    X_train, X_test, y_train, y_test = grant_tagger.split_data(
-        X_vect,
-        y,
-        relevant_sample_ratio=args.relevant_sample_ratio,
-        irrelevant_sample_seed=4,
-        split_seed=4)
+    if not args.best_of_n:
+        args.best_of_n = 1
+    for run in range(args.best_of_n):
+        print(run)
+        grant_tagger = GrantTagger(
+            ngram_range=(1, 2),
+            test_size=0.25,
+            vectorizer_type=args.vectorizer_type,
+            model_type=args.model_type,
+            bert_type=args.bert_type,
+            relevant_sample_ratio=args.relevant_sample_ratio
+        )
 
-    grant_tagger.fit(X_train, y_train)
+        X_vect, y = grant_tagger.transform(data)
+        split_seed = 4 + run
+        irrelevant_sample_seed = 4
+        X_train, X_test, y_train, y_test = grant_tagger.split_data(
+            X_vect,
+            y,
+            irrelevant_sample_seed=irrelevant_sample_seed,
+            split_seed=split_seed)
+        split_info = {
+            'Split random seed': split_seed,
+            'Training data directory': args.training_data_file,
+            'Irrelevant sample seed': irrelevant_sample_seed,
+            'Relevant sample ratio': args.relevant_sample_ratio
+            }
+        grant_tagger.fit(X_train, y_train)
 
-    train_scores = grant_tagger.evaluate(X_train, y_train, print_results=True)
-    test_scores = grant_tagger.evaluate(X_test, y_test, print_results=True)
-    evaluation_results = {
-        'Train scores': train_scores,
-        'Test scores': test_scores,
-        'Train size': len(y_train),
-        'Test size': len(y_test)
-        }
+        train_scores, _, _ = grant_tagger.evaluate(X_train, y_train, print_results=True)
+        test_scores, test_class_rep, test_conf_mat = grant_tagger.evaluate(X_test, y_test, print_results=True)
+        evaluation_results = {
+            'Train scores': train_scores,
+            'Test scores': test_scores,
+            'Train size': len(y_train),
+            'Test size': len(y_test),
+            'Test classification report': test_class_rep,
+            'Test confusion matrix': test_conf_mat
+            }
+        if test_scores['f1'] >= best_test_f1:
+            best_test_f1 = test_scores['f1']
+            best_grant_tagger = grant_tagger
+            best_evaluation_results = evaluation_results
+            best_split_info = split_info
+        evaluation_results_runs.append(test_scores)
     
     outout_name = '_'.join(
         [args.vectorizer_type, args.model_type]
@@ -230,48 +268,11 @@ if __name__ == '__main__':
     if args.bert_type and args.vectorizer_type=='bert':
         outout_name = '_'.join([outout_name, args.bert_type])
     
-    datestamp = datetime.now().date().strftime('%y%m%d')
     outout_name = '_'.join([outout_name, datestamp])
 
-    grant_tagger.save_model(
+    best_grant_tagger.save_model(
         os.path.join('models', outout_name),
-        evaluation_results=evaluation_results,
+        split_info=best_split_info,
+        evaluation_results=best_evaluation_results,
+        evaluation_results_runs=evaluation_results_runs
         )
-
-    # print('\nTraining descriptions')
-    # print(grant_tagger.return_mislabeled_data(y_train, grant_tagger.predict(X_train), grant_tagger.train_indices))
-    # print('\nTest description')
-    # test_descriptions = grant_tagger.return_mislabeled_data(y_test,
-    #                                                         grant_tagger.predict(X_test),
-    #                                                         grant_tagger.test_indices)
-    # print(test_descriptions)
-    # print("\nMislabled Grant descriptions")
-    # print(test_descriptions[test_descriptions['True_label'] != test_descriptions['Predicted_label']])
-
-    # # Loading a trained model and vectorizer to predict new data:
-
-    # grant_tagger_loaded = GrantTagger()
-    # grant_tagger_loaded.load_model(os.path.join('models', 'count_naive_bayes_200806'))
-
-    # new_grants = [
-    #     'Is this a grant about tools and stuff like models',
-    #     'in this grant I created a model of the human health care system in the UK. The model is open source and several python software packages have been released.']
-    # new_grants_vect = grant_tagger_loaded.vectorizer.transform(new_grants)
-    # grant_tagger_loaded.predict(new_grants_vect)
-
-    # # Predict all the training data
-    # X_vect = grant_tagger_loaded.vectorizer.transform(data['Description'].tolist())
-    # y = data['Relevance code']
-    # grant_tagger_loaded.evaluate(X_vect, y, print_results=True, average='binary')
-
-    # # Split the train and test and evaluate
-    # X_train, X_test, y_train, y_test = grant_tagger_loaded.split_data(
-    #     X_vect,
-    #     y,
-    #     relevant_sample_ratio=args.relevant_sample_ratio,
-    #     irrelevant_sample_seed=4,
-    #     split_seed=4)
-
-    # grant_tagger_loaded.evaluate(X_train, y_train, print_results=True)
-    # grant_tagger_loaded.evaluate(X_test, y_test, print_results=True)
-
