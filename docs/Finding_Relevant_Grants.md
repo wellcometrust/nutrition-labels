@@ -257,7 +257,129 @@ test results:
 | Ensemble (mean) | 0.856038647 | 0.826126619 | 0.888888889 |
 
 
+# 21st October 2020
+
+## The best random seed and variability in results
+
+There is quite a bit of variability in the model results due to which random seed you use to split the data into the training and test sets. To scope how large this variability is and which random seed might generally produce good results on the different models we ran each model type 10 times with different random seeds. 
+
+A new argument for `grant_tagger.py` is given - `best_of_n` to set how many times you want the model to be ran. The results of all runs will be saved in a `repeated_results.txt` file but only the best model (defined by the highest test F1 score) will be saved. e.g.
+
+```
+python nutrition_labels/grant_tagger.py --training_data_file data/processed/training_data/200807/training_data.csv --vectorizer_type count --relevant_sample_ratio 1 --model_type naive_bayes --bert_type bert --best_of_n 10
+```
+
+We used the training data `data/processed/training_data/200807/training_data.csv` for all these experiments.
+
+Summary of the range of results:
+
+| Model | Test accuracy range | Test F1 range | Test precision range | Test recall range |
+| ----- | ------------------- | ------------- | -------------------- | ----------------- |
+| count_naive_bayes_201020 | (0.729, 0.879) | (0.752, 0.881) | (0.638, 0.870) | (0.786, 0.920) |
+| count_log_reg_201020 | (0.701, 0.804) | (0.673, 0.814) | (0.667, 0.827) | (0.589, 0.917) |
+| count_SVM_201021 | (0.701, 0.776) | (0.673, 0.774) | (0.656, 0.796) | (0.611, 0.875)|
+| tfidf_naive_bayes_201021 | (0.636, 0.860) | (0.707, 0.870) | (0.553, 0.877) | (0.786, 0.979)|
+| tfidf_log_reg_201021 | (0.701, 0.841) | (0.680, 0.828) | (0.647, 0.911) | (0.571, 0.917) |
+| tfidf_SVM_201021 | (0.692, 0.841) | (0.621, 0.832) | (0.634, 0.968) | (0.482, 0.938)|
+| bert_naive_bayes_bert_201021 | (0.636, 0.738) | (0.661, 0.785) | (0.580, 0.735) | (0.643, 0.879)|
+| bert_log_reg_scibert_201021 | (0.682, 0.850) | (0.691, 0.867) | (0.679, 0.851) | (0.679, 0.912) |
+| bert_naive_bayes_scibert_201021 | (0.72, 0.822) | (0.737, 0.844) | (0.636, 0.828) | (0.707, 0.931) |
+
+All the results:
+
+| Model | Seed | irrelevant_sample_seed |  Test accuracy | Test F1 | Test precision | Test recall | Best 3 F1 |
+| ----- | ---- | ---------------------- | -------------- | ------- | -------------- | ----------- | ------ |
+| count_naive_bayes_201020 | 4 | 4 | 0.850 | 0.867 | 0.825 | 0.912 | * |
+| count_naive_bayes_201020 | 5 | 4 | 0.729 | 0.752 | 0.638 | 0.917 | |
+| count_naive_bayes_201020 | 6 | 4 | 0.757 | 0.772 | 0.733 | 0.815 | |
+| count_naive_bayes_201020 | 7 | 4 | 0.879 | 0.879 | 0.870 | 0.887 | * |
+| count_naive_bayes_201020 | 8 | 4 | 0.794 | 0.800 | 0.815 | 0.786 | |
+| count_naive_bayes_201020 | 9 | 4 | 0.869 | 0.881 | 0.867 | 0.897 | * |
+| count_naive_bayes_201020 | 10 | 4 | 0.841 | 0.852 | 0.860 | 0.845 | |
+| count_naive_bayes_201020 | 11 | 4 | 0.766 | 0.771 | 0.700 | 0.857 | | 
+| count_naive_bayes_201020 | 12 | 4 | 0.804 | 0.814 | 0.730 | 0.920 | | 
+| count_naive_bayes_201020 | 13 | 4 | 0.813 | 0.825 | 0.797 | 0.855 | | 
+| count_log_reg_201020 | 4 | 4 | 0.804 | 0.814 | 0.821 | 0.807 | * |
+| count_log_reg_201020 | 5 | 4 | 0.757 | 0.772 | 0.667 | 0.917 | |
+| count_log_reg_201020 | 6 | 4 | 0.748 | 0.738 | 0.776 | 0.704 | |
+| count_log_reg_201020 | 7 | 4 | 0.804 | 0.800 | 0.808 | 0.792 | * |
+| count_log_reg_201020 | 8 | 4 | 0.701 | 0.673 | 0.786 | 0.589 | |
+| count_log_reg_201020 | 9 | 4 | 0.757 | 0.776 | 0.776 | 0.776 | |
+| count_log_reg_201020 | 10 | 4 | 0.776 | 0.782 | 0.827 | 0.741 | * |
+| count_log_reg_201020 | 11 | 4 | 0.748 | 0.733 | 0.712 | 0.755 | |
+| count_log_reg_201020 | 12 | 4 | 0.748 | 0.727 | 0.735 | 0.720 | |
+| count_log_reg_201020 | 13 | 4 | 0.710 | 0.699 | 0.750 | 0.655| |
+| count_SVM_201021 | 4 | 4 | 0.738 | 0.745 | 0.774 | 0.719 | * |
+| count_SVM_201021 | 5 | 4 | 0.738 | 0.750 | 0.656 | 0.875 | * |
+| count_SVM_201021 | 6 | 4 | 0.701 | 0.673 | 0.750 | 0.611 | |
+| count_SVM_201021 | 7 | 4 | 0.748 | 0.727 | 0.783 | 0.679 | |
+| count_SVM_201021 | 8 | 4 | 0.720 | 0.700 | 0.795 | 0.625 | |
+| count_SVM_201021 | 9 | 4 | 0.738 | 0.745 | 0.788 | 0.707 | * |
+| count_SVM_201021 | 10 | 4 | 0.729 | 0.729 | 0.796 | 0.672 | |
+| count_SVM_201021 | 11 | 4 | 0.776 | 0.774 | 0.719 | 0.837 | * |
+| count_SVM_201021 | 12 | 4 | 0.738 | 0.731 | 0.704 | 0.760 | |
+| count_SVM_201021 | 13 | 4 | 0.720 | 0.700 | 0.778 | 0.636 | |
+| tfidf_naive_bayes_201021 | 4 | 4 | 0.841 | 0.862 | 0.803 | 0.930 | * |
+| tfidf_naive_bayes_201021 | 5 | 4 | 0.636 | 0.707 | 0.553 | 0.979 | |
+| tfidf_naive_bayes_201021 | 6 | 4 | 0.785 | 0.813 | 0.725 | 0.926 | |
+| tfidf_naive_bayes_201021 | 7 | 4 | 0.804 | 0.821 | 0.750 | 0.906 | |
+| tfidf_naive_bayes_201021 | 8 | 4 | 0.794 | 0.800 | 0.815 | 0.786 | |
+| tfidf_naive_bayes_201021 | 9 | 4 | 0.860 | 0.870 | 0.877 | 0.862 | * |
+| tfidf_naive_bayes_201021 | 10 | 4 | 0.813 | 0.825 | 0.839 | 0.810 | * |
+| tfidf_naive_bayes_201021 | 11 | 4 | 0.664 | 0.714 | 0.584 | 0.918 | |
+| tfidf_naive_bayes_201021 | 12 | 4 | 0.692 | 0.740 | 0.610 | 0.940 | |
+| tfidf_naive_bayes_201021 | 13 | 4 | 0.794 | 0.814 | 0.762 | 0.873 | |
+| tfidf_log_reg_201021 | 4 | 4 | 0.813 | 0.811 | 0.878 | 0.754 | * |
+| tfidf_log_reg_201021 | 5 | 4 | 0.738 | 0.759 | 0.647 | 0.917 | |
+| tfidf_log_reg_201021 | 6 | 4 | 0.701 | 0.680 | 0.739 | 0.630 | |
+| tfidf_log_reg_201021 | 7 | 4 | 0.841 | 0.828 | 0.891 | 0.774 | * |
+| tfidf_log_reg_201021 | 8 | 4 | 0.729 | 0.688 | 0.865 | 0.571 | |
+| tfidf_log_reg_201021 | 9 | 4 | 0.804 | 0.796 | 0.911 | 0.707 | |
+| tfidf_log_reg_201021 | 10 | 4 | 0.729 | 0.707 | 0.854 | 0.603 | |
+| tfidf_log_reg_201021 | 11 | 4 | 0.794 | 0.792 | 0.737 | 0.857 | |
+| tfidf_log_reg_201021 | 12 | 4 | 0.813 | 0.815 | 0.759 | 0.880 | * |
+| tfidf_log_reg_201021 | 13 | 4 | 0.766 | 0.747 | 0.841 | 0.673 | |
+| tfidf_SVM_201021 | 4 | 4 | 0.757 | 0.729 | 0.897 | 0.614 | |
+| tfidf_SVM_201021 | 5 | 4 | 0.729 | 0.756 | 0.634 | 0.938 | |
+| tfidf_SVM_201021 | 6 | 4 | 0.692 | 0.629 | 0.800 | 0.519 | |
+| tfidf_SVM_201021 | 7 | 4 | 0.813 | 0.787 | 0.902 | 0.698 | * | 
+| tfidf_SVM_201021 | 8 | 4 | 0.692 | 0.621 | 0.871 | 0.482 | |
+| tfidf_SVM_201021 | 9 | 4 | 0.729 | 0.674 | 0.968 | 0.517 | |
+| tfidf_SVM_201021 | 10 | 4 | 0.729 | 0.681 | 0.939 | 0.534 | |
+| tfidf_SVM_201021 | 11 | 4 | 0.813 | 0.808 | 0.764 | 0.857 | * |
+| tfidf_SVM_201021 | 12 | 4 | 0.841 | 0.832 | 0.824 | 0.840 | * |
+| tfidf_SVM_201021 | 13 | 4 | 0.748 | 0.710 | 0.868 | 0.600 | |
+| bert_naive_bayes_bert_201021 | 4 | 4 | 0.720 | 0.758 | 0.701 | 0.825 | * |
+| bert_naive_bayes_bert_201021 | 5 | 4 | 0.654 | 0.684 | 0.580 | 0.833 | |
+| bert_naive_bayes_bert_201021 | 6 | 4 | 0.664 | 0.700 | 0.636 | 0.778 | |
+| bert_naive_bayes_bert_201021 | 7 | 4 | 0.682 | 0.696 | 0.661 | 0.736 | |
+| bert_naive_bayes_bert_201021 | 8 | 4 | 0.692 | 0.686 | 0.735 | 0.643 | |
+| bert_naive_bayes_bert_201021 | 9 | 4 | 0.738 | 0.785 | 0.708 | 0.879 | * |
+| bert_naive_bayes_bert_201021 | 10 | 4 | 0.636 | 0.661 | 0.667 | 0.655 | |
+| bert_naive_bayes_bert_201021 | 11 | 4 | 0.692 | 0.673 | 0.654 | 0.694 | |
+| bert_naive_bayes_bert_201021 | 12 | 4 | 0.654 | 0.694 | 0.592 | 0.840 | |
+| bert_naive_bayes_bert_201021 | 13 | 4 | 0.682 | 0.712 | 0.667 | 0.764 | * |
+| bert_log_reg_scibert_201021 | 4 | 4 | 0.850 | 0.867 | 0.825 | 0.912 | * |
+| bert_log_reg_scibert_201021 | 5 | 4 | 0.804 | 0.804 | 0.729 | 0.896 | * |
+| bert_log_reg_scibert_201021 | 6 | 4 | 0.682 | 0.691 | 0.679 | 0.704 | |
+| bert_log_reg_scibert_201021 | 7 | 4 | 0.785 | 0.777 | 0.800 | 0.755 | |
+| bert_log_reg_scibert_201021 | 8 | 4 | 0.682 | 0.691 | 0.704 | 0.679 | |
+| bert_log_reg_scibert_201021 | 9 | 4 | 0.757 | 0.794 | 0.735 | 0.862 | * |
+| bert_log_reg_scibert_201021 | 10 | 4 | 0.766 | 0.762 | 0.851 | 0.690 | |
+| bert_log_reg_scibert_201021 | 11 | 4 | 0.794 | 0.776 | 0.776 | 0.776 | |
+| bert_log_reg_scibert_201021 | 12 | 4 | 0.748 | 0.733 | 0.725 | 0.740 | |
+| bert_log_reg_scibert_201021 | 13 | 4 | 0.757 | 0.764 | 0.764 | 0.764 | |
+| bert_naive_bayes_scibert_201021 | 4 | 4 | 0.822 | 0.835 | 0.828 | 0.842 | * |
+| bert_naive_bayes_scibert_201021 | 5 | 4 | 0.720 | 0.737 | 0.636 | 0.875 | |
+| bert_naive_bayes_scibert_201021 | 6 | 4 | 0.757 | 0.776 | 0.726 | 0.833 | |
+| bert_naive_bayes_scibert_201021 | 7 | 4 | 0.766 | 0.771 | 0.750 | 0.792 | |
+| bert_naive_bayes_scibert_201021 | 8 | 4 | 0.757 | 0.755 | 0.800 | 0.714 | |
+| bert_naive_bayes_scibert_201021 | 9 | 4 | 0.813 | 0.844 | 0.771 | 0.931 | * |
+| bert_naive_bayes_scibert_201021 | 10 | 4 | 0.748 | 0.752 | 0.804 | 0.707 | |
+| bert_naive_bayes_scibert_201021 | 11 | 4 | 0.776 | 0.769 | 0.727 | 0.816 | |
+| bert_naive_bayes_scibert_201021 | 12 | 4 | 0.720 | 0.750 | 0.643 | 0.900 | |
+| bert_naive_bayes_scibert_201021 | 13 | 4 | 0.766 | 0.779 | 0.759 | 0.800 | * |
 
 
-
+I calculated the average scores for each random seed used. 
 
