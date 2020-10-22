@@ -14,27 +14,23 @@ if __name__ == '__main__':
 
     data = pd.read_csv(training_data_file)
 
-    model_types = ['naive_bayes', 'log_reg']
+    model_types = ['naive_bayes', 'log_reg', 'SVM']
     vectorizer_types = ['count', 'tfidf', 'bert', 'scibert']
-    bert_types = ['bert', 'scibert']
 
     relevant_sample_ratio = 1
     num_rand_seeds = 10
 
     for vectorizer_type in vectorizer_types:
+        print(vectorizer_type)
+        if vectorizer_type in ['bert', 'scibert']:
+            bert_type = vectorizer_type
+            vectorizer_type = 'bert'
+        else:
+            bert_type = 'bert'
         for model_type in model_types:
-            print(vectorizer_type)
             print(model_type)
-            if vectorizer_type in ['bert', 'scibert']:
-                bert_type = vectorizer_type
-                vectorizer_type = 'bert'
-            else:
-                bert_type = 'bert'
 
-            evaluation_results_runs = []
-            for split_seed in range(num_rand_seeds):
-
-                grant_tagger = GrantTagger(
+            grant_tagger = GrantTagger(
                     ngram_range=(1, 2),
                     test_size=0.25,
                     vectorizer_type=vectorizer_type,
@@ -43,8 +39,11 @@ if __name__ == '__main__':
                     relevant_sample_ratio=relevant_sample_ratio
                     )
 
-                X_vect, y = grant_tagger.transform(data)
+            X_vect, y = grant_tagger.transform(data)
 
+            evaluation_results_runs = []
+            for split_seed in range(num_rand_seeds):
+                print(split_seed)
                 X_train, X_test, y_train, y_test = grant_tagger.split_data(
                     X_vect,
                     y,
