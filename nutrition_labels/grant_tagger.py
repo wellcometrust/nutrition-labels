@@ -111,7 +111,7 @@ class GrantTagger():
         elif self.model_type == 'SVM':
             model = SVC()
         elif self.model_type == 'log_reg':
-            model = LogisticRegression()
+            model = LogisticRegression(max_iter=1000)
         else:
             print('Model type not recognised')
         self.model = model.fit(X, y)
@@ -225,7 +225,7 @@ if __name__ == '__main__':
     )
 
     X_vect, y = grant_tagger.transform(data)
-    split_seed = 4
+    split_seed = 0
     X_train, X_test, y_train, y_test = grant_tagger.split_data(
         X_vect,
         y,
