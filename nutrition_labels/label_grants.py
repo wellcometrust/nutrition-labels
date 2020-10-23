@@ -20,10 +20,10 @@ def process_grants_data(grant_data, training_data, split_seed):
 
     # Label which training data was in the original test/train sets
     # Just need to separate the internal IDs by the same indexes
-    grant_tagger = GrantTagger()
-    _, _, y_train, y_test = grant_tagger.split_data(
+    grant_tagger = GrantTagger(relevant_sample_ratio=1)
+    x_train, x_test, y_train, y_test = grant_tagger.split_data(
         training_data['Internal ID'],
-        training_data['Internal ID'],
+        training_data['Relevance code'],
         split_seed=split_seed)
 
     # Add the manually tagged relevance code label from the training data
@@ -45,9 +45,9 @@ def process_grants_data(grant_data, training_data, split_seed):
 
     data_trained =[]
     for ref in grant_data['Internal ID']:
-        if ref in y_train:
+        if ref in x_train.tolist():
             data_trained.append('Training data')
-        elif ref in y_test:
+        elif ref in x_test.tolist():
             data_trained.append('Test data')
         else:
             data_trained.append('Unseen data')
@@ -150,6 +150,7 @@ if __name__ == '__main__':
     grant_data['Final ensemble label found by'] = (grant_data[['Relevance code', 'Ensemble predictions']]
                              .apply(lambda x: 'Model prediction' if np.isnan(x[0]) else 'Manually tagged', axis = 1))
     relevant_grants = grant_data[grant_data['Final ensemble label'] == 1]
+    print(f"Found {len(relevant_grants)} relevant grants")
 
     scores = evaluate_ensemble(grant_data)
 
