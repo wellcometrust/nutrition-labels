@@ -87,11 +87,11 @@ def get_seed_results(file):
     seed = re.sub('Split random seed: ', '', seed)
     return ast.literal_eval(seed)
 
-def evaluate_ensemble(grant_data):
+def evaluate_ensemble(grant_data, pred_col='Ensemble predictions'):
     test_grants = grant_data.loc[grant_data['How has this grant been used before?']=='Test data']
 
     y = test_grants['Relevance code'].tolist()
-    y_predict = test_grants['Ensemble predictions'].tolist()
+    y_predict = test_grants[pred_col].tolist()
     # Evaluate ensemble results
     scores = {
             'accuracy': accuracy_score(y, y_predict),
@@ -132,7 +132,6 @@ if __name__ == '__main__':
     grant_data = process_grants_data(grant_data, training_data, split_seed)
 
     # Predict for each model
-    cutoff = len(useful_models)
     grants_text = grant_data['Grant texts'].tolist()
 
     for model_name in useful_models:
@@ -144,32 +143,32 @@ if __name__ == '__main__':
     del grant_data['Grant texts']
 
     prediction_sums = grant_data[[f'{model_name} predictions' for model_name in useful_models]].sum(axis=1)
-    grant_data['Ensemble predictions'] = [1 if pred_sum >= cutoff else 0 for pred_sum in prediction_sums]
-    grant_data['Final ensemble label'] = (grant_data[['Relevance code', 'Ensemble predictions']]
-                                 .apply(lambda x: x[1] if np.isnan(x[0]) else x[0], axis = 1))
-    grant_data['Final ensemble label found by'] = (grant_data[['Relevance code', 'Ensemble predictions']]
-                             .apply(lambda x: 'Model prediction' if np.isnan(x[0]) else 'Manually tagged', axis = 1))
-    relevant_grants = grant_data[grant_data['Final ensemble label'] == 1]
-    print(f"Found {len(relevant_grants)} relevant grants")
 
-    scores = evaluate_ensemble(grant_data)
+    # Calculate the different final predictions and scores for different cutoffs
 
-    # Save
-    output_path = 'data/processed/ensemble/'
-   
-    if not os.path.exists(output_path):
-        os.makedirs(output_path)
+    for cutoff in list(range(round(len(useful_models)/2), len(useful_models)+1)):
+        grant_data[f'Ensemble predictions - {cutoff} models'] = [1 if pred_sum >= cutoff else 0 for pred_sum in prediction_sums]
+        grant_data[f'Final ensemble label - {cutoff} models'] = (grant_data[['Relevance code', f'Ensemble predictions - {cutoff} models']]
+                                     .apply(lambda x: x[1] if np.isnan(x[0]) else x[0], axis = 1))
+        grant_data[f'Final ensemble label found by - {cutoff} models'] = (grant_data[['Relevance code', f'Ensemble predictions - {cutoff} models']]
+                                 .apply(lambda x: 'Model prediction' if np.isnan(x[0]) else 'Manually tagged', axis = 1))
+        relevant_grants = grant_data[grant_data[f'Final ensemble label - {cutoff} models'] == 1]
+        print(f"Found {len(relevant_grants)} relevant grants")
+        scores = evaluate_ensemble(grant_data, pred_col=f'Ensemble predictions - {cutoff} models')
+        # Save
+        output_path = 'data/processed/ensemble/'
+        if not os.path.exists(output_path):
+            os.makedirs(output_path)
+        with open(os.path.join(output_path, f'{datestamp}_training_information_{cutoff}models.txt'), 'w') as f:
+            f.write('Ensemble models: ' + str(useful_models))
+            f.write('\nf1_cutoff: ' + str(f1_cutoff))
+            f.write('\nprecision_cutoff: ' + str(precision_cutoff))
+            f.write('\nrecall_cutoff: ' + str(recall_cutoff))
+            f.write('\nNumber relevant grants: ' + str(len(relevant_grants)))
+            f.write('\nOnly includes models after: '+ str(after_date))
+            f.write('\ntraining_file: '+ training_file)
+            for key, value in scores.items():
+                f.write('\n' + key + ': ' + str(value))
+        relevant_grants.to_csv(os.path.join(output_path, f'{datestamp}_ensemble_results_{cutoff}models.csv'), index = False)
 
-    with open(os.path.join(output_path, f'{datestamp}_training_information.txt'), 'w') as f:
-        f.write('Ensemble models: ' + str(useful_models))
-        f.write('\nf1_cutoff: ' + str(f1_cutoff))
-        f.write('\nprecision_cutoff: ' + str(precision_cutoff))
-        f.write('\nrecall_cutoff: ' + str(recall_cutoff))
-        f.write('\nOnly includes models after: '+ str(after_date))
-        f.write('\ntraining_file: '+ training_file)
-        for key, value in scores.items():
-            f.write('\n' + key + ': ' + str(value))
-
-    relevant_grants.to_csv(os.path.join(output_path, f'{datestamp}_ensemble_results.csv'), index = False)
     grant_data.to_csv(os.path.join(output_path, f'{datestamp}_all_ensemble_results.csv'), index = False)
-

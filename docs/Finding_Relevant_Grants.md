@@ -357,3 +357,11 @@ Test confusion matrix:
 |--|--|--|
 | actual tag 0|31|1|
 | actual tag 1|20|55|
+
+The above results are when all 4 models need to agree on a grant being relevant in order for the ensemble result to say it's relevant. However we can experiment with different numbers of the models needing to agree:
+
+| Number of models that need to agree | Number of relevant grants | Test F1 | Test precision | Test recall |
+|---|---|---|---|---|
+|2| 4125 |0.954 |0.936|0.973|
+|3|2956|0.915|0.970|0.867|
+|4|1257|0.840|0.982|0.733|
