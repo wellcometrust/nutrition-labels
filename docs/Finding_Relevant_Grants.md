@@ -299,4 +299,61 @@ The highest average f1 score over all models (0.838) was found when the random s
 
 Thus we will take the **'best seed' to be 0** since it consistently produces high scores regardless of metric.
 
-## Rerunning all the Models
+### Rerunning all the Models
+
+ngram range: (1,2),
+Test proportion : 0.25,
+Train size: 321,
+Test size: 107,
+Not relevant ratio: 1
+
+| Date | Vectorizer type | Model type | Bert type (if relevant) | Train F1 | Test F1 | Test precision | Test recall |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| 201022 | count | log_reg | - | 1.000 | 0.842 | 0.814 | 0.873 |
+| 201022 | count | naive_bayes | - | 1.000 | 0.864 | 0.810 | 0.927 |
+| 201022 | count | SVM | - | 0.994 | 0.847 | 0.839 | 0.855 |
+| 201022 | tfidf | log_reg | - | 1.000 | 0.844 | 0.852 | 0.836 |
+| 201022 | tfidf | naive_bayes | - | 1.000 | 0.846 | 0.765 | 0.945 |
+| 201022 | tfidf | SVM | - | 1.000 | 0.822 | 0.846 | 0.800 |
+| 201022 | bert | naive_bayes | bert | 0.713 | 0.757 | 0.813 | 0.709 |
+| 201022 | bert | SVM | bert | 0.819 | 0.881 | 0.825 | 0.945 |
+| 201022 | bert | log_reg | bert | 1.000 | 0.825 | 0.797 | 0.855 |
+| 201022 | bert | naive_bayes | scibert | 0.772 | 0.796 | 0.811 | 0.782 |
+| 201022 | bert | SVM | scibert | 0.776 | 0.879 | 0.904 | 0.855 |
+| 201022 | bert | log_reg | scibert | 1.000 | 0.814 | 0.762 | 0.873 |
+
+### Ensemble model
+
+Only choosing models which were:
+- Trained on 201022
+- F1 >= 0.8
+- Precision >= 0.82
+- Recall >= 0.82
+
+This returned 4 models: ['count_SVM_201022', 'bert_SVM_scibert_201022', 'bert_SVM_bert_201022', 'tfidf_log_reg_201022']
+
+It found **1257** relevant grants.
+
+On the test data:
+
+**accuracy: 0.804
+f1: 0.840
+precision_score: 0.982
+recall_score: 0.733**
+
+Test classification report:    
+
+||precision|recall|f1-score|support|
+|--|--|--|--|--|
+|0.0|0.61|0.97|0.75|  32|
+|1.0|0.98|0.73|0.84| 75|
+|accuracy|||0.80|107|
+|macro avg|0.79|0.85|0.79| 107|
+|weighted avg| 0.87|0.80|0.81|107|
+
+Test confusion matrix:
+
+||predicted tag 0 | predicted tag 1 |
+|--|--|--|
+| actual tag 0|31|1|
+| actual tag 1|20|55|
