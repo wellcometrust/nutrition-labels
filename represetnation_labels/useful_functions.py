@@ -50,19 +50,12 @@ def get_name(name_key,addition):
         alter_name = re.sub(' percent','', alter_name)
         return str(alter_name) + ' ' + (addition)
 
-if __name__ == '__main__':
-
-    with open('data/raw/cohort_demographics_test_data.json', 'r') as fb:
-        cohorts_dic = json.load(fb)
-
-    with open('data/raw/Reference_population.json', 'r') as fb:
-        reference_dict = json.load(fb)
-
+def clean_data(cohorts_dict, reference_dict):
     graph_dict = {}
 
-    for dataset, variables in cohorts_dic.items():
+    for dataset, variables in cohorts_dict.items():
         graph_dict[dataset] = {}
-        for var, vals in cohorts_dic[dataset].items():
+        for var, vals in cohorts_dict[dataset].items():
             if var == 'Ethnicity':
                 graph_dict[dataset][var] = multi_eth_change_format(vals)
             elif isinstance(list(vals.values())[0],dict):
@@ -76,18 +69,31 @@ if __name__ == '__main__':
             ref_dict[var] = eth_change_format(vals,'ethnicity')
         else:
             ref_dict[var] = change_format(vals, var)
-
+            
     for var,vals in ref_dict.items():
         ref_dict[var]['percent'] = get_percents(list(vals['values']))
 
     for dataset, variables in graph_dict.items():
         for var,vals in variables.items():
-            missing = {uf.get_name(k, 'missing'): [v[-1]] * (len(v) - 1) for k, v in vals.items() if
-                       isinstance(v[0], int)}
+            missing = {get_name(k,'missing'):[v[-1]]*(len(v) -1) for k,v in vals.items() if isinstance(v[0],int)}
             perc_dict = {get_name(k,'percent'): get_percents(v) for k,v in vals.items() if isinstance(v[0],int)}
             ref_pers = ref_dict[var]['percent']
             rel_dict = {get_name(k,'reletive'): get_reletives(v,ref_pers) for k,v in perc_dict.items()}
             std_ref_dict = {get_name(k,'reference standardised'):
                                 standardise_refs(v,ref_pers) for k,v in vals.items() if isinstance(v[0],int)}
             vals_short = {k:v[:-1] for k,v in vals.items()}
-            graph_dict[dataset][var]={**vals_short,**perc_dict,**rel_dict,**std_ref_dict}
+            ref_pers = {'ref percent': ref_pers}
+            graph_dict[dataset][var]={**vals_short,**perc_dict,**rel_dict,**std_ref_dict,**missing,**ref_pers}
+
+    return ref_dict, graph_dict
+
+if __name__ == '__main__':
+
+    with open('data/raw/cohort_demographics_test_data.json', 'r') as fb:
+        cohorts_dic = json.load(fb)
+
+    with open('data/raw/Reference_population.json', 'r') as fb:
+        reference_dict = json.load(fb)
+
+    ref_dict, graph_dict = clean_data(cohorts_dic, reference_dict)
+
