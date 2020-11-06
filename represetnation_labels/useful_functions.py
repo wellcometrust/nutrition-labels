@@ -82,8 +82,8 @@ if __name__ == '__main__':
 
     for dataset, variables in graph_dict.items():
         for var,vals in variables.items():
-            missing = {get_name(k,'missing'):v[-1] for k,v in vals.items() if isinstance(v[0],int)}
-            missing = {k:v[:-1] for k,v in missing.items()}
+            missing = {uf.get_name(k, 'missing'): [v[-1]] * (len(v) - 1) for k, v in vals.items() if
+                       isinstance(v[0], int)}
             perc_dict = {get_name(k,'percent'): get_percents(v) for k,v in vals.items() if isinstance(v[0],int)}
             ref_pers = ref_dict[var]['percent']
             rel_dict = {get_name(k,'reletive'): get_reletives(v,ref_pers) for k,v in perc_dict.items()}
