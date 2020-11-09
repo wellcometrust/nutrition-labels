@@ -50,6 +50,10 @@ def get_name(name_key,addition):
         alter_name = re.sub(' percent','', alter_name)
         return str(alter_name) + ' ' + (addition)
 
+def reletivise_text(perc):
+    string =  'there is ' + str(round(perc)) + '% of this group needed to be representative'
+    return(string)
+
 def clean_data(cohorts_dict, reference_dict):
     graph_dict = {}
 
@@ -84,9 +88,10 @@ def clean_data(cohorts_dict, reference_dict):
             vals_short = {k:v[:-1] for k,v in vals.items()}
             desc_text = {'description text': ['this is description text for this variable'] * len(ref_pers)}
             ref_pers = {'ref percent': ref_pers}
+            rel_text = {get_name(k,'text'):[reletivise_text(i) for i in v] for k,v in rel_dict.items()}
             graph_dict[dataset][var]={**vals_short,
                                       **perc_dict,
-                                      **rel_dict,**std_ref_dict,**missing,**ref_pers,**desc_text}
+                                      **rel_dict,**std_ref_dict,**missing,**ref_pers,**desc_text,**rel_text}
 
     return ref_dict, graph_dict
 
