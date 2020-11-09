@@ -14,19 +14,19 @@ def eth_change_format(eth_dict,name):
                 'values':[sum(v.values()) for v in eth_dict_alter.values()]}
     return new_dict
 
-def multi_eth_change_format(eth_dict):
-    if list(eth_dict.keys()) == ['White', 'Black', 'Asian', 'Chinese', 'Mixed', 'Other', 'Missing']:
-        return eth_change_format(eth_dict,'Ethnicity')
-    else:
+def multi_eth_change_format(eth_dict,dataset):
+    if dataset == 'ALSPAC' or dataset == 'CPRD':
         dict_copy = {k: eth_change_format(v, k) for k, v in eth_dict.items()}
         dict_copy = {str(k) + ' values': v['values'] for k, v in dict_copy.items()}
         dict_copy['Ethnicity'] = ['White', 'Black', 'Asian', 'Mixed', 'Other', 'Missing']
         return dict_copy
+    else:
+        return eth_change_format(eth_dict, 'Ethnicity')
 
-def multi_change_format(multi_dict,name):
-    fst_key = list(multi_dict.keys())[0]
-    variable = list(multi_dict[fst_key].keys())
-    new_dict = {str(k) + ' values':[values for values in v.values()] for k,v in multi_dict.items()}
+def nested_change_format(nested_dict,name):
+    fst_key = list(nested_dict.keys())[0]
+    variable = list(nested_dict[fst_key].keys())
+    new_dict = {str(k) + ' values':[values for values in v.values()] for k,v in nested_dict.items()}
     new_dict[name] = variable
     return new_dict
 
@@ -55,11 +55,11 @@ def clean_data(cohorts_dict, reference_dict):
 
     for dataset, variables in cohorts_dict.items():
         graph_dict[dataset] = {}
-        for var, vals in cohorts_dict[dataset].items():
+        for var, vals in variables.items():
             if var == 'Ethnicity':
-                graph_dict[dataset][var] = multi_eth_change_format(vals)
+                graph_dict[dataset][var] = multi_eth_change_format(vals,dataset)
             elif isinstance(list(vals.values())[0],dict):
-                graph_dict[dataset][var] = multi_change_format(vals,var)
+                graph_dict[dataset][var] = nested_change_format(vals,var)
             else:
                 graph_dict[dataset][var] = change_format(vals, var)
 
@@ -82,8 +82,11 @@ def clean_data(cohorts_dict, reference_dict):
             std_ref_dict = {get_name(k,'reference standardised'):
                                 standardise_refs(v,ref_pers) for k,v in vals.items() if isinstance(v[0],int)}
             vals_short = {k:v[:-1] for k,v in vals.items()}
+            desc_text = {'description text': ['this is description text for this variable'] * len(ref_pers)}
             ref_pers = {'ref percent': ref_pers}
-            graph_dict[dataset][var]={**vals_short,**perc_dict,**rel_dict,**std_ref_dict,**missing,**ref_pers}
+            graph_dict[dataset][var]={**vals_short,
+                                      **perc_dict,
+                                      **rel_dict,**std_ref_dict,**missing,**ref_pers,**desc_text}
 
     return ref_dict, graph_dict
 
