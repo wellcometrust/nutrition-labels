@@ -1,5 +1,6 @@
 import json
 import re
+import numpy as np
 
 def change_format(og_dict,name):
     new_dict = {name: list(og_dict.keys()),
@@ -52,7 +53,7 @@ def get_name(name_key,addition):
 
 def reletivise_text(perc):
     string =  'there is ' + str(round(perc)) + '% of this group needed to be representative'
-    return(string)
+    return string
 
 def clean_data(cohorts_dict, reference_dict):
     graph_dict = {}
@@ -95,6 +96,96 @@ def clean_data(cohorts_dict, reference_dict):
 
     return ref_dict, graph_dict
 
+def spider_plot_source(spider_dict,addition):
+    imp_keys = ['ref percent'] + [k for k in spider_dict.keys() if addition in k]
+    test_spider = {re.sub(addition, '', k): v for k, v in spider_dict.items() if k in imp_keys}
+
+    num_vars = len(test_spider['values'])
+    theta = np.linspace(0, 2 * np.pi, num_vars, endpoint=False)
+    # rotate theta such that the first axis is at the top
+    theta += np.pi / 2
+
+    def unit_poly_verts(theta):
+        """Return vertices of polygon for subplot axes.
+        This polygon is circumscribed by a unit circle centered at (0.5, 0.5)
+        """
+        x0, y0, r = [0.5] * 3
+        verts = [(r * np.cos(t) + x0, r * np.sin(t) + y0) for t in theta]
+        return verts
+
+    def radar_patch(r, theta):
+        yt = (r + 0.01) * np.sin(theta) + 0.5
+        xt = (r + 0.01) * np.cos(theta) + 0.5
+        return xt, yt
+
+    verts = unit_poly_verts(theta)
+    x = [i[0] for i in verts]
+    y = [i[1] for i in verts]
+
+    rel_values = np.array(test_spider['reletive'])
+    values = np.array(test_spider['values'])
+
+    ref_std = np.array(test_spider['reference standardised'])
+
+
+    values = values / (sum(values) * 2)
+    ref_std = ref_std / (sum(ref_std) * 2)
+    rel_values = rel_values/(sum(rel_values) *2)
+
+    x_val, y_val = radar_patch(values, theta)
+    x_ref, y_ref = radar_patch(ref_std, theta)
+    x_rel, y_rel = radar_patch(rel_values,theta)
+
+
+    new_line_max = np.array([max(np.concatenate([values, ref_std]))] * len(values))
+    new_x, new_y = radar_patch(new_line_max, theta)
+    new_x_lines = [[0.5, i] for i in new_x]
+    new_y_lines = [[0.5, i] for i in new_y]
+
+    rel_new_line_max = np.array([max(rel_values)] * len(rel_values))
+    rel_new_x, rel_new_y = radar_patch(rel_new_line_max, theta)
+    rel_new_x_lines = [[0.5, i] for i in rel_new_x]
+    rel_new_y_lines = [[0.5, i] for i in rel_new_y]
+
+    source = {
+        addition + 'x_vals':np.array(x_val),
+        addition +'y_vals':np.array(y_val),
+        addition +'x_ref':np.array(x_ref),
+        addition +'y_ref':np.array(y_ref),
+        addition +'x_rel':np.array(x_rel),
+        addition +'y_rel':np.array(y_rel),
+        addition +'x_lines':new_x_lines,
+        addition +'y_lines':new_y_lines,
+        addition +'rel_x_lines': rel_new_x_lines,
+        addition +'rel_y_lines': rel_new_y_lines,
+        addition +'labs_x_cords':np.array(new_x),
+        addition +'labs_y_cords':np.array(new_y),
+        addition +'rel_labs_x_cords':np.array(rel_new_x),
+        addition +'rel_labs_y_cords': np.array(rel_new_y),
+    }
+    return source
+
+def full_spider_source(data_dict):
+    if 'values' in data_dict.keys():
+        spider_dict = spider_plot_source(data_dict,'')
+        source = {**data_dict,**spider_dict}
+    else:
+        var_list = [re.sub('values','',i) for i in data_dict.keys() if 'values' in i]
+        source = data_dict.copy()
+        for i in var_list:
+            spider_dict = spider_plot_source(data_dict,i)
+            source.update(spider_dict)
+    return source
+
+def update_graph_dict(g_dict):
+    g_dict2 = g_dict.copy()
+    for dataset in g_dict2.keys():
+        for var in g_dict2[dataset].keys():
+            if var == 'Ethnicity' or var == 'Socioeconomic Status':
+                g_dict2[dataset][var] = full_spider_source(g_dict2[dataset][var])
+    return g_dict2
+
+
 if __name__ == '__main__':
 
     with open('data/raw/cohort_demographics_test_data.json', 'r') as fb:
@@ -104,4 +195,8 @@ if __name__ == '__main__':
         reference_dict = json.load(fb)
 
     ref_dict, graph_dict = clean_data(cohorts_dic, reference_dict)
-
+    graph_dict2 = update_graph_dict(graph_dict)
+    graph_dict2['UK Biobank']['Text'] = 'The UK Biobank is a prospective cohort study that recruited adults aged between 40-69 years in the UK in 2006-2010. People were invited to participate by mailed invitations to the general public living within 25 miles of one of the 22 assessment centres in England, Scotland and Wales (there was a response rate of 5.5%). '
+    graph_dict2['ALSPAC']['Text'] = 'The Avon Longitudinal Study of Children and Parents (ALSPAC) is a prospective cohort study which recruited pregnant women living in the South West of England during 1990-1992. It aims to understand how genetic and environmental factors influence health and development in parents and children by collecting information on demographics, lifestyle behaviours, physical and mental health. The parents and children have been followed up since recruitment through questionnaires, and a subset completed additional assessments (e.g. ‘Focus on Mothers’) which collected anthropometric measurements and biological samples.'
+    graph_dict2['ALSPAC']['Age']['description text'] =['At recruitment, the mother was asked to describe her age and that of her partner. The children were obviously all born shortly after their mothers were invited to join the study, so their age at recruitment is 0 years. Overtime, subsequent data was collected at different time points, providing a longitudinal perspective on key health and lifestyle characteristics. So, whilst these labels reflect the baseline characteristics, it does not capture any changes during the participants’ life course (for example when the children are grown-up, their socioeconomic status may be different).'] * len(graph_dict2['ALSPAC']['Age']['Age'])
+    graph_dict2['ALSPAC']['Ethnicity']['description text'] = ['The mother was asked to describe the ethnic origin of herself, her partner and her parents in a questionnaire. There were 9 possible ethnicity categories: white, Black/Caribbean, Black/African, Black/other, Indian, Pakistani, Bangladeshi, Chinese, Other. Most research using this data derived the childs ethnic background as ‘white’ (if both parents were described as white) or ‘non-white’ (if either parent was described as any ethnicity other than white). The 9 categories for ethnicity offer a greater level of granularity than many other cohort studies. However, there are far more ethnic groups represented in the UK, and often people do not identify with one ethnicity. These groups also get aggregated into just 2 categories (white or non-white) for the child’s ethnicity, meaning that it may be difficult to understand any nuances or differences in health and well-being related to ethnic background.  Often larger but fewer categories are used for analysis to ensure the sample size is large enough for statistical signifacince.'] * len(graph_dict2['ALSPAC']['Ethnicity']['Ethnicity'])
