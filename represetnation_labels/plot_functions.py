@@ -31,7 +31,7 @@ def missing_plot(source,missing_vals,values):
                      border_line_alpha=0,
                      background_fill_alpha=0,
                      text_font = 'helvetica',
-                     text_color = '#a0a0a0', text_font_size = '19pt'
+                     text_color = '#1f1f1f', text_font_size = '19pt'
                     )
     u.add_layout(citation)
 
@@ -66,7 +66,7 @@ def plot_age(source,name,reletivise = False,out = False):
         if reletivise:
             legend_name = name + '%/Uk Population%'
         else:
-            legend_name = name ' percent'
+            legend_name = name + ' percent'
 
         p = figure(
             x_range=list(source.data['Age']),
@@ -106,8 +106,8 @@ def plot_age(source,name,reletivise = False,out = False):
 
             hover2 = HoverTool(tooltips=[
                 ('Age range', '@Age'),
-                ('Raw values', "@{" + values + "}"),
-                ('Percent/%', "@{" + percent + "}{0.0}"),
+                ('Number of people', "@{" + values + "}"),
+                ('Dataset Percent/%', "@{" + percent + "}{0.0}"),
                 ('UK population percent/%', '@{ref percent}{0.0}')
             ],
                 mode='mouse', name='data plot')
@@ -180,7 +180,7 @@ def plot_ethnicity(source, name,reletivise = False,out = False):
         if reletivise:
             legend_name = name + '%/Uk Population%'
         else:
-            legend_name = name ' percent'
+            legend_name = name + ' percent'
         q = figure(title='Ethnicity',
                    x_range=(min(source.data[labs_x_cords]) - 0.1, max(source.data[labs_x_cords]) + 0.1),
                    y_range=(min(source.data[labs_y_cords]) * 0.9, max(source.data[labs_y_cords]) * 1.1))
@@ -221,8 +221,8 @@ def plot_ethnicity(source, name,reletivise = False,out = False):
         else:
             hover = HoverTool(tooltips=[
                 ("Ethnicity", "@Ethnicity"),
-                ('Raw values', "@{"+values+"}"),
-                ('Percent/%', "@{"+percent+"}{0.0}"),
+                ('Number of people', "@{"+values+"}"),
+                ('Dataset percent/%', "@{"+percent+"}{0.0}"),
                 ('UK population percent/%', '@{ref percent}{0.0}')
             ])
 
@@ -293,7 +293,7 @@ def plot_gender(source,name, reletivise = False,out = False):
         if reletivise:
             legend_name = name + '%/Uk Population%'
         else:
-            legend_name = name ' percent'
+            legend_name = name + ' percent'
         r = figure(
             x_range=list(source.data['Gender']),
             title='Gender',
@@ -332,8 +332,8 @@ def plot_gender(source,name, reletivise = False,out = False):
 
             hover2 = HoverTool(tooltips=[
                 ('Gender', '@Gender'),
-                ('Raw values', "@{" + values + "}"),
-                ('Percent/%', "@{" + percent + "}{0.0}"),
+                ('Number of people', "@{" + values + "}"),
+                ('Dataset percent/%', "@{" + percent + "}{0.0}"),
                 ('UK population percent/%', '@{ref percent}{0.0}')
             ],
                 mode='mouse', name='data plot')
@@ -405,6 +405,10 @@ def plot_ses(source, name,reletivise = False,out = False):
             x_ref = addition + 'x_ref'
             y_ref = addition + 'y_ref'
 
+        if reletivise:
+            legend_name = name + '%/Uk Population%'
+        else:
+            legend_name = name + ' percent'
 
         q = figure(title='Socioeconomic status', x_range=(min(source.data[labs_x_cords]) - 0.1, max(source.data[labs_x_cords]) + 0.1),
                    y_range=(min(source.data[labs_y_cords]) * 0.9, max(source.data[labs_y_cords]) * 1.1))
@@ -426,7 +430,7 @@ def plot_ses(source, name,reletivise = False,out = False):
             line_alpha=0,
             color='#003667',
             source=source,
-            legend_label=name
+            legend_label=legend_name
         )
 
         q.multi_line(
@@ -445,8 +449,8 @@ def plot_ses(source, name,reletivise = False,out = False):
         else:
             hover = HoverTool(tooltips=[
                 ('Socioeconomic Status', '@{Socioeconomic Status}'),
-                ('Raw values', "@{"+values+"}"),
-                ('Percent/%', "@{"+percent+"}{0.0}"),
+                ('Number of people', "@{"+values+"}"),
+                ('Dataset percent/%', "@{"+percent+"}{0.0}"),
                 ('UK population percent/%', '@{ref percent}{0.0}')
             ])
 
@@ -457,7 +461,7 @@ def plot_ses(source, name,reletivise = False,out = False):
                 line_width=0,
                 alpha=0.35,
                 source=source,
-                legend_label='UK Population Ratio')
+                legend_label='UK Population Percent')
 
         q.yaxis.major_label_text_font_size = '0pt'
         q.xaxis.major_label_text_font_size = '0pt'
@@ -682,7 +686,7 @@ def full_ses_plot(data_dict,name,reletivise = False, out = False):
         if reletivise:
             legend_name = name + '%/Uk Population%'
         else:
-            legend_name = name ' percent'
+            legend_name = name + ' percent'
         def unit_poly_verts(theta):
             """Return vertices of polygon for subplot axes.
             This polygon is circumscribed by a unit circle centered at (0.5, 0.5)
@@ -860,44 +864,46 @@ def rel_plots(plot_dict,name,out):
     pal_nr = Panel(child = non_reletive,title = 'Populations')
     pal_r = Panel(child=reletive, title='Compare Populations')
     tabs = Tabs(tabs = [pal_nr,pal_r])
-    if 'Text' in plot_dict.values():
-        description = Div(
-            text=plot_dict[name]['Text'],
-            style={'font-size': '20pt', 'color': '#555555', 'font': 'helvetica'},
-        )
-        out_plot = gridplot([[description],[tabs]],toolbar_options={'autohide': True})
-    else:
-        out_plot = tabs
     if out:
         file_name = str(date.today()) + 'tabs_plot.html'
         output_file(file_name)
-        save(out_plot)
-    return(out_plot)
+        save(tabs)
+    return(tabs)
 
 def all_datasets(plot_dict,out):
     panal_list = [Panel(child = rel_plots(plot_dict,i,out= False),title = i) for i in plot_dict.keys()]
     tabs = Tabs(tabs = panal_list)
     title = Div(text="""Data Representation Labels""",
-                style={'font-size': '40pt', 'color': '#a0a0a0', 'font': 'helvetica'},
-                height=100)
+                style={'font-size': '28pt', 'color': '#a0a0a0', 'font': 'helvetica'}
+                )
+    created_by = Div(
+        text="""<i>Created by Wellcome’s Data for Science and Health Priority Area </i>""",
+        style={'font-size': '7pt', 'color': '#555555', 'font': 'helvetica'}
+    )
     description  = Div(
-        text="""This is a tool to examine the demographics of commonly used datasets and how they compare to the UK population.""",
-        style={'font-size': '14pt', 'color': '#555555', 'font': 'helvetica'},
-        height=100
-    )
-    added_description = Div(
-        text="""The datasets represented by these labels are some of the most commonly used and cited datasets in usage in the UK today. The data displayed here was collated using a combination of metadata available in published papers and online platforms (such as Closer Discovery and the datasets own webpages). No raw data was accessed for the purpose of this project. For UK population we used the 2011 census data""",
-        style={'font-size': '14pt', 'color': '#555555', 'font': 'helvetica'},
-        height=200
-    )
-    final_description = Div(
-        text="""The 'Compare Populations' tab shows how each demographic group is represented in comaprison to the makeup of the UK. This is calculated by taking the percent of a group in a data set and dividing it by the percent of that group in the UK population. For example: If women make up 10% of a dataset, and women comprise 50% of the population at large, that means this dataset has 20% of the number of women required to be truly representative in this metric. """,
-        style={'font-size': '14pt', 'color': '#555555', 'font': 'helvetica'},
-        height=200
+        text="""This is a tool for researchers to examine the demographics of commonly used datasets and how they compare to the UK population. The datasets we are highlighting are: """,
+        style={'font-size': '14pt', 'color': '#555555', 'font': 'helvetica'}
     )
 
+    dataset_list = Div(
+        text="""<ul><li>UK Biobank</li><li>ALSPAC</li><li>CPRD</li><li>National Child Development Study</li><li>Whitehall study II</li><li>HES</li></ul>  """,
+        style={'font-size': '14pt', 'color': '#555555', 'font': 'helvetica'})
 
-    final = gridplot([[title],[description], [added_description],[final_description] ,[tabs]], toolbar_options={'autohide': True})
+    creation = Div(
+        text="""It was created by the Wellcome Trust with the intention of comparing how the UK population is represented in these datasets, and highlighting where there are disparities.<br>
+         <b>How we chose the datasets and accessed the number going into the graph:</b>  The datasets represented by these labels are some of the most commonly used and cited datasets in the UK today. The data displayed here was collated using a combination of metadata available in published papers and online platforms (such as Closer Discovery and the datasets own webpages). No raw data was accessed for the purpose of this project.<br>
+         <b>Known limitations:</b> We know that the groupings of sub-populations used in the datasets, e.g. ethnicity groupings, are subjective and potentially inaccurate at times.<br>
+         Please don’t hesitate to contact us with any questions, feedback or suggestions at <u>b.knowles@wellcome.org</ul> """,
+        style={'font-size': '14pt', 'color': '#555555', 'font': 'helvetica'}
+    )
+
+    last_updated = Div(
+        text="""<i>Date last updated: 9th Nov 2020</i> """,
+        style={'font-size': '7pt', 'color': '#555555', 'font': 'helvetica'}
+
+    )
+    final = gridplot([[title],[created_by],[description], [dataset_list],[creation],[last_updated] ,[tabs]],
+                     toolbar_options={'autohide': True})
 
     if out:
         file_name = str(date.today()) + 'representation_labels.html'
