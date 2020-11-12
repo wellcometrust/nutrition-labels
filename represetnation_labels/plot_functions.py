@@ -893,6 +893,7 @@ def all_datasets(plot_dict,out):
         text="""It was created by the Wellcome Trust with the intention of comparing how the UK population is represented in these datasets, and highlighting where there are disparities.<br>
          <b>How we chose the datasets and accessed the number going into the graph:</b>  The datasets represented by these labels are some of the most commonly used and cited datasets in the UK today. The data displayed here was collated using a combination of metadata available in published papers and online platforms (such as Closer Discovery and the datasets own webpages). No raw data was accessed for the purpose of this project.<br>
          <b>Known limitations:</b> We know that the groupings of sub-populations used in the datasets, e.g. ethnicity groupings, are subjective and potentially inaccurate at times.<br>
+         <b>'Compare Populations':</b> tab shows how each demographic group is represented in comaprison to the makeup of the UK. This is calculated by taking the percent of a group in a data set and dividing it by the percent of that group in the UK population. For example: If women make up 10% of a dataset, and women comprise 50% of the population at large, that means this dataset has 20% of the number of women required to be truly representative in this metric.<br>'
          Please don’t hesitate to contact us with any questions, feedback or suggestions at <u>b.knowles@wellcome.org</ul> """,
         style={'font-size': '14pt', 'color': '#555555', 'font': 'helvetica'}
     )
