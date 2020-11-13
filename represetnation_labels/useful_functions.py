@@ -44,16 +44,31 @@ def standardise_refs(vals,ref_perc):
     return std
 
 def get_name(name_key,addition):
-    if name_key == 'values' or name_key == 'percent':
+    if name_key == 'values' or name_key == 'percent' or name_key == '':
         return addition
     else:
         alter_name = re.sub(' values','',name_key)
         alter_name = re.sub(' percent','', alter_name)
+        alter_name = re.sub('','', alter_name)
         return str(alter_name) + ' ' + (addition)
 
 def reletivise_text(perc):
     string =  'there is ' + str(round(perc)) + '% of this group needed to be representative'
     return string
+
+def absolute_reletivise_text(values,ref_std):
+    if values == 0:
+        return('This data set needs ' + str(ref_std) + ' more people in this group to be representative')
+    elif ref_std > values:
+        val = ref_std - values
+        mult = round(ref_std/values,1)
+        return('This data set needs ' + str(mult) + 'X (n:' + str(val) +') more people in this group to be representative')
+    else:
+        val = values - ref_std
+        return ('This group is overrepresenet. there can be ' + str(val) + ' fewer people in this group to be representative')
+
+def absolute_reletivie_list(values,ref_std):
+    return([absolute_reletivise_text(values[i],ref_std[i]) for i in range(len(values))])
 
 def clean_data(cohorts_dict, reference_dict):
     graph_dict = {}
@@ -90,9 +105,18 @@ def clean_data(cohorts_dict, reference_dict):
             desc_text = {'description text': ['this is description text for this variable'] * len(ref_pers)}
             ref_pers = {'ref percent': ref_pers}
             rel_text = {get_name(k,'text'):[reletivise_text(i) for i in v] for k,v in rel_dict.items()}
+            if 'values' in vals_short.keys():
+                cat_list = ['']
+            else:
+                cat_list = [re.sub('values','',i) for i in vals.keys() if 'values' in i]
+
+            abs_rel_text = {get_name(i,
+                                     'abs text'):absolute_reletivie_list(vals_short[str(i) + 'values'],
+                                                                           std_ref_dict[str(i) + 'reference standardised']) for i in cat_list}
             graph_dict[dataset][var]={**vals_short,
                                       **perc_dict,
-                                      **rel_dict,**std_ref_dict,**missing,**ref_pers,**desc_text,**rel_text}
+                                      **rel_dict,
+                                      **std_ref_dict,**missing,**ref_pers,**desc_text,**rel_text,**abs_rel_text}
 
     return ref_dict, graph_dict
 
@@ -202,3 +226,4 @@ if __name__ == '__main__':
     graph_dict2['ALSPAC']['Ethnicity']['description text'] = ['The mother was asked to describe the ethnic origin of herself, her partner and her parents in a questionnaire. There were 9 possible ethnicity categories: white, Black/Caribbean, Black/African, Black/other, Indian, Pakistani, Bangladeshi, Chinese, Other. Most research using this data derived the childs ethnic background as ‘white’ (if both parents were described as white) or ‘non-white’ (if either parent was described as any ethnicity other than white). The 9 categories for ethnicity offer a greater level of granularity than many other cohort studies. However, there are far more ethnic groups represented in the UK, and often people do not identify with one ethnicity. These groups also get aggregated into just 2 categories (white or non-white) for the child’s ethnicity, meaning that it may be difficult to understand any nuances or differences in health and well-being related to ethnic background.  Often larger but fewer categories are used for analysis to ensure the sample size is large enough for statistical signifacince.'] * len(graph_dict2['ALSPAC']['Ethnicity']['Ethnicity'])
     for dataset in graph_dict2.keys():
         graph_dict2[dataset]['Ethnicity']['description text'] = ['The 5 ethnicities are the groups which all datasets have in common. Some datasets did collect more granular data (up to 16 categories) but to compare the representativeness between datasets, the data has been grouped to these higher-level categories.']* len(graph_dict2[dataset]['Ethnicity']['Ethnicity'])
+        graph_dict2[dataset]['Socioeconomic Status']['description text'] =['Social class based on Occupation (formerly the UK Registrar General’s occupational coding) has been used across datasets as an indicator of socioeconomic status. The categories are<br><ul><li>V (unskilled)</li><li>IV (semi-skilled manual)</li><li>III (skilled manual)</li><li>III (non-manual)</li><li>II (managerial and technical)</li><li>I (professional)</li></ul>'] * len(graph_dict2[dataset]['Socioeconomic Status']['Socioeconomic Status'])

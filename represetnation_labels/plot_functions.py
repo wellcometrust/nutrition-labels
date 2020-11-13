@@ -55,7 +55,7 @@ def plot_age(source,name,reletivise = False,out = False):
 
         if reletivise:
             values = addition + 'reletive'
-            rel_text = addition + 'reletive text'
+            rel_text = addition + 'abs text'
         else:
             values = addition + 'values'
             ref_std = addition + 'reference standardised'
@@ -130,6 +130,8 @@ def plot_age(source,name,reletivise = False,out = False):
         p.title.text_font = "helvetica"
         p.legend.label_text_font = "helvetica"
         p.legend.label_text_color = "#a0a0a0"
+        p.legend.border_line_color = '#555555'
+        p.legend.border_line_width = 2
         p.add_tools(hover2)
 
         a = missing_plot(source, missing_vals, values)
@@ -158,7 +160,7 @@ def plot_ethnicity(source, name,reletivise = False,out = False):
         missing = addition + 'missing'
         if reletivise:
             values = addition + 'reletive'
-            rel_text = addition + 'reletive text'
+            rel_text = addition + 'abs text'
             x_vals = addition + 'x_rel'
             y_vals = addition + 'y_rel'
             x_lines = addition + 'rel_x_lines'
@@ -254,6 +256,8 @@ def plot_ethnicity(source, name,reletivise = False,out = False):
         q.title.text_font = "helvetica"
         q.legend.label_text_font = "helvetica"
         q.legend.label_text_color = "#a0a0a0"
+        q.legend.border_line_color = '#555555'
+        q.legend.border_line_width = 2
         q.add_layout(labels)
         q.add_tools(hover)
         q.toolbar_location = None
@@ -283,7 +287,7 @@ def plot_gender(source,name, reletivise = False,out = False):
     def gender_plot(source, addition, name, reletivise=reletivise):
         if reletivise:
             values = addition + 'reletive'
-            rel_text = addition + 'reletive text'
+            rel_text = addition + 'abs text'
         else:
             values = addition + 'values'
             ref_std = addition + 'reference standardised'
@@ -355,6 +359,8 @@ def plot_gender(source,name, reletivise = False,out = False):
         r.title.text_font = "helvetica"
         r.legend.label_text_font = "helvetica"
         r.legend.label_text_color = "#a0a0a0"
+        r.legend.border_line_color = '#555555'
+        r.legend.border_line_width = 2
         r.add_tools(hover2)
         r.toolbar_location = None
         a = missing_plot(source, missing_vals, values)
@@ -386,7 +392,7 @@ def plot_ses(source, name,reletivise = False,out = False):
         missing = addition + 'missing'
         if reletivise:
             values = addition + 'reletive'
-            rel_text = addition + 'reletive text'
+            rel_text = addition + 'abs text'
             x_vals = addition + 'x_rel'
             y_vals = addition + 'y_rel'
             x_lines = addition + 'rel_x_lines'
@@ -482,6 +488,8 @@ def plot_ses(source, name,reletivise = False,out = False):
         q.title.text_font = "helvetica"
         q.legend.label_text_font = "helvetica"
         q.legend.label_text_color = "#a0a0a0"
+        q.legend.border_line_color = '#555555'
+        q.legend.border_line_width = 2
         q.add_layout(labels)
         q.add_tools(hover)
         q.toolbar_location = None
@@ -886,14 +894,19 @@ def all_datasets(plot_dict,out):
     )
 
     dataset_list = Div(
-        text="""<ul><li>UK Biobank</li><li>ALSPAC</li><li>CPRD</li><li>National Child Development Study</li><li>Whitehall study II</li><li>HES</li></ul>  """,
-        style={'font-size': '14pt', 'color': '#555555', 'font': 'helvetica'})
+        text="""<ul><li><b>UK Biobank:</b> The UK Biobank is a prospective cohort study that recruited 500,000 adults aged between 40-69 years in the UK in 2006-2010, aiming to improve the prevention, diagnosis and treatment of a wide range of illnesses.</li>
+                    <li><b>ALSPAC:</b> The Avon Longitudinal Study of Children and Parents (ALSPAC) is a prospective cohort study which recruited 14,541 pregnant women living in the South West of England during 1990-1992, aiming to understand how genetic and environmental factors influence health and development in parents and children by collecting information on demographics, lifestyle behaviours, physical and mental health</li>
+                    <li><b>CPRD:</b> The Clinical Practice Research Datalink (CPRD, formerly the General Practice Research Database) is a primary care research database which collates de-identified patient data from general practices across the UK, covering 50 million patients, including 16 million currently registered patients.</li>
+                    <li><b>National Child Development Study:</b> The 1958 National Child Development Study (NCDS) is a prospective cohort study of 17,415 people born in England, Scotland and Wales in a single week of 1958.  It has been used to understand topics such as the effects of socioeconomic circumstances, and child adversities on health, and social mobility.</li>
+                    <li><b>Whitehall study II:</b> The Whitehall II Study (also know as the Stress and Health Study) is a prospective cohort of 10,308 participants aged 35-55, of whom 3,413 were women and 6,895 men, was recruited from the British Civil Service in 1985.</li>
+                    <li><b>HES:</b> Hospital Episode Statistics (HES) is a database containing details of all admissions, A&E attendances and outpatient appointments at NHS hospitals in England. It contains over 200 million records with a wide range of information about an individual patient admitted to an NHS hospital such as diagnoses, operations, demographics, and administrative information. It is often used by linking to other datasets such as the UK Biobank. </li></ul>  """,
+        style={'font-size': '10pt', 'color': '#555555', 'font': 'helvetica'})
 
     creation = Div(
         text="""It was created by the Wellcome Trust with the intention of comparing how the UK population is represented in these datasets, and highlighting where there are disparities.<br>
          <b>How we chose the datasets and accessed the number going into the graph:</b>  The datasets represented by these labels are some of the most commonly used and cited datasets in the UK today. The data displayed here was collated using a combination of metadata available in published papers and online platforms (such as Closer Discovery and the datasets own webpages). No raw data was accessed for the purpose of this project.<br>
          <b>Known limitations:</b> We know that the groupings of sub-populations used in the datasets, e.g. ethnicity groupings, are subjective and potentially inaccurate at times.<br>
-         <b>'Compare Populations':</b> tab shows how each demographic group is represented in comaprison to the makeup of the UK. This is calculated by taking the percent of a group in a data set and dividing it by the percent of that group in the UK population. For example: If women make up 10% of a dataset, and women comprise 50% of the population at large, that means this dataset has 20% of the number of women required to be truly representative in this metric.<br>'
+         <b>'Compare Populations':</b> tab shows how each demographic group is represented in comaprison to the makeup of the UK. This is calculated by taking the percent of a group in a data set and dividing it by the percent of that group in the UK population. For example: If women make up 10% of a dataset, and women comprise 50% of the population at large, that means this dataset has 20% of the number of women required to be truly representative in this metric (this doesnt include missing data).<br>
          Please don’t hesitate to contact us with any questions, feedback or suggestions at <u>b.knowles@wellcome.org</ul> """,
         style={'font-size': '14pt', 'color': '#555555', 'font': 'helvetica'}
     )
