@@ -58,14 +58,14 @@ def reletivise_text(perc):
 
 def absolute_reletivise_text(values,ref_std):
     if values == 0:
-        return('This data set needs ' + str(ref_std) + ' more people in this group to be representative')
+        return('This group is representative.')
     elif ref_std > values:
         val = ref_std - values
         mult = round(ref_std/values,1)
-        return('This data set needs ' + str(mult) + 'X (n:' + str(val) +') more people in this group to be representative')
+        return('This group needs ' + str(mult) + 'X (n:' + str(val) +') more people to be representative.')
     else:
         val = values - ref_std
-        return ('This group is overrepresenet. there can be ' + str(val) + ' fewer people in this group to be representative')
+        return ('This group is overrepresented. There should be ' + str(val) + ' fewer people in this group to be representative.')
 
 def absolute_reletivie_list(values,ref_std):
     return([absolute_reletivise_text(values[i],ref_std[i]) for i in range(len(values))])
@@ -99,6 +99,25 @@ def clean_data(cohorts_dict, reference_dict):
             perc_dict = {get_name(k,'percent'): get_percents(v) for k,v in vals.items() if isinstance(v[0],int)}
             ref_pers = ref_dict[var]['percent']
             rel_dict = {get_name(k,'reletive'): get_reletives(v,ref_pers) for k,v in perc_dict.items()}
+            rel_colours_dict = {}
+            rep_or_not_legend_dict = {}
+            rep_threshold_dict = {}
+            for k,v in rel_dict.items():
+                rep_threshold_dict[k + '_rep_threhsold'] = [100]*len(v)
+                rel_colours = []
+                rep_or_not = []
+                for i in v:
+                    if i < 95:
+                        rel_colours.append('#FF112C')
+                        rep_or_not.append('Under-representative of the UK population')
+                    elif i < 105:
+                        rel_colours.append('#90C877')
+                        rep_or_not.append('Well representative of the UK population')
+                    else:
+                        rel_colours.append('#5FBFCE')
+                        rep_or_not.append('Over-representative of the UK population')
+                rel_colours_dict[k + '_colours'] = rel_colours
+                rep_or_not_legend_dict[k + '_representative_or_not'] = rep_or_not
             std_ref_dict = {get_name(k,'reference standardised'):
                                 standardise_refs(v,ref_pers) for k,v in vals.items() if isinstance(v[0],int)}
             vals_short = {k:v[:-1] for k,v in vals.items()}
@@ -116,6 +135,9 @@ def clean_data(cohorts_dict, reference_dict):
             graph_dict[dataset][var]={**vals_short,
                                       **perc_dict,
                                       **rel_dict,
+                                      **rel_colours_dict,
+                                      **rep_or_not_legend_dict,
+                                      **rep_threshold_dict,
                                       **std_ref_dict,**missing,**ref_pers,**desc_text,**rel_text,**abs_rel_text}
 
     return ref_dict, graph_dict
@@ -151,14 +173,21 @@ def spider_plot_source(spider_dict,addition):
 
     ref_std = np.array(test_spider['reference standardised'])
 
-
+    rep_lower_threshold_mapped = 95/(sum(rel_values) *2)
+    rep_upper_threshold_mapped = 105/(sum(rel_values) *2)
+    
     values = values / (sum(values) * 2)
     ref_std = ref_std / (sum(ref_std) * 2)
     rel_values = rel_values/(sum(rel_values) *2)
 
+    rep_lower_threshold = np.array([rep_lower_threshold_mapped]*len(rel_values))
+    rep_upper_threshold = np.array([rep_upper_threshold_mapped]*len(rel_values))
+
     x_val, y_val = radar_patch(values, theta)
     x_ref, y_ref = radar_patch(ref_std, theta)
     x_rel, y_rel = radar_patch(rel_values,theta)
+    x_l_rep, y_l_rep = radar_patch(rep_lower_threshold,theta)
+    x_u_rep, y_u_rep = radar_patch(rep_upper_threshold,theta)
 
 
     new_line_max = np.array([max(np.concatenate([values, ref_std]))] * len(values))
@@ -178,6 +207,10 @@ def spider_plot_source(spider_dict,addition):
         addition +'y_ref':np.array(y_ref),
         addition +'x_rel':np.array(x_rel),
         addition +'y_rel':np.array(y_rel),
+        addition +'x_l_rep':np.array(x_l_rep),
+        addition +'y_l_rep':np.array(y_l_rep),
+        addition +'x_u_rep':np.array(x_u_rep),
+        addition +'y_u_rep':np.array(y_u_rep),
         addition +'x_lines':new_x_lines,
         addition +'y_lines':new_y_lines,
         addition +'rel_x_lines': rel_new_x_lines,
