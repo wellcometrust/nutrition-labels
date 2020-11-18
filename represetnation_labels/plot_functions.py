@@ -5,7 +5,7 @@ import numpy as np
 import math
 from bokeh.plotting import figure, output_file, show, gridplot,save
 
-from bokeh.models import ColumnDataSource, LabelSet, HoverTool, Div, Label, CustomJS
+from bokeh.models import ColumnDataSource, LabelSet, HoverTool, Div, Label, CustomJS, Span
 from bokeh.models.widgets import Panel, Tabs
 from datetime import date
 import re
@@ -64,7 +64,7 @@ def plot_age(source,name,reletivise = False,out = False):
         percent = addition + 'percent'
 
         if reletivise:
-            legend_name = name + '%/Uk Population%'
+            legend_name = addition + 'reletive_representative_or_not'
         else:
             legend_name = name + ' percent'
 
@@ -75,23 +75,49 @@ def plot_age(source,name,reletivise = False,out = False):
             toolbar_location=None
         )
 
-        p.vbar(
-            x='Age',
-            top=values,
-            width=0.9,
-            color='#003667',
-            legend_label=legend_name,
-            line_alpha=0,
-            source=source
-        )
-
         if reletivise:
+
+            p.vbar(
+                x='Age',
+                top=values,
+                width=0.9,
+                color=addition + 'reletive_colours',
+                legend_group=legend_name,
+                line_alpha=0,
+                source=source
+            )
+            # You can't add legends to spans so this is the hacky way - create a line with the same settings as the lines, but with no data
+            p.line([], [], legend_label='Representative of the UK population', line_color='black', line_width=1, line_alpha=0.8, line_dash='dashed')
+
+            # Add horizontal line at 100 with label
+            hline = Span(location=95, dimension='width', line_color='black', line_width=1, line_alpha=0.8, line_dash='dashed')
+            hline2 = Span(location=105, dimension='width', line_color='black', line_width=1, line_alpha=0.8, line_dash='dashed')
+            p.renderers.extend([hline, hline2])
+
+            citation = Label(x=30, y=90, x_units='screen', y_units='data',
+                 text='95%', render_mode='css')
+            p.add_layout(citation)
+            citation = Label(x=30, y=105, x_units='screen', y_units='data',
+                 text='105%', render_mode='css')
+            p.add_layout(citation)
+
             hover2 = HoverTool(tooltips=[
                 ('Age range', '@Age'),
                 (' ', "@{" + rel_text + "}"),
             ],
                 mode='mouse', name='data plot')
         else:
+
+            p.vbar(
+                x='Age',
+                top=values,
+                width=0.9,
+                color='#003667',
+                legend_label=legend_name,
+                line_alpha=0,
+                source=source
+            )
+
             p.vbar(
                 x='Age',
                 top=ref_std,
@@ -167,6 +193,10 @@ def plot_ethnicity(source, name,reletivise = False,out = False):
             y_lines = addition + 'rel_y_lines'
             labs_x_cords = addition + 'rel_labs_x_cords'
             labs_y_cords = addition + 'rel_labs_y_cords'
+            x_rep_low_thresh = addition + 'x_l_rep'
+            y_rep_low_thresh = addition + 'y_l_rep'
+            x_rep_up_thresh = addition + 'x_u_rep'
+            y_rep_up_thresh = addition + 'y_u_rep'
         else:
             values = addition + 'values'
             percent = addition + 'percent'
@@ -198,29 +228,64 @@ def plot_ethnicity(source, name,reletivise = False,out = False):
             render_mode='canvas'
         )
 
-        q.patch(
-            x= x_vals,
-            y=y_vals,
-            line_alpha=0,
-            color='#003667',
-            source=source,
-            legend_label=legend_name
-        )
-
-        q.multi_line(
-            x_lines,
-            y_lines,
-            source=source,
-            color="#a0a0a0",
-            line_width=1
-        )
         if reletivise:
+
+            q.patch(
+                x= x_vals,
+                y=y_vals,
+                line_alpha=0,
+                color='#003667',
+                source=source
+            )
+
+            q.circle(
+                x= x_vals,
+                y= y_vals,
+                source=source,
+                color=addition + 'reletive_colours',
+                size = 6,
+                legend_group = addition + 'reletive_representative_or_not')
+
+
+            q.patch(
+                x= x_rep_low_thresh,
+                y= y_rep_low_thresh,
+                fill_alpha=0,
+                line_color='black',
+                line_width=1,
+                line_alpha=0.8,
+                line_dash='dashed',
+                source=source
+            )
+
+            q.patch(
+                x= x_rep_up_thresh,
+                y= y_rep_up_thresh,
+                fill_alpha=0,
+                line_color='black',
+                line_width=1,
+                line_alpha=0.8,
+                line_dash='dashed',
+                source=source,
+                legend_label='Representative of the UK population.'
+            )
+
             hover = HoverTool(tooltips=[
                 ('Ethnicity', '@Ethnicity'),
                 (' ', "@{"+rel_text+"}"),
             ],
                 mode='mouse', name='data plot')
         else:
+
+            q.patch(
+                x= x_vals,
+                y=y_vals,
+                line_alpha=0,
+                color='#003667',
+                source=source,
+                legend_label=legend_name
+            )
+
             hover = HoverTool(tooltips=[
                 ("Ethnicity", "@Ethnicity"),
                 ('Number of people', "@{"+values+"}"),
@@ -236,6 +301,14 @@ def plot_ethnicity(source, name,reletivise = False,out = False):
                 alpha=0.35,
                 source=source,
                 legend_label='UK Population Percent')
+
+        q.multi_line(
+            x_lines,
+            y_lines,
+            source=source,
+            color="#a0a0a0",
+            line_width=1
+        )
 
         q.yaxis.major_label_text_font_size = '0pt'
         q.xaxis.major_label_text_font_size = '0pt'
@@ -295,7 +368,7 @@ def plot_gender(source,name, reletivise = False,out = False):
         missing_vals = addition + 'missing'
         percent = addition + 'percent'
         if reletivise:
-            legend_name = name + '%/Uk Population%'
+            legend_name = addition + 'reletive_representative_or_not'
         else:
             legend_name = name + ' percent'
         r = figure(
@@ -305,23 +378,49 @@ def plot_gender(source,name, reletivise = False,out = False):
             toolbar_location=None
         )
 
-        r.vbar(
-            x='Gender',
-            top=values,
-            width=0.8,
-            color='#003667',
-            legend_label=legend_name,
-            line_alpha=0,
-            source=source
-        )
-
         if reletivise:
+
+            r.vbar(
+                x='Gender',
+                top=values,
+                width=0.8,
+                color=addition + 'reletive_colours',
+                legend_group=legend_name,
+                line_alpha=0,
+                source=source
+            )
+
+            # You can't add legends to spans so this is the hacky way - create a line with the same settings as the lines, but with no data
+            r.line([], [], legend_label='Representative of the UK population', line_color='black', line_width=1, line_alpha=0.8, line_dash='dashed')
+
+            # Add horizontal line at 100 with label
+            hline = Span(location=95, dimension='width', line_color='black', line_width=1, line_alpha=0.8, line_dash='dashed')
+            hline2 = Span(location=105, dimension='width', line_color='black', line_width=1, line_alpha=0.8, line_dash='dashed')
+            r.renderers.extend([hline, hline2])
+
+            citation = Label(x=30, y=90, x_units='screen', y_units='data',
+                 text='95%', render_mode='css')
+            r.add_layout(citation)
+            citation = Label(x=30, y=105, x_units='screen', y_units='data',
+                 text='105%', render_mode='css')
+            r.add_layout(citation)
+
             hover2 = HoverTool(tooltips=[
                 ('Gender', '@Gender'),
                 (' ', "@{" + rel_text + "}"),
             ],
                 mode='mouse', name='data plot')
         else:
+            r.vbar(
+                x='Gender',
+                top=values,
+                width=0.8,
+                color='#003667',
+                legend_label=legend_name,
+                line_alpha=0,
+                source=source
+            )
+
             r.vbar(
                 x='Gender',
                 top=ref_std,
@@ -399,6 +498,10 @@ def plot_ses(source, name,reletivise = False,out = False):
             y_lines = addition + 'rel_y_lines'
             labs_x_cords = addition + 'rel_labs_x_cords'
             labs_y_cords = addition + 'rel_labs_y_cords'
+            x_rep_low_thresh = addition + 'x_l_rep'
+            y_rep_low_thresh = addition + 'y_l_rep'
+            x_rep_up_thresh = addition + 'x_u_rep'
+            y_rep_up_thresh = addition + 'y_u_rep'
         else:
             values = addition + 'values'
             percent = addition + 'percent'
@@ -430,29 +533,63 @@ def plot_ses(source, name,reletivise = False,out = False):
             render_mode='canvas'
         )
 
-        q.patch(
-            x= x_vals,
-            y=y_vals,
-            line_alpha=0,
-            color='#003667',
-            source=source,
-            legend_label=legend_name
-        )
-
-        q.multi_line(
-            x_lines,
-            y_lines,
-            source=source,
-            color="#a0a0a0",
-            line_width=1
-        )
         if reletivise:
+
+            q.patch(
+                x= x_vals,
+                y=y_vals,
+                line_alpha=0,
+                color='#003667',
+                source=source
+            )
+
+            q.circle(
+                x= x_vals,
+                y= y_vals,
+                source=source,
+                color=addition + 'reletive_colours',
+                size = 6,
+                legend_group = addition + 'reletive_representative_or_not')
+
+            q.patch(
+                x= x_rep_low_thresh,
+                y= y_rep_low_thresh,
+                fill_alpha=0,
+                line_color='black',
+                line_width=1,
+                line_alpha=0.8,
+                line_dash='dashed',
+                source=source
+            )
+
+            q.patch(
+                x= x_rep_up_thresh,
+                y= y_rep_up_thresh,
+                fill_alpha=0,
+                line_color='black',
+                line_width=1,
+                line_alpha=0.8,
+                line_dash='dashed',
+                source=source,
+                legend_label='Representative of the UK population.'
+            )
+
             hover = HoverTool(tooltips=[
                 ('Socioeconomic Status', '@{Socioeconomic Status}'),
                 (' ', "@{"+rel_text+"}"),
             ],
                 mode='mouse', name='data plot')
         else:
+
+            q.patch(
+                x= x_vals,
+                y=y_vals,
+                line_alpha=0,
+                color='#003667',
+                source=source,
+                legend_label=legend_name
+            )
+
             hover = HoverTool(tooltips=[
                 ('Socioeconomic Status', '@{Socioeconomic Status}'),
                 ('Number of people', "@{"+values+"}"),
@@ -468,6 +605,15 @@ def plot_ses(source, name,reletivise = False,out = False):
                 alpha=0.35,
                 source=source,
                 legend_label='UK Population Percent')
+
+
+        q.multi_line(
+            x_lines,
+            y_lines,
+            source=source,
+            color="#a0a0a0",
+            line_width=1
+        )
 
         q.yaxis.major_label_text_font_size = '0pt'
         q.xaxis.major_label_text_font_size = '0pt'
@@ -564,7 +710,6 @@ def full_plot_ethnicity(data_dict,name,reletivise = False, out = False):
         new_x_lines = [[0.5, i] for i in new_x]
         new_y_lines = [[0.5, i] for i in new_y]
 
-
         title_eth = 'Ethnicity'
 
         source = ColumnDataSource(data=dict(x_vals=x_val,
@@ -614,6 +759,7 @@ def full_plot_ethnicity(data_dict,name,reletivise = False, out = False):
             line_width=1
         )
         if reletivise:
+            
             hover = HoverTool(tooltips=[
                 ('Ethnicity', '@label_eth'),
                 (' ', "@rel_text"),
@@ -928,5 +1074,24 @@ def all_datasets(plot_dict,out):
 
 
 if __name__ == '__main__':
+    import useful_functions as uf
+
+    with open('data/raw/cohort_demographics_test_data.json', 'r') as fb:
+        cohorts_dic = json.load(fb)
+
+    with open('data/raw/Reference_population.json', 'r') as fb:
+        reference_dict = json.load(fb)
+
+    ref_dict, graph_dict = uf.clean_data(cohorts_dic, reference_dict)
+    graph_dict2 = uf.update_graph_dict(graph_dict)
+    graph_dict2['UK Biobank']['Text'] = 'The UK Biobank is a prospective cohort study that recruited adults aged between 40-69 years in the UK in 2006-2010. People were invited to participate by mailed invitations to the general public living within 25 miles of one of the 22 assessment centres in England, Scotland and Wales (there was a response rate of 5.5%). '
+    graph_dict2['ALSPAC']['Text'] = 'The Avon Longitudinal Study of Children and Parents (ALSPAC) is a prospective cohort study which recruited pregnant women living in the South West of England during 1990-1992. It aims to understand how genetic and environmental factors influence health and development in parents and children by collecting information on demographics, lifestyle behaviours, physical and mental health. The parents and children have been followed up since recruitment through questionnaires, and a subset completed additional assessments (e.g. ‘Focus on Mothers’) which collected anthropometric measurements and biological samples.'
+    graph_dict2['ALSPAC']['Age']['description text'] =['At recruitment, the mother was asked to describe her age and that of her partner. The children were obviously all born shortly after their mothers were invited to join the study, so their age at recruitment is 0 years. Overtime, subsequent data was collected at different time points, providing a longitudinal perspective on key health and lifestyle characteristics. So, whilst these labels reflect the baseline characteristics, it does not capture any changes during the participants’ life course (for example when the children are grown-up, their socioeconomic status may be different).'] * len(graph_dict2['ALSPAC']['Age']['Age'])
+    graph_dict2['ALSPAC']['Ethnicity']['description text'] = ['The mother was asked to describe the ethnic origin of herself, her partner and her parents in a questionnaire. There were 9 possible ethnicity categories: white, Black/Caribbean, Black/African, Black/other, Indian, Pakistani, Bangladeshi, Chinese, Other. Most research using this data derived the childs ethnic background as ‘white’ (if both parents were described as white) or ‘non-white’ (if either parent was described as any ethnicity other than white). The 9 categories for ethnicity offer a greater level of granularity than many other cohort studies. However, there are far more ethnic groups represented in the UK, and often people do not identify with one ethnicity. These groups also get aggregated into just 2 categories (white or non-white) for the child’s ethnicity, meaning that it may be difficult to understand any nuances or differences in health and well-being related to ethnic background.  Often larger but fewer categories are used for analysis to ensure the sample size is large enough for statistical signifacince.'] * len(graph_dict2['ALSPAC']['Ethnicity']['Ethnicity'])
+    for dataset in graph_dict2.keys():
+        graph_dict2[dataset]['Ethnicity']['description text'] = ['The 5 ethnicities are the groups which all datasets have in common. Some datasets did collect more granular data (up to 16 categories) but to compare the representativeness between datasets, the data has been grouped to these higher-level categories.']* len(graph_dict2[dataset]['Ethnicity']['Ethnicity'])
+
     all_datasets(graph_dict2, out=True)
+
+
 
