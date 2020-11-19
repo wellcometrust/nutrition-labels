@@ -8,3 +8,4 @@ lxml
 wellcomeml[deep-learning]
 docutils==0.15.2
 bokeh==2.1.0
+scholarly
