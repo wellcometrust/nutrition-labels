@@ -235,13 +235,13 @@ These results are just from running one training of the model using a specific t
 
 I expect the changes to the training data made most of the difference, but adding the title and grant types did contribute a little to the increases seen (I tested without these and the scores were slightly smaller).
 
-## Ensemble model 
-We took the top performing models, labeled the grant data with each model and defined a grant as containing  a tool only if all three models agreed. 
+## Ensemble model
+We took the top performing models, labeled the grant data with each model and defined a grant as containing  a tool only if all three models agreed.
 
-Criteria for chosing models: 
-F1 >= 0.8 
+Criteria for chosing models:
+F1 >= 0.8
 Precision >= 0.82
-Recall >= 0.82 
+Recall >= 0.82
 
 This returned 3 models: bert_log_reg_scibert_200807, bert_naive_bayes_scibert_200807, count_naive_bayes_200807
 
@@ -257,7 +257,111 @@ test results:
 | Ensemble (mean) | 0.856038647 | 0.826126619 | 0.888888889 |
 
 
+# 22nd October 2020
+
+There are 2 random number seeds in the creation of the training data - one for selecting the values from the irrelevant dataset to use, and one for splitting of the training and test datasets. This process has been rewritten so that it only uses one random seed.
+
+## The best random seed and variability in results
+
+There is quite a bit of variability in the model results due to which random seed you use to split the data into the training and test sets. To scope how large this variability is and which random seed might generally produce good results on the different models we ran each model type 10 times with different random seeds.
+
+By running
+
+```
+python nutrition_labels/grant_tagger_seed_experiments.py
+```
+different combinations of the vectorizer and model types will be run 10 times and the results outputted.
+
+We used the training data `data/processed/training_data/200807/training_data.csv` for all these experiments.
 
 
+### Variability in the results:
+
+| Model | Mean/std/range test accuracy | Mean/std/range test f1 | Mean/std/range test precision_score | Mean/std/range test recall_score |
+| ----- | ------------------ | ------------ | ------------------------- | ---------------------- |
+| count_naive_bayes_201021|0.793/ 0.044/ (0.701, 0.85)|0.805/ 0.040/ (0.724, 0.864)|0.780/ 0.063/ (0.609, 0.833)|0.839/ 0.070/ (0.732, 0.927)|
+| count_log_reg_201022|0.778/ 0.035/ (0.729, 0.832)|0.783/ 0.033/ (0.729, 0.842)|0.778/ 0.036/ (0.696, 0.824)|0.791/ 0.055/ (0.696, 0.873)|
+| tfidf_naive_bayes_201021|0.750/ 0.078/ (0.57, 0.822)|0.777/ 0.059/ (0.662, 0.846)|0.730/ 0.105/ (0.506, 0.821)|0.855/ 0.100/ (0.644, 0.957)|
+| tfidf_log_reg_201021|0.776/ 0.054/ (0.701, 0.841)|0.767/ 0.062/ (0.681, 0.844)|0.817/ 0.067/ (0.651, 0.9)|0.737/ 0.121/ (0.571, 0.885)|
+| bert_naive_bayes_bert_201021|0.731/ 0.053/ (0.636, 0.804)|0.737/ 0.051/ (0.636, 0.817)|0.736/ 0.071/ (0.61, 0.812)|0.744/ 0.065/ (0.596, 0.825)|
+|bert_SVM_bert_201022|0.767/ 0.042/ (0.72, 0.869)|0.785/ 0.036/ (0.754, 0.881)|0.743/ 0.052/ (0.647, 0.825)|0.838/ 0.063/ (0.763, 0.945)|
+|bert_log_reg_bert_201022|0.759/ 0.037/ (0.71, 0.813)|0.761/ 0.037/ (0.713, 0.825)|0.771/ 0.066/ (0.65, 0.894)|0.761/ 0.074/ (0.643, 0.855)|
+|bert_log_reg_scibert_201022|0.783/ 0.035/ (0.738, 0.832)|0.791/ 0.030/ (0.727, 0.826)|0.782/ 0.045/ (0.738, 0.865)|0.806/ 0.073/ (0.643, 0.894)|
+|count_SVM_201022|0.753/ 0.043/ (0.701, 0.841)|0.750/ 0.048/ (0.687, 0.847)|0.772/ 0.045/ (0.691, 0.839)|0.736/ 0.084/ (0.607, 0.855)|
+|tfidf_SVM_201022|0.751/ 0.062/ (0.654, 0.832)|0.721/	0.089/ (0.584, 0.833)|0.843/ 0.081/ (0.656, 0.946)|0.660/ 0.178/ (0.441, 0.894)|
+|bert_SVM_scibert_201022|0.776/ 0.039/ (0.748, 0.879)|0.780/ 0.038/ (0.75, 0.879)|0.787/ 0.080/ (0.656, 0.904)|0.784/ 0.080/ (0.684, 0.904)|
 
 
+### Best seed:
+We calculated the highest average metrics over all models for the different random seeds used.
+
+The highest average f1 score over all models (0.838) was found when the random seed 0 was used, followed by 5 (0.797) and then 4 (0.784). The highest average precision score over all models (0.836) was found when the random seed 2 was used, followed by 0 (0.820) and then 1 (0.806). The highest average recall score over all models (0.870) was found when the random seed 9 was used, followed by 5 (0.864) and then 0 (0.861).
+
+Thus we will take the **'best seed' to be 0** since it consistently produces high scores regardless of metric.
+
+### Rerunning all the Models
+
+ngram range: (1,2),
+Test proportion : 0.25,
+Train size: 321,
+Test size: 107,
+Not relevant ratio: 1
+
+| Date | Vectorizer type | Model type | Bert type (if relevant) | Train F1 | Test F1 | Test precision | Test recall |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| 201022 | count | log_reg | - | 1.000 | 0.842 | 0.814 | 0.873 |
+| 201022 | count | naive_bayes | - | 1.000 | 0.864 | 0.810 | 0.927 |
+| 201022 | count | SVM | - | 0.994 | 0.847 | 0.839 | 0.855 |
+| 201022 | tfidf | log_reg | - | 1.000 | 0.844 | 0.852 | 0.836 |
+| 201022 | tfidf | naive_bayes | - | 1.000 | 0.846 | 0.765 | 0.945 |
+| 201022 | tfidf | SVM | - | 1.000 | 0.822 | 0.846 | 0.800 |
+| 201022 | bert | naive_bayes | bert | 0.713 | 0.757 | 0.813 | 0.709 |
+| 201022 | bert | SVM | bert | 0.819 | 0.881 | 0.825 | 0.945 |
+| 201022 | bert | log_reg | bert | 1.000 | 0.825 | 0.797 | 0.855 |
+| 201022 | bert | naive_bayes | scibert | 0.772 | 0.796 | 0.811 | 0.782 |
+| 201022 | bert | SVM | scibert | 0.776 | 0.879 | 0.904 | 0.855 |
+| 201022 | bert | log_reg | scibert | 1.000 | 0.814 | 0.762 | 0.873 |
+
+### Ensemble model
+
+Only choosing models which were:
+- Trained on 201022
+- F1 >= 0.8
+- Precision >= 0.82
+- Recall >= 0.82
+
+This returned 4 models: ['count_SVM_201022', 'bert_SVM_scibert_201022', 'bert_SVM_bert_201022', 'tfidf_log_reg_201022']
+
+It found **1257** relevant grants.
+
+On the test data:
+
+**accuracy: 0.804
+f1: 0.840
+precision_score: 0.982
+recall_score: 0.733**
+
+Test classification report:    
+
+||precision|recall|f1-score|support|
+|--|--|--|--|--|
+|0.0|0.61|0.97|0.75|  32|
+|1.0|0.98|0.73|0.84| 75|
+|accuracy|||0.80|107|
+|macro avg|0.79|0.85|0.79| 107|
+|weighted avg| 0.87|0.80|0.81|107|
+
+Test confusion matrix:
+
+||predicted tag 0 | predicted tag 1 |
+|--|--|--|
+| actual tag 0|31|1|
+| actual tag 1|20|55|
+
+The above results are when all 4 models need to agree on a grant being relevant in order for the ensemble result to say it's relevant. However we can experiment with different numbers of the models needing to agree:
+
+| Number of models that need to agree | Number of relevant grants | Test F1 | Test precision | Test recall |
+|---|---|---|---|---|
+|2| 4125 |0.954 |0.936|0.973|
+|3|2956|0.915|0.970|0.867|
+|4|1257|0.840|0.982|0.733|
