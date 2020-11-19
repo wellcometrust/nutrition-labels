@@ -358,7 +358,6 @@ Test confusion matrix:
 | actual tag 0|48|4|
 | actual tag 1|13|42|
 
-
 The above results are when all 4 models need to agree on a grant being relevant in order for the ensemble result to say it's relevant. However we can experiment with different numbers of the models needing to agree:
 
 | Number of models that need to agree | Number of relevant grants | Test F1 | Test precision | Test recall |
@@ -368,4 +367,4 @@ The above results are when all 4 models need to agree on a grant being relevant 
 |3|2956|0.873|0.873|0.873|
 |4|1257|0.832|0.913|0.764|
 
-
+All the results for this are in the `data/processed/ensemble/` folder with the '201118' tag.
