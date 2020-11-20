@@ -109,13 +109,13 @@ def clean_data(cohorts_dict, reference_dict):
                 for i in v:
                     if i < 95:
                         rel_colours.append('#FF112C')
-                        rep_or_not.append('Under-representative of the UK population')
+                        rep_or_not.append('Under-represented')
                     elif i < 105:
                         rel_colours.append('#90C877')
-                        rep_or_not.append('Well representative of the UK population')
+                        rep_or_not.append('Well represented')
                     else:
                         rel_colours.append('#5FBFCE')
-                        rep_or_not.append('Over-representative of the UK population')
+                        rep_or_not.append('Over-represented')
                 rel_colours_dict[k + '_colours'] = rel_colours
                 rep_or_not_legend_dict[k + '_representative_or_not'] = rep_or_not
             std_ref_dict = {get_name(k,'reference standardised'):
@@ -132,6 +132,8 @@ def clean_data(cohorts_dict, reference_dict):
             abs_rel_text = {get_name(i,
                                      'abs text'):absolute_reletivie_list(vals_short[str(i) + 'values'],
                                                                            std_ref_dict[str(i) + 'reference standardised']) for i in cat_list}
+            abs_rel_text = {re.sub('  ',' ',k):v for k,v in abs_rel_text.items()}
+
             graph_dict[dataset][var]={**vals_short,
                                       **perc_dict,
                                       **rel_dict,
