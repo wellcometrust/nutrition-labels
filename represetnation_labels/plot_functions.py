@@ -6,8 +6,6 @@ from bokeh.plotting import figure, output_file, show, gridplot,save
 
 from bokeh.models import ColumnDataSource, LabelSet, HoverTool, Div, Label, CustomJS, Span
 from bokeh.models.widgets import Panel, Tabs
-from bokeh.resources import CDN
-from bokeh.embed import file_html
 from datetime import date
 import re
 
@@ -17,7 +15,7 @@ def missing_plot(source,missing_vals,values):
     val_sum = sum(source.data[values])
     missing_percent = round(missing_val / (val_sum + missing_val) * 100, 1)
 
-    u = figure(plot_height=50, plot_width=600, toolbar_location=None,x_range=(0,val_sum))
+    u = figure(plot_height=50, plot_width=600, toolbar_location=None,x_range=(0,val_sum + missing_val))
 
     if missing_percent < 0.1:
         text = 'There is no missing data in this variable'
@@ -270,7 +268,7 @@ def plot_ethnicity(source, name,reletivise = False,out = False):
                 line_alpha=0.8,
                 line_dash='dashed',
                 source=source,
-                legend_label='Representative of the UK population.'
+                legend_label='Representative.'
             )
 
             hover = HoverTool(tooltips=[
@@ -437,7 +435,7 @@ def plot_ethnicity2(source,name,out=False):
         q.legend.location = (46, 24)
         q.legend.label_text_font = "helvetica"
         q.legend.label_text_color = "#a0a0a0"
-        q.legend.label_background_fill_alpha = 0.2
+        q.legend.background_fill_alpha = 0.2
         q.add_layout(dataset_lab)
         q.add_layout(ref_lab)
         q.add_tools(hover4)
@@ -501,7 +499,7 @@ def plot_gender(source,name, reletivise = False,out = False):
             )
 
             # You can't add legends to spans so this is the hacky way - create a line with the same settings as the lines, but with no data
-            r.line([], [], legend_label='Representative of the UK population', line_color='black', line_width=1, line_alpha=0.8, line_dash='dashed')
+            r.line([], [], legend_label='Representative', line_color='black', line_width=1, line_alpha=0.8, line_dash='dashed')
 
             # Add horizontal line at 100 with label
             hline = Span(location=95, dimension='width', line_color='black', line_width=1, line_alpha=0.8, line_dash='dashed')
@@ -681,7 +679,7 @@ def plot_ses(source, name,reletivise = False,out = False):
                 line_alpha=0.8,
                 line_dash='dashed',
                 source=source,
-                legend_label='Representative of the UK population.'
+                legend_label='Representative.'
             )
 
             hover = HoverTool(tooltips=[
@@ -1117,7 +1115,7 @@ def full_plot(age_source,eth_source,gender_source,ses_source, name,reletivise,ou
 #    compar_text = Div(text = """<b>'Dataset and UK Population Ratio':</b> tab shows how each demographic group is represented in comaprison to the makeup of the UK. This is calculated by taking the percent of a group in a data set and dividing it by the percent of that group in the UK population. For example: If women make up 10% of a dataset, and women comprise 50% of the population at large, that means this dataset has 20% of the number of women required to be truly representative in this metric (this doesnt include missing data)""",
 #                      style={'font-size': '14pt', 'color': '#555555', 'font': 'helvetica'})
     final_plot = gridplot([[age_p,eth_p],[gender_p,ses_p]],toolbar_options={'autohide': True})
-    html = file_html(final_plot, CDN, "my plot")
+
     if out:
         if reletivise:
             rel = 'rel'
@@ -1125,8 +1123,8 @@ def full_plot(age_source,eth_source,gender_source,ses_source, name,reletivise,ou
             rel = 'no_rel'
         file_name = 'represetnation_labels/web_page/'+ name + '_' + rel + '_' + 'full_plot.html'
         output_file(file_name)
-
-    return html
+        save(final_plot)
+    return final_plot
 
 def rel_plots(plot_dict,name,data_desc_dict,out):
     age_source = ColumnDataSource(data=plot_dict[name]['Age'])
@@ -1196,7 +1194,13 @@ def all_datasets(plot_dict,data_desc_dict,out):
         save(final)
     return(final)
 
-
+def export_plots_as_html(plot_dict,reletivise):
+    for k in graph_dict2.keys():
+        age_source = ColumnDataSource(data=plot_dict[k]['Age'])
+        eth_source = ColumnDataSource(data=plot_dict[k]['Ethnicity'])
+        gender_source = ColumnDataSource(data=plot_dict[k]['Gender'])
+        ses_source = ColumnDataSource(data=plot_dict[k]['Socioeconomic Status'])
+        full_plot(age_source, eth_source, gender_source, ses_source, k, reletivise=reletivise,out = True)
 
 
 
@@ -1246,12 +1250,8 @@ if __name__ == '__main__':
                       }
 #    all_datasets(graph_dict2,data_desc_dict, out=True)
 
-    # for k in graph_dict2.keys():
-    #     age_source = ColumnDataSource(data=graph_dict2[k]['Age'])
-    #     eth_source = ColumnDataSource(data=graph_dict2[k]['Ethnicity'])
-    #     gender_source = ColumnDataSource(data=graph_dict2[k]['Gender'])
-    #     ses_source = ColumnDataSource(data=graph_dict2[k]['Socioeconomic Status'])
-    #     non_reletive = full_plot(age_source, eth_source, gender_source, ses_source, k, reletivise=False,out = False)
+    export_plots_as_html(graph_dict2,reletivise=True)
+    export_plots_as_html(graph_dict2, reletivise=False)
 
 
 

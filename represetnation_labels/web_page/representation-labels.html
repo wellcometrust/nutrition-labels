@@ -1,0 +1,386 @@
+<!doctype html>
+
+<html lang="en">
+<head>
+	<title>Data Representation Labels</title>
+	<meta charset="utf-8">
+	<meta name="description" content="The HTML5 Herald">
+	<meta name="author" content="SitePoint">
+	<style>
+		p {
+			margin:0;
+		}
+		
+		h1 {
+			margin:0;
+			padding10px;
+		}
+		@font-face {font-family: "Wellcome";  
+			src: url("//db.onlinewebfonts.com/t/0266b572f93d8951152b39652eb58613.eot")}
+				
+		.title{
+		  background-color:#003667;
+		  padding:10px;
+		  width: 100%;
+		  color:white;
+		  font-size:50px;
+		  font-family:Wellcome;
+		}
+		
+		.tiny_text{
+		  padding: 10px;
+		  color:#555555;
+		  font-size:16px;
+		  font-family:helvetica;
+		  font-style:italic;
+		}
+		
+		.paragraph_text{
+		  padding: 10px;
+		  color:#555555;
+		  font-size:24px;
+		  font-family:helvetica;
+		}
+		
+		.tab{
+		  background-color: #cb9b00;
+		  display:inline-block;
+		  margin: 0 -4px;
+		  cursor: pointer;
+		  padding: 14px 16px;
+		  font-family: Wellcome;
+		  font-size: 24px;
+		  color: white;
+		  }
+		 .tab:hover{
+		 background-color: #ffe699 !important;
+		 }
+		.tab_container{
+		  width: 100%;
+		  background-color: #cb9b00;
+		}
+		
+		.box{
+		  margin: 10px;
+		  padding: 4px;
+		  background-color: #D1EAEC;
+		  color: #555555;
+		  font-family: helvetica;
+		  font-size: 24px;
+		}
+		
+		.two_boxes{
+		  width:50%;
+		  box-sizing:border-box;
+		}
+			
+		.box_hide{
+		  display:None;
+		}
+		
+		.plot_hide{
+		  display:none;
+		}
+		
+		.plot{}
+		.dataset_tab{}
+		.rel_tab{}
+	</style>
+
+	<script type="text/javascript" src="button_function.js">
+	</script>
+</head>
+  
+
+<body style = "width:100%; 
+				padding:0;
+				margin:0">
+    <div class = "title">
+		<h1> Data Representation Labels </h1>
+    </div>
+	
+    <p class = "tiny_text">
+		Created by Wellcome’s Data for Science and Health Priority Area
+    </p>
+  
+    <p class = "paragraph_text"> 
+		This is a tool for researchers to examine the demographics of commonly used datasets 
+		and how they compare to the UK population.It was created by the Wellcome Trust with 
+		the intention of comparing how the UK population is represented in these datasets, and 
+		highlighting where there are disparities. 
+    </p>
+  
+	<p class = "paragraph_text">
+		The datasets we are highlighting are:
+	</p>
+
+    <ul class = "paragraph_text"> 
+	    <li>UK Biobank</li>
+        <li>ALSPAC</li>
+        <li>CPRD</li>
+        <li>National Child Development Study</li>
+        <li>Whitehall study II</li>
+        <li>Hospital Episode Statistics (HES)</li>				
+	</ul>
+
+	<div style = "display:flex;">
+		<div class = "box two_boxes" >
+			<p style = "font-family:Wellcome"> How we chose the datasets </p>
+			<p> The datasets represented by these labels are some of the most commonly used and cited
+			datasets in the UK today. The data displayed here was collated using a combination of 
+			metadata available in published papers and online platforms (such as Closer Discovery and 
+			the datasets own webpages). No raw data was accessed for the purpose of this project.</p>
+		</div>
+		<div class = "box two_boxes" >
+			<p style = "font-family:Wellcome">Known limitations:</p> 
+			<p> We know that the groupings of sub-populations used in the datasets, e.g. ethnicity groupings, 
+			are subjective and potentially inaccurate at times.</p>	
+		</div>
+	</div>
+	
+	<p class = "paragraph_text">
+		Please don’t hesitate to contact us with any questions, feedback or suggestions at <u>b.knowles@wellcome.org</u>
+	</p>
+	
+	<div class = "tab_container">
+		<div class = "tab dataset_tab" id = 'UK_Biobank' style = "background-color:#fec200" onclick = "button_active('UK_Biobank')">
+			UK Biobank
+		</div>
+		
+		<div class = "tab dataset_tab" id = 'ALSPAC' onclick = "button_active('ALSPAC')">
+			ALSPAC
+		</div>
+		
+		<div class = "tab dataset_tab" id = 'CPRD' onclick = "button_active('CPRD')">
+			CPRD
+		</div>
+		
+		<div class = "tab dataset_tab" id = 'National_Child_Development_Study' onclick = "button_active('National_Child_Development_Study')">
+			National Child Development Study
+		</div>
+		
+		<div class = "tab dataset_tab" id = 'Whitehall_study_II' onclick = "button_active('Whitehall_study_II')">
+			Whitehall study II
+		</div>
+		
+		<div class = "tab dataset_tab" id = 'HES' onclick = "button_active('HES')">
+			HES
+		</div>
+		
+	</div>
+
+
+	<div class = "box box_hide" id="UK_Biobank_text" style = "display:block">
+		<p style = "font-family:Wellcome">UK Biobank </p>
+		<p style "display:block"> The UK Biobank is a prospective cohort study that recruited
+		500,000 adults aged between 40-69 years in the UK in 2006-2010, aiming to improve the 
+		prevention, diagnosis and treatment of a wide range of illnesses. </p>
+	</div>
+
+	
+
+	<div class = "box box_hide" id = "ALSPAC_text" >
+		<p style = "font-family:Wellcome">ALSPAC </p>
+		<p style "display:block"> The Avon Longitudinal Study of Children and Parents (ALSPAC) is
+		a prospective cohort study which recruited 14,541 pregnant women living in the South West of
+		England during 1990-1992, aiming to understand how genetic and environmental factors influence
+		health and development in parents and children by collecting information on demographics, 
+		lifestyle behaviours, physical and mental health </p>
+	</div>
+
+	<div class = "box box_hide" id = "CPRD_text">
+		<p style = "font-family:Wellcome">CPRD</p>
+		<p style "display:block">The Clinical Practice Research Datalink (CPRD, formerly the
+		General Practice Research Database) is a primary care research database which collates
+		de-identified patient data from general practices across the UK, covering 50 million
+		patients, including 16 million currently registered patients.  </p>
+	</div>
+	
+		<div class = "box box_hide" id = "National_Child_Development_Study_text">
+		<p style = "font-family:Wellcome">National Child Development Study</p>
+		<p>The 1958 National Child Development Study (NCDS) is a prospective cohort study 
+		of 17,415 people born in England, Scotland and Wales in a single week of 1958. It 
+		has been used to understand topics such as the effects of socioeconomic circumstances, 
+		and child adversities on health, and social mobility.</p>
+	</div>
+	
+	<div class = "box box_hide" id = "Whitehall_study_II_text">
+		<p style = "font-family:Wellcome">Whitehall Study II</p>
+		<p>The Whitehall II Study (also know as the Stress and Health Study) is a prospective 
+		cohort of 10,308 participants aged 35-55, of whom 3,413 were women and 6,895 men, was 
+		recruited from the British Civil Service in 1985.</p>
+	</div>
+	
+	<div class = "box box_hide" id = "HES_text">
+		<p style = "font-family:Wellcome">HES</p>
+		<p>Hospital Episode Statistics (HES) is a database containing details of all admissions, 
+		A and E attendances and outpatient appointments at NHS hospitals in England. It contains 
+		over 200 million records with a wide range of information about an individual patient 
+		admitted to an NHS hospital such as diagnoses, operations, demographics, and administrative 
+		information. It is often used by linking to other datasets such as the UK Biobank.</p>
+	</div>
+
+	<div class = "tab_container">
+		<div class = "tab" id = "no_rel" style = "background-color:#fec200" onclick = "plot_active('no_rel','rel')">
+		Populations 
+		</div>
+		<div class = "tab" id = "rel" onclick = "plot_active('rel','no_rel')">
+		Dataset and UK Population Ratio
+		</div>
+	</div>
+	
+	<div class = "box">
+		<p style = "font-family:Wellcome"> Dataset and UK Population Ratio </p>
+		<p> This shows how each demographic group is represented in comaprison to the makeup of the UK. 
+		This is calculated by taking the percent of a group in a data set and dividing it by the percent 
+		of that group in the UK population. For example: If women make up 10% of a dataset, and women 
+		comprise 50% of the population at large, that means this dataset has 20% of the number of women 
+		required to be truly representative in this metric (this doesnt include missing data)</p>
+	</div>
+	
+	<div class ="box_hide plot" id = "UK_Biobank_plot" style = "display:block;">
+		<div class = "no_rel" id = "UK_Biobank_plotno_rel"> 
+			<iframe src="UK Biobank_no_rel_full_plot.html"
+				sandbox="allow-same-origin allow-scripts"
+				width="100%"
+				height="2000"
+				scrolling="no"
+				seamless="seamless"
+				frameborder="0">
+			</iframe>
+		</div>
+
+		<div class = "plot_hide rel" id = "UK_Biobank_plotrel">
+			<iframe src="UK Biobank_rel_full_plot.html"
+				sandbox="allow-same-origin allow-scripts"
+				width="100%"
+				height="2000"
+				scrolling="no"
+				seamless="seamless"
+				frameborder="0">
+			</iframe>
+		</div>
+	</div>
+	
+	<div class = "box_hide plot" id = "ALSPAC_plot">
+		<div id = "ALSPAC_plotno_rel">
+			<iframe src="ALSPAC_no_rel_full_plot.html"
+				sandbox="allow-same-origin allow-scripts"
+				width="100%"
+				height="2000"
+				scrolling="no"
+				seamless="seamless"
+				frameborder="0">
+			</iframe>
+		</div>
+		
+		<div class = "plot_hide" id = "ALSPAC_plotrel">
+			<iframe src="ALSPAC_rel_full_plot.html"
+				sandbox="allow-same-origin allow-scripts"
+				width="100%"
+				height="2000"
+				scrolling="no"
+				seamless="seamless"
+				frameborder="0">
+			</iframe>
+		</div>
+	</div>
+	
+	<div class = "box_hide plot" id = "CPRD_plot">
+		<div id = "CPRD_plotno_rel">
+			<iframe src="CPRD_no_rel_full_plot.html"
+				sandbox="allow-same-origin allow-scripts"
+				width="100%"
+				height="2000"
+				scrolling="no"
+				seamless="seamless"
+				frameborder="0">
+			</iframe>
+		</div>
+		
+		<div class = "plot_hide" id = "CPRD_plotrel">
+			<iframe src="CPRD_rel_full_plot.html"
+				sandbox="allow-same-origin allow-scripts"
+				width="100%"
+				height="2000"
+				scrolling="no"
+				seamless="seamless"
+				frameborder="0">
+			</iframe>
+		</div>
+	</div>
+	
+	<div class = "box_hide plot" id = "Whitehall_study_II_plot">
+		<div id = "Whitehall_study_II_plotno_rel">
+			<iframe src="Whitehall II study_no_rel_full_plot.html"
+				sandbox="allow-same-origin allow-scripts"
+				width="100%"
+				height="2000"
+				scrolling="no"
+				seamless="seamless"
+				frameborder="0">
+			</iframe>
+		</div>
+
+		<div class = "plot_hide" id = "Whitehall_study_II_plotrel">
+			<iframe src="Whitehall II study_rel_full_plot.html"
+				sandbox="allow-same-origin allow-scripts"
+				width="100%"
+				height="2000"
+				scrolling="no"
+				seamless="seamless"
+				frameborder="0">
+			</iframe>
+		</div>
+	</div>
+	
+	<div class="box_hide plot" id = "National_Child_Development_Study_plot">
+		<div id = "National_Child_Development_Study_plotno_rel">
+			<iframe src="National Child Development Study_no_rel_full_plot.html"
+				sandbox="allow-same-origin allow-scripts"
+				width="100%"
+				height="2000"
+				scrolling="no"
+				seamless="seamless"
+				frameborder="0">
+			</iframe>
+		</div> 
+
+		<div class = "plot_hide" id = "National_Child_Development_Study_plotrel">
+			<iframe src="National Child Development Study_rel_full_plot.html"
+				sandbox="allow-same-origin allow-scripts"
+				width="100%"
+				height="2000"
+				scrolling="no"
+				seamless="seamless"
+				frameborder="0">
+			</iframe>
+		</div>
+	</div>
+	
+	<div class = "box_hide plot" id = "HES_plot">
+		<div id = "HES_plotno_rel">
+			<iframe src="HES_no_rel_full_plot.html"
+				sandbox="allow-same-origin allow-scripts"
+				width="100%"
+				height="2000"
+				scrolling="no"
+				seamless="seamless"
+				frameborder="0">
+			</iframe>
+		</div>
+		
+		<div class = "plot_hide" id = "HES_plotrel" >
+			<iframe src="HES_rel_full_plot.html"
+				sandbox="allow-same-origin allow-scripts"
+				width="100%"
+				height="2000"
+				scrolling="no"
+				seamless="seamless"
+				frameborder="0">
+			</iframe>
+		</div>
+	</div>
+	
+</body>
+</html>
