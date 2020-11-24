@@ -109,13 +109,13 @@ def clean_data(cohorts_dict, reference_dict):
                 for i in v:
                     if i < 95:
                         rel_colours.append('#FF112C')
-                        rep_or_not.append('Under-representative of the UK population')
+                        rep_or_not.append('Under-represented')
                     elif i < 105:
                         rel_colours.append('#90C877')
-                        rep_or_not.append('Well representative of the UK population')
+                        rep_or_not.append('Well represented')
                     else:
                         rel_colours.append('#5FBFCE')
-                        rep_or_not.append('Over-representative of the UK population')
+                        rep_or_not.append('Over-represented')
                 rel_colours_dict[k + '_colours'] = rel_colours
                 rep_or_not_legend_dict[k + '_representative_or_not'] = rep_or_not
             std_ref_dict = {get_name(k,'reference standardised'):
@@ -132,6 +132,8 @@ def clean_data(cohorts_dict, reference_dict):
             abs_rel_text = {get_name(i,
                                      'abs text'):absolute_reletivie_list(vals_short[str(i) + 'values'],
                                                                            std_ref_dict[str(i) + 'reference standardised']) for i in cat_list}
+            abs_rel_text = {re.sub('  ',' ',k):v for k,v in abs_rel_text.items()}
+
             graph_dict[dataset][var]={**vals_short,
                                       **perc_dict,
                                       **rel_dict,
@@ -242,6 +244,29 @@ def update_graph_dict(g_dict):
                 g_dict2[dataset][var] = full_spider_source(g_dict2[dataset][var])
     return g_dict2
 
+def boxy_sanky(eth_dict,addition):
+    perc = eth_dict[addition + 'percent']
+    ref_p = eth_dict['ref percent']
+    y_coords = [[80 if i == 0 else round(sum(perc[:i]),1),
+                             round(sum(perc[:i + 1]),1),
+                             round(sum(ref_p[:i + 1]),1),
+                             80 if i == 0 else round(sum(ref_p[:i]),1)] for i in range(len(perc))]
+
+    return y_coords
+
+def ethnicity_tips(eth_dict):
+    out_str = []
+    for eth in eth_dict.values():
+        eth_str = str()
+        for k,v in eth.items():
+            if v > 0:
+                tip =k + ':' + str(v) + ' '
+                eth_str = eth_str + tip
+        out_str.append(eth_str)
+    out_str = out_str[:-1]
+    del out_str[3]
+    return out_str
+
 
 if __name__ == '__main__':
 
@@ -260,3 +285,21 @@ if __name__ == '__main__':
     for dataset in graph_dict2.keys():
         graph_dict2[dataset]['Ethnicity']['description text'] = ['The 5 ethnicities are the groups which all datasets have in common. Some datasets did collect more granular data (up to 16 categories) but to compare the representativeness between datasets, the data has been grouped to these higher-level categories.']* len(graph_dict2[dataset]['Ethnicity']['Ethnicity'])
         graph_dict2[dataset]['Socioeconomic Status']['description text'] =['Social class based on Occupation (formerly the UK Registrar General’s occupational coding) has been used across datasets as an indicator of socioeconomic status. The categories are<br><ul><li>V (unskilled)</li><li>IV (semi-skilled manual)</li><li>III (skilled manual)</li><li>III (non-manual)</li><li>II (managerial and technical)</li><li>I (professional)</li></ul>'] * len(graph_dict2[dataset]['Socioeconomic Status']['Socioeconomic Status'])
+        if 'values' in graph_dict2[dataset]['Ethnicity'].keys():
+            var_list = ['']
+        else:
+            var_list = [re.sub('values', '', i) for i in graph_dict2[dataset]['Ethnicity'].keys() if 'values' in i]
+        boxy_y = {i + 'y_coords': boxy_sanky(graph_dict2[dataset]['Ethnicity'],i) for i in var_list}
+        graph_dict2[dataset]['Ethnicity'].update(boxy_y)
+        graph_dict2[dataset]['Ethnicity']['x_coords'] = [[0,0,100,100] for i in range(len(graph_dict2[dataset]['Ethnicity']['Ethnicity']))]
+        graph_dict2[dataset]['Ethnicity']['colours'] = ["#003667","#ed6b00","#87f5fb","#a882dd","#721817"]
+
+    for dataset,variables in cohorts_dic.items():
+        print(dataset)
+        if dataset in ['UK Biobank','National Child Development Study', 'Whitehall II study', 'HES']:
+            graph_dict2[dataset]['Ethnicity']['tips'] = ethnicity_tips(variables['Ethnicity'])
+        else:
+            tips = {str(k) + ' tips':ethnicity_tips(v) for k,v in variables['Ethnicity'].items()}
+            graph_dict2[dataset]['Ethnicity'].update(tips)
+
+

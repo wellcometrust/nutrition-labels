@@ -1,4 +1,3 @@
-import pandas as pd
 import json
 
 import numpy as np
@@ -11,22 +10,23 @@ from datetime import date
 import re
 
 def missing_plot(source,missing_vals,values):
-    u = figure(plot_height = 50,plot_width = 600,toolbar_location = None)
+
     missing_val = source.data[missing_vals][0]
     val_sum = sum(source.data[values])
+    missing_percent = round(missing_val / (val_sum + missing_val) * 100, 1)
 
-    if missing_val == 0:
+    u = figure(plot_height=50, plot_width=600, toolbar_location=None,x_range=(0,val_sum + missing_val))
+
+    if missing_percent < 0.1:
         text = 'There is no missing data in this variable'
     else:
-        missing_percent = round(missing_val/(val_sum + missing_val)*100,1)
-        text = 'There is ' + str(missing_percent) + ' % missing data in this variable'
+        text = str(missing_percent) + ' % of data for this variable is missing'
+
+    u.patch(x=[0, 0, val_sum, val_sum], y=[0, 2, 2, 0], color='#eec344', line_color='#c5c5c5', line_width=5)
+    u.patch(x=[val_sum, val_sum, val_sum + missing_val, val_sum + missing_val], y=[0, 2, 2, 0], color='#c5c5c5',line_width =5)
 
 
-    u.patch(x = [0,0,val_sum,val_sum],y = [0,2,2,0], color = '#ffba79',line_alpha = 0)
-    u.patch(x = [val_sum,val_sum,val_sum + missing_val,val_sum + missing_val],y = [0,2,2,0], color = '#c5c5c5',line_alpha = 1)
-
-
-    citation = Label(x=27, y=5, x_units='screen', y_units='screen',
+    citation = Label(x=5, y=5, x_units='screen', y_units='screen',
                      text=text, render_mode='canvas',
                      border_line_alpha=0,
                      background_fill_alpha=0,
@@ -87,7 +87,7 @@ def plot_age(source,name,reletivise = False,out = False):
                 source=source
             )
             # You can't add legends to spans so this is the hacky way - create a line with the same settings as the lines, but with no data
-            p.line([], [], legend_label='Representative of the UK population', line_color='black', line_width=1, line_alpha=0.8, line_dash='dashed')
+            p.line([], [], legend_label='Representative', line_color='black', line_width=1, line_alpha=0.8, line_dash='dashed')
 
             # Add horizontal line at 100 with label
             hline = Span(location=95, dimension='width', line_color='black', line_width=1, line_alpha=0.8, line_dash='dashed')
@@ -148,10 +148,10 @@ def plot_age(source,name,reletivise = False,out = False):
         p.xgrid.grid_line_color = None
         p.ygrid.grid_line_color = None
         p.outline_line_width = 0
-        p.background_fill_color = '#f5f5f5'
-        p.background_fill_alpha = 0.9
+        p.background_fill_color = '#f2f6fe'
+        p.background_fill_alpha = 1
         p.legend.location = 'top_left'
-        p.title.text_color = '#a0a0a0'
+        p.title.text_color = '#5C5C5C'
         p.title.text_font_size = '24pt'
         p.title.text_font = "helvetica"
         p.legend.label_text_font = "helvetica"
@@ -160,7 +160,7 @@ def plot_age(source,name,reletivise = False,out = False):
         p.legend.border_line_width = 2
         p.add_tools(hover2)
 
-        a = missing_plot(source, missing_vals, values)
+        a = missing_plot(source, missing_vals, addition + 'values')
         text = Div(
             text=source.data['description text'][0],
             style={'font': 'helvetica', 'color': '#555555', 'font-size': '14pt'}
@@ -208,6 +208,7 @@ def plot_ethnicity(source, name,reletivise = False,out = False):
             labs_y_cords = addition + 'labs_y_cords'
             x_ref = addition + 'x_ref'
             y_ref = addition + 'y_ref'
+            tips = addition + 'tips'
 
         if reletivise:
             legend_name = name + '%/Uk Population%'
@@ -223,7 +224,7 @@ def plot_ethnicity(source, name,reletivise = False,out = False):
             text='Ethnicity',
             text_align='center',
             text_font='helvetica',
-            text_color='#a0a0a0',
+            text_color='#A65D25',
             source=source,
             render_mode='canvas'
         )
@@ -267,7 +268,7 @@ def plot_ethnicity(source, name,reletivise = False,out = False):
                 line_alpha=0.8,
                 line_dash='dashed',
                 source=source,
-                legend_label='Representative of the UK population.'
+                legend_label='Representative.'
             )
 
             hover = HoverTool(tooltips=[
@@ -289,6 +290,7 @@ def plot_ethnicity(source, name,reletivise = False,out = False):
             hover = HoverTool(tooltips=[
                 ("Ethnicity", "@Ethnicity"),
                 ('Number of people', "@{"+values+"}"),
+                ('',"@{"+tips+"}"),
                 ('Dataset percent/%', "@{"+percent+"}{0.0}"),
                 ('UK population percent/%', '@{ref percent}{0.0}')
             ])
@@ -321,10 +323,10 @@ def plot_ethnicity(source, name,reletivise = False,out = False):
         q.xgrid.grid_line_color = None
         q.ygrid.grid_line_color = None
         q.outline_line_width = 0
-        q.background_fill_color = '#f5f5f5'
-        q.background_fill_alpha = 0.9
+        q.background_fill_color = '#f2f6fe'
+        q.background_fill_alpha = 1
         q.legend.location = 'top_left'
-        q.title.text_color = '#a0a0a0'
+        q.title.text_color = '#5C5C5C'
         q.title.text_font_size = '24pt'
         q.title.text_font = "helvetica"
         q.legend.label_text_font = "helvetica"
@@ -355,6 +357,112 @@ def plot_ethnicity(source, name,reletivise = False,out = False):
         output_file(file_name)
         save(eth_p)
     return eth_p
+
+def plot_ethnicity2(source,name,out=False):
+    def eth_plot2(source, addition, name):
+        y_coords = addition + 'y_coords'
+        values = addition + 'values'
+        percent = addition + 'percent'
+        tips = addition + 'tips'
+        missing = addition + 'missing'
+
+        q = figure(title='Ethnicity - Cumulative percent', x_range=(-10, 110))
+
+        q.patches(xs='x_coords', ys=y_coords, color='colours', line_color = 'white',line_width =1.5,legend_field='Ethnicity', source=source)
+
+        perc_lab_cords = np.array([i[0] for i in source.data[y_coords]] + [100])
+        perc_x_lab_cords = np.array([0] * len(perc_lab_cords))
+        y_labels = [str(i) + '%' for i in perc_lab_cords]
+        perc_lab_cords = perc_lab_cords - 0.5
+
+        ref_p_lab_cords = np.array([i[3] for i in source.data[y_coords]] + [100])
+        ref_p_x_lab_cords = np.array([100] * len(perc_lab_cords))
+        ref_y_labels = [str(i) + '%' for i in ref_p_lab_cords]
+        ref_p_lab_cords = ref_p_lab_cords - 0.5
+
+        hover4 = HoverTool(tooltips=[
+            ('Ethnicity', '@Ethnicity'),
+            ('Raw values', "@{"+values+"}"),
+            ('',"@{"+tips+"}"),
+            ('Percent/%', "@{"+percent+"}{0.0}"),
+            ('UK population percent/%', '@{ref percent}{0.0}')
+        ],
+            mode='mouse', name='data plot')
+
+        for i in range(len(perc_lab_cords)):
+            label = Label(x=perc_x_lab_cords[i], y=perc_lab_cords[i], text=y_labels[i], render_mode='canvas',
+                          text_align='right',
+                          border_line_alpha=0, background_fill_alpha=0, text_font='helvetica', text_color='#a0a0a0',
+                          text_font_size='10pt')
+
+            label2 = Label(
+                x=ref_p_x_lab_cords[i],
+                y=ref_p_lab_cords[i],
+                text=ref_y_labels[i],
+                render_mode='canvas',
+                text_align='left',
+                border_line_alpha=0,
+                background_fill_alpha=0,
+                text_font='helvetica',
+                text_color='#a0a0a0',
+                text_font_size='10pt')
+
+            q.add_layout(label)
+            q.add_layout(label2)
+
+        dataset_lab = Label(x=20, y=100, text=name, render_mode='canvas', text_align='right',
+                            border_line_alpha=0, background_fill_alpha=0, text_font='helvetica', text_color='#a0a0a0')
+        ref_lab = Label(x=100, y=100, text='UK Population', render_mode='canvas', text_align='right',
+                        border_line_alpha=0, background_fill_alpha=0, text_font='helvetica', text_color='#a0a0a0')
+
+        q.yaxis.major_label_text_font_size = '0pt'
+        q.yaxis.major_tick_line_color = None
+        q.yaxis.minor_tick_line_color = None
+        q.xaxis.major_tick_line_color = None  # turn off y-axis major ticks
+        q.xaxis.minor_tick_line_color = None
+        q.yaxis.axis_line_color = None
+        q.xaxis.axis_line_color = None
+        q.xaxis.major_label_text_font_size = '0pt'
+        q.xaxis.major_tick_line_color = None
+        q.xgrid.grid_line_color = None
+        q.ygrid.grid_line_color = None
+        q.outline_line_width = 0
+        q.background_fill_color = '#f2f6fe'
+        q.background_fill_alpha = 1
+        q.title.text_color = '#5C5C5C'
+        q.title.text_font_size = '24pt'
+        q.title.text_font = "helvetica"
+        q.legend.location = (46, 24)
+        q.legend.label_text_font = "helvetica"
+        q.legend.label_text_color = "#a0a0a0"
+        q.legend.background_fill_alpha = 0.2
+        q.add_layout(dataset_lab)
+        q.add_layout(ref_lab)
+        q.add_tools(hover4)
+
+        a = missing_plot(source, missing, values)
+        text = Div(
+            text=source.data['description text'][0],
+            style={'font': 'helvetica', 'color': '#555555', 'font-size': '14pt'}
+        )
+        final_plot = gridplot([[q], [a], [text]], toolbar_options={'autohide': True})
+
+        return final_plot
+
+    if 'values' in source.data.keys():
+        eht2_p = eth_plot2(source, '', name)
+
+    else:
+        var_list = [re.sub('values', '', i) for i in source.data.keys() if 'values' in i]
+        tab_list = [Panel(child=eth_plot2(source, i, name), title=re.sub(' ', '', i)) for i in var_list]
+        eht2_p = Tabs(tabs=tab_list)
+    if out:
+        file_name = str(date.today()) + 'ethnicity_plot.html'
+        output_file(file_name)
+        save(eht2_p)
+    return eht2_p
+
+
 
 def plot_gender(source,name, reletivise = False,out = False):
     def gender_plot(source, addition, name, reletivise=reletivise):
@@ -391,7 +499,7 @@ def plot_gender(source,name, reletivise = False,out = False):
             )
 
             # You can't add legends to spans so this is the hacky way - create a line with the same settings as the lines, but with no data
-            r.line([], [], legend_label='Representative of the UK population', line_color='black', line_width=1, line_alpha=0.8, line_dash='dashed')
+            r.line([], [], legend_label='Representative', line_color='black', line_width=1, line_alpha=0.8, line_dash='dashed')
 
             # Add horizontal line at 100 with label
             hline = Span(location=95, dimension='width', line_color='black', line_width=1, line_alpha=0.8, line_dash='dashed')
@@ -450,10 +558,10 @@ def plot_gender(source,name, reletivise = False,out = False):
         r.xgrid.grid_line_color = None
         r.ygrid.grid_line_color = None
         r.outline_line_width = 0
-        r.background_fill_color = '#f5f5f5'
-        r.background_fill_alpha = 0.9
+        r.background_fill_color = '#f2f6fe'
+        r.background_fill_alpha = 1
         r.legend.location = 'top_left'
-        r.title.text_color = '#a0a0a0'
+        r.title.text_color = '#5C5C5C'
         r.title.text_font_size = '24pt'
         r.title.text_font = "helvetica"
         r.legend.label_text_font = "helvetica"
@@ -462,7 +570,7 @@ def plot_gender(source,name, reletivise = False,out = False):
         r.legend.border_line_width = 2
         r.add_tools(hover2)
         r.toolbar_location = None
-        a = missing_plot(source, missing_vals, values)
+        a = missing_plot(source, missing_vals, addition + 'values')
         text = Div(
             text=source.data['description text'][0],
             style={'font': 'helvetica', 'color': '#555555', 'font-size': '14pt'}
@@ -528,7 +636,7 @@ def plot_ses(source, name,reletivise = False,out = False):
             text='Socioeconomic Status',
             text_align='center',
             text_font='helvetica',
-            text_color='#a0a0a0',
+            text_color='#A65D25',
             source=source,
             render_mode='canvas'
         )
@@ -571,7 +679,7 @@ def plot_ses(source, name,reletivise = False,out = False):
                 line_alpha=0.8,
                 line_dash='dashed',
                 source=source,
-                legend_label='Representative of the UK population.'
+                legend_label='Representative.'
             )
 
             hover = HoverTool(tooltips=[
@@ -626,8 +734,8 @@ def plot_ses(source, name,reletivise = False,out = False):
         q.xgrid.grid_line_color = None
         q.ygrid.grid_line_color = None
         q.outline_line_width = 0
-        q.background_fill_color = '#f5f5f5'
-        q.background_fill_alpha = 0.9
+        q.background_fill_color = '#f2f6fe'
+        q.background_fill_alpha = 1
         q.legend.location = 'top_left'
         q.title.text_color = '#a0a0a0'
         q.title.text_font_size = '24pt'
@@ -759,7 +867,7 @@ def full_plot_ethnicity(data_dict,name,reletivise = False, out = False):
             line_width=1
         )
         if reletivise:
-            
+
             hover = HoverTool(tooltips=[
                 ('Ethnicity', '@label_eth'),
                 (' ', "@rel_text"),
@@ -796,7 +904,7 @@ def full_plot_ethnicity(data_dict,name,reletivise = False, out = False):
         q.background_fill_color = '#f5f5f5'
         q.background_fill_alpha = 0.9
         q.legend.location = 'top_left'
-        q.title.text_color = '#a0a0a0'
+        q.title.text_color = '#5C5C5C'
         q.title.text_font_size = '24pt'
         q.title.text_font = "helvetica"
         q.legend.label_text_font = "helvetica"
@@ -998,17 +1106,27 @@ def full_ses_plot(data_dict,name,reletivise = False, out = False):
 
 def full_plot(age_source,eth_source,gender_source,ses_source, name,reletivise,out):
     age_p = plot_age(age_source,name = name,reletivise=reletivise)
-    eth_p = plot_ethnicity(eth_source, name=name, reletivise=reletivise)
+    if reletivise:
+        eth_p = plot_ethnicity(eth_source, name=name, reletivise=reletivise)
+    else:
+        eth_p = plot_ethnicity2(eth_source,name = name)
     gender_p = plot_gender(gender_source, name=name, reletivise=reletivise)
     ses_p = plot_ses(ses_source, name=name, reletivise=reletivise)
+#    compar_text = Div(text = """<b>'Dataset and UK Population Ratio':</b> tab shows how each demographic group is represented in comaprison to the makeup of the UK. This is calculated by taking the percent of a group in a data set and dividing it by the percent of that group in the UK population. For example: If women make up 10% of a dataset, and women comprise 50% of the population at large, that means this dataset has 20% of the number of women required to be truly representative in this metric (this doesnt include missing data)""",
+#                      style={'font-size': '14pt', 'color': '#555555', 'font': 'helvetica'})
     final_plot = gridplot([[age_p,eth_p],[gender_p,ses_p]],toolbar_options={'autohide': True})
+
     if out:
-        file_name = str(date.today()) + 'full_plot.html'
+        if reletivise:
+            rel = 'rel'
+        else:
+            rel = 'no_rel'
+        file_name = 'represetnation_labels/web_page/'+ name + '_' + rel + '_' + 'full_plot.html'
         output_file(file_name)
         save(final_plot)
     return final_plot
 
-def rel_plots(plot_dict,name,out):
+def rel_plots(plot_dict,name,data_desc_dict,out):
     age_source = ColumnDataSource(data=plot_dict[name]['Age'])
     eth_source = ColumnDataSource(data=plot_dict[name]['Ethnicity'])
     gender_source = ColumnDataSource(data=plot_dict[name]['Gender'])
@@ -1016,16 +1134,22 @@ def rel_plots(plot_dict,name,out):
     non_reletive = full_plot(age_source,eth_source,gender_source,ses_source,name,reletivise = False,out = False)
     reletive = full_plot(age_source,eth_source,gender_source,ses_source,name,reletivise = True,out = False)
     pal_nr = Panel(child = non_reletive,title = 'Populations')
-    pal_r = Panel(child=reletive, title='Compare Populations')
+    pal_r = Panel(child=reletive, title='Dataset and UK Population Ratio')
     tabs = Tabs(tabs = [pal_nr,pal_r])
+    text = data_desc_dict[name]
+    data_desc = Div(
+        text=text,
+        style={'font-size': '14pt', 'color': '#555555', 'font': 'helvetica'}
+    )
+    out_plot = gridplot([[data_desc],[tabs]],toolbar_options={'autohide': True})
     if out:
         file_name = str(date.today()) + 'tabs_plot.html'
         output_file(file_name)
-        save(tabs)
-    return(tabs)
+        save(out_plot)
+    return(out_plot)
 
-def all_datasets(plot_dict,out):
-    panal_list = [Panel(child = rel_plots(plot_dict,i,out= False),title = i) for i in plot_dict.keys()]
+def all_datasets(plot_dict,data_desc_dict,out):
+    panal_list = [Panel(child = rel_plots(plot_dict,i,data_desc_dict,out= False),title = i) for i in plot_dict.keys()]
     tabs = Tabs(tabs = panal_list)
     title = Div(text="""Data Representation Labels""",
                 style={'font-size': '28pt', 'color': '#a0a0a0', 'font': 'helvetica'}
@@ -1040,19 +1164,18 @@ def all_datasets(plot_dict,out):
     )
 
     dataset_list = Div(
-        text="""<ul><li><b>UK Biobank:</b> The UK Biobank is a prospective cohort study that recruited 500,000 adults aged between 40-69 years in the UK in 2006-2010, aiming to improve the prevention, diagnosis and treatment of a wide range of illnesses.</li>
-                    <li><b>ALSPAC:</b> The Avon Longitudinal Study of Children and Parents (ALSPAC) is a prospective cohort study which recruited 14,541 pregnant women living in the South West of England during 1990-1992, aiming to understand how genetic and environmental factors influence health and development in parents and children by collecting information on demographics, lifestyle behaviours, physical and mental health</li>
-                    <li><b>CPRD:</b> The Clinical Practice Research Datalink (CPRD, formerly the General Practice Research Database) is a primary care research database which collates de-identified patient data from general practices across the UK, covering 50 million patients, including 16 million currently registered patients.</li>
-                    <li><b>National Child Development Study:</b> The 1958 National Child Development Study (NCDS) is a prospective cohort study of 17,415 people born in England, Scotland and Wales in a single week of 1958.  It has been used to understand topics such as the effects of socioeconomic circumstances, and child adversities on health, and social mobility.</li>
-                    <li><b>Whitehall study II:</b> The Whitehall II Study (also know as the Stress and Health Study) is a prospective cohort of 10,308 participants aged 35-55, of whom 3,413 were women and 6,895 men, was recruited from the British Civil Service in 1985.</li>
-                    <li><b>HES:</b> Hospital Episode Statistics (HES) is a database containing details of all admissions, A&E attendances and outpatient appointments at NHS hospitals in England. It contains over 200 million records with a wide range of information about an individual patient admitted to an NHS hospital such as diagnoses, operations, demographics, and administrative information. It is often used by linking to other datasets such as the UK Biobank. </li></ul>  """,
+        text="""<ul><li>UK Biobank</li>
+                    <li>ALSPAC</li>
+                    <li>CPRD</li>
+                    <li>National Child Development Study</li>
+                    <li>Whitehall study II</li>
+                    <li>Hospital Episode Statistics (HES)</li></ul>  """,
         style={'font-size': '10pt', 'color': '#555555', 'font': 'helvetica'})
 
     creation = Div(
         text="""It was created by the Wellcome Trust with the intention of comparing how the UK population is represented in these datasets, and highlighting where there are disparities.<br>
          <b>How we chose the datasets and accessed the number going into the graph:</b>  The datasets represented by these labels are some of the most commonly used and cited datasets in the UK today. The data displayed here was collated using a combination of metadata available in published papers and online platforms (such as Closer Discovery and the datasets own webpages). No raw data was accessed for the purpose of this project.<br>
          <b>Known limitations:</b> We know that the groupings of sub-populations used in the datasets, e.g. ethnicity groupings, are subjective and potentially inaccurate at times.<br>
-         <b>'Compare Populations':</b> tab shows how each demographic group is represented in comaprison to the makeup of the UK. This is calculated by taking the percent of a group in a data set and dividing it by the percent of that group in the UK population. For example: If women make up 10% of a dataset, and women comprise 50% of the population at large, that means this dataset has 20% of the number of women required to be truly representative in this metric (this doesnt include missing data).<br>
          Please don’t hesitate to contact us with any questions, feedback or suggestions at <u>b.knowles@wellcome.org</ul> """,
         style={'font-size': '14pt', 'color': '#555555', 'font': 'helvetica'}
     )
@@ -1071,10 +1194,19 @@ def all_datasets(plot_dict,out):
         save(final)
     return(final)
 
+def export_plots_as_html(plot_dict,reletivise):
+    for k in graph_dict2.keys():
+        age_source = ColumnDataSource(data=plot_dict[k]['Age'])
+        eth_source = ColumnDataSource(data=plot_dict[k]['Ethnicity'])
+        gender_source = ColumnDataSource(data=plot_dict[k]['Gender'])
+        ses_source = ColumnDataSource(data=plot_dict[k]['Socioeconomic Status'])
+        full_plot(age_source, eth_source, gender_source, ses_source, k, reletivise=reletivise,out = True)
+
+
 
 
 if __name__ == '__main__':
-    import useful_functions as uf
+    import represetnation_labels.useful_functions as uf
 
     with open('data/raw/cohort_demographics_test_data.json', 'r') as fb:
         cohorts_dic = json.load(fb)
@@ -1090,8 +1222,36 @@ if __name__ == '__main__':
     graph_dict2['ALSPAC']['Ethnicity']['description text'] = ['The mother was asked to describe the ethnic origin of herself, her partner and her parents in a questionnaire. There were 9 possible ethnicity categories: white, Black/Caribbean, Black/African, Black/other, Indian, Pakistani, Bangladeshi, Chinese, Other. Most research using this data derived the childs ethnic background as ‘white’ (if both parents were described as white) or ‘non-white’ (if either parent was described as any ethnicity other than white). The 9 categories for ethnicity offer a greater level of granularity than many other cohort studies. However, there are far more ethnic groups represented in the UK, and often people do not identify with one ethnicity. These groups also get aggregated into just 2 categories (white or non-white) for the child’s ethnicity, meaning that it may be difficult to understand any nuances or differences in health and well-being related to ethnic background.  Often larger but fewer categories are used for analysis to ensure the sample size is large enough for statistical signifacince.'] * len(graph_dict2['ALSPAC']['Ethnicity']['Ethnicity'])
     for dataset in graph_dict2.keys():
         graph_dict2[dataset]['Ethnicity']['description text'] = ['The 5 ethnicities are the groups which all datasets have in common. Some datasets did collect more granular data (up to 16 categories) but to compare the representativeness between datasets, the data has been grouped to these higher-level categories.']* len(graph_dict2[dataset]['Ethnicity']['Ethnicity'])
+        graph_dict2[dataset]['Socioeconomic Status']['description text'] = ['Social class based on Occupation (formerly the UK Registrar General’s occupational coding) has been used across datasets as an indicator of socioeconomic status. The categories are<br><ul><li>V (unskilled)</li><li>IV (semi-skilled manual)</li><li>III (skilled manual)</li><li>III (non-manual)</li><li>II (managerial and technical)</li><li>I (professional)</li></ul>'] * len(graph_dict2[dataset]['Socioeconomic Status']['Socioeconomic Status'])
+        if 'values' in graph_dict2[dataset]['Ethnicity'].keys():
+            var_list = ['']
+        else:
+            var_list = [re.sub('values', '', i) for i in graph_dict2[dataset]['Ethnicity'].keys() if 'values' in i]
+        boxy_y = {i + 'y_coords': uf.boxy_sanky(graph_dict2[dataset]['Ethnicity'], i) for i in var_list}
+        graph_dict2[dataset]['Ethnicity'].update(boxy_y)
+        graph_dict2[dataset]['Ethnicity']['x_coords'] = [[0, 0, 100, 100] for i in
+                                                         range(len(graph_dict2[dataset]['Ethnicity']['Ethnicity']))]
+        graph_dict2[dataset]['Ethnicity']['colours'] = ["#dbeaff","#9dd8e7","#006272","#ffe699","#fec200"]
 
-    all_datasets(graph_dict2, out=True)
+    for dataset,variables in cohorts_dic.items():
+        if dataset in ['UK Biobank','National Child Development Study', 'Whitehall II study', 'HES']:
+            graph_dict2[dataset]['Ethnicity']['tips'] = uf.ethnicity_tips(variables['Ethnicity'])
+        else:
+            tips = {str(k) + ' tips':uf.ethnicity_tips(v) for k,v in variables['Ethnicity'].items()}
+            graph_dict2[dataset]['Ethnicity'].update(tips)
+
+    data_desc_dict = {
+        'UK Biobank': 'The UK Biobank is a prospective cohort study that recruited 500,000 adults aged between 40-69 years in the UK in 2006-2010, aiming to improve the prevention, diagnosis and treatment of a wide range of illnesses.',
+        'ALSPAC': 'The Avon Longitudinal Study of Children and Parents (ALSPAC) is a prospective cohort study which recruited 14,541 pregnant women living in the South West of England during 1990-1992, aiming to understand how genetic and environmental factors influence health and development in parents and children by collecting information on demographics, lifestyle behaviours, physical and mental health',
+        'CPRD':'The Clinical Practice Research Datalink (CPRD, formerly the General Practice Research Database) is a primary care research database which collates de-identified patient data from general practices across the UK, covering 50 million patients, including 16 million currently registered patients.',
+        'National Child Development Study':'The 1958 National Child Development Study (NCDS) is a prospective cohort study of 17,415 people born in England, Scotland and Wales in a single week of 1958. It has been used to understand topics such as the effects of socioeconomic circumstances, and child adversities on health, and social mobility.',
+        'Whitehall II study':'The Whitehall II Study (also know as the Stress and Health Study) is a prospective cohort of 10,308 participants aged 35-55, of whom 3,413 were women and 6,895 men, was recruited from the British Civil Service in 1985.',
+        'HES':'Hospital Episode Statistics (HES) is a database containing details of all admissions, A&E attendances and outpatient appointments at NHS hospitals in England. It contains over 200 million records with a wide range of information about an individual patient admitted to an NHS hospital such as diagnoses, operations, demographics, and administrative information. It is often used by linking to other datasets such as the UK Biobank.'
+                      }
+#    all_datasets(graph_dict2,data_desc_dict, out=True)
+
+    export_plots_as_html(graph_dict2,reletivise=True)
+    export_plots_as_html(graph_dict2, reletivise=False)
 
 
 
