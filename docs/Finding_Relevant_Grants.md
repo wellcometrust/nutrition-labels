@@ -336,32 +336,35 @@ It found **1257** relevant grants.
 
 On the test data:
 
-**accuracy: 0.804
-f1: 0.840
-precision_score: 0.982
-recall_score: 0.733**
+**accuracy: 0.841
+f1: 0.832
+precision_score: 0.913
+recall_score: 0.764**
 
 Test classification report:    
 
 ||precision|recall|f1-score|support|
 |--|--|--|--|--|
-|0.0|0.61|0.97|0.75|  32|
-|1.0|0.98|0.73|0.84| 75|
-|accuracy|||0.80|107|
-|macro avg|0.79|0.85|0.79| 107|
-|weighted avg| 0.87|0.80|0.81|107|
+|0.0|0.79|0.92|0.85|52|
+|1.0|0.91|0.76|0.83|55|
+|accuracy|||0.84|107|
+|macro avg|0.85|0.84|0.84|107|
+|weighted avg|0.85|0.84|0.84|107|
 
 Test confusion matrix:
 
 ||predicted tag 0 | predicted tag 1 |
 |--|--|--|
-| actual tag 0|31|1|
-| actual tag 1|20|55|
+| actual tag 0|48|4|
+| actual tag 1|13|42|
 
 The above results are when all 4 models need to agree on a grant being relevant in order for the ensemble result to say it's relevant. However we can experiment with different numbers of the models needing to agree:
 
 | Number of models that need to agree | Number of relevant grants | Test F1 | Test precision | Test recall |
 |---|---|---|---|---|
-|2| 4125 |0.954 |0.936|0.973|
-|3|2956|0.915|0.970|0.867|
-|4|1257|0.840|0.982|0.733|
+|1|5926|0.860|0.788|0.945|
+|2|4125|0.885|0.862|0.909|
+|3|2956|0.873|0.873|0.873|
+|4|1257|0.832|0.913|0.764|
+
+All the results for this are in the `data/processed/ensemble/` folder with the '201118' tag.

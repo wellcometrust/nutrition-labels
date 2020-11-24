@@ -20,7 +20,10 @@ def process_grants_data(grant_data, training_data, split_seed):
 
     # Label which training data was in the original test/train sets
     # Just need to separate the internal IDs by the same indexes
-    grant_tagger = GrantTagger(relevant_sample_ratio=1)
+    # We use vectorizer type bert since this option deals with the X data indices appropriately
+    # for using training_data['Internal ID'] in place of the usual X_vect,
+    # otherwise the indices selection for the sampling done in 'split_data' are incorrect for X
+    grant_tagger = GrantTagger(relevant_sample_ratio=1, vectorizer_type='bert')
     x_train, x_test, y_train, y_test = grant_tagger.split_data(
         training_data['Internal ID'],
         training_data['Relevance code'],
@@ -45,9 +48,9 @@ def process_grants_data(grant_data, training_data, split_seed):
 
     data_trained =[]
     for ref in grant_data['Internal ID']:
-        if ref in x_train.tolist():
+        if ref in x_train:
             data_trained.append('Training data')
-        elif ref in x_test.tolist():
+        elif ref in x_test:
             data_trained.append('Test data')
         else:
             data_trained.append('Unseen data')
@@ -146,7 +149,7 @@ if __name__ == '__main__':
 
     # Calculate the different final predictions and scores for different cutoffs
 
-    for cutoff in list(range(round(len(useful_models)/2), len(useful_models)+1)):
+    for cutoff in list(range(1, len(useful_models)+1)):
         grant_data[f'Ensemble predictions - {cutoff} models'] = [1 if pred_sum >= cutoff else 0 for pred_sum in prediction_sums]
         grant_data[f'Final ensemble label - {cutoff} models'] = (grant_data[['Relevance code', f'Ensemble predictions - {cutoff} models']]
                                      .apply(lambda x: x[1] if np.isnan(x[0]) else x[0], axis = 1))
@@ -172,4 +175,3 @@ if __name__ == '__main__':
         relevant_grants.to_csv(os.path.join(output_path, f'{datestamp}_ensemble_results_{cutoff}models.csv'), index = False)
 
     grant_data.to_csv(os.path.join(output_path, f'{datestamp}_all_ensemble_results.csv'), index = False)
-
