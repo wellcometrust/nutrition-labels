@@ -1,5 +1,7 @@
 import pickle
 from datetime import datetime
+import configparser
+from argparse import ArgumentParser
 
 import pandas as pd
 import numpy as np
@@ -36,17 +38,33 @@ def load_cluster(cluster_file):
         cluster = pickle.load(f)
     return cluster
 
-if __name__ == '__main__':
-
-    datestamp = datetime.now().date().strftime('%y%m%d')
+def clean_for_clustering(grant_data, tech_grants):
+    # Process grants data for clustering - clean, merge with tech grants, and
+    # remove duplicate 6 digits, but make sure to keep the ones that are identified as tech grants
+    grant_data = clean_grants_data(grant_data)
+    grants_text = grant_data[['Description']].agg(
+                '. '.join, axis=1
+                ).tolist()
+    grant_data['Grant Text'] = grants_text
     
-    tech_grants = pd.read_csv("data/processed/ensemble_results.csv")
-    grant_data = pd.read_csv("data/raw/wellcome-grants-awarded-2005-2019.csv")
+    # Short amounts of text cause bad clusters (end up clustering on grant programme names)
+    grant_data = grant_data[grant_data['Grant Text'].map(len)>100]
+    
+    # These grants have short descriptions which are all quite different, but 
+    # end up clustering together because of these words
+    grant_data = grant_data[~grant_data['Grant Text'].str.contains('Student Elective Prize for')]
+    grant_data = grant_data[~grant_data['Title'].str.contains('Vacation Scholarships')]
+    # For this the description isn't about the project but the scholarship
+    grant_data = grant_data[~grant_data['Title'].str.contains('Biomedical Vacation Scholarship')]
+                                      
+    tech_grant_ids = tech_grants['Internal ID'].tolist()
+    grant_data['Tech grant?'] = grant_data['Internal ID'].isin(tech_grant_ids)
+    grant_data.sort_values(by=['Tech grant?'], ascending=False, inplace=True)
+    grant_data.drop_duplicates(subset=['Internal ID 6 digit'], inplace=True)
+    
+    return grant_data
 
-    output_file = f'models/clustering/grants_clusters_{datestamp}.pkl'
-    tech_output_file = f'models/clustering/tech_grants_clusters_{datestamp}.pkl'
-    grant_data_output_file = f'data/processed/cluster_grant_data_{datestamp}.csv'
-
+def old_clean_for_clustering(grant_data, tech_grants):
     # Process grants data for clustering - clean, merge with tech grants, and
     # remove duplicate 6 digits, but make sure to keep the ones that are identified as tech grants
     grant_data = clean_grants_data(grant_data)
@@ -59,13 +77,52 @@ if __name__ == '__main__':
     grant_data.sort_values(by=['Tech grant?'], ascending=False, inplace=True)
     grant_data.drop_duplicates(subset=['Internal ID 6 digit'], inplace=True)
 
+    return grant_data
+
+if __name__ == '__main__':
+
+    datestamp = datetime.now().date().strftime('%y%m%d')
+
+    parser = ArgumentParser()
+    parser.add_argument(
+        '--config_path',
+        help='Path to config file',
+        default='configs/clustering/2020.11.25.ini'
+    )
+    args = parser.parse_args()
+
+    config = configparser.ConfigParser()
+    config.read(args.config_path)
+
+    tech_grants_file_name = config["data"]["tech_grants_file_name"]
+    tech_grants = pd.read_csv(tech_grants_file_name)
+    grant_data = pd.read_csv("data/raw/wellcome-grants-awarded-2005-2019.csv")
+
+    output_file = f'models/clustering/grants_clusters_{datestamp}.pkl'
+    tech_output_file = f'models/clustering/tech_grants_clusters_{datestamp}.pkl'
+    grant_data_output_file = f'data/processed/cluster_grant_data_{datestamp}.csv'
+
+    if args.config_path == 'configs/clustering/2020.09.16.ini':
+        # For reproducibility of the older results
+        grant_data = old_clean_for_clustering(grant_data, tech_grants)
+    else:
+        grant_data = clean_for_clustering(grant_data, tech_grants)
+    
     # Cluster on all grant data
     X = grant_data['Grant Text'].tolist()
     params = {
-        'clustering': {'min_samples': 20, 'eps': 0.12},
-        'reducer': {'metric': 'cosine', 'min_dist': 0.15, 'n_neighbors': 30}}
+        'clustering': {
+            'min_samples': int(config["cluster_all"]["cluster_min_samples"]),
+            'eps': float(config["cluster_all"]["cluster_eps"])},
+        'reducer': {
+            'metric': config["cluster_all"]["reducer_metric"],
+            'min_dist': float(config["cluster_all"]["reducer_min_dist"]),
+            'n_neighbors': int(config["cluster_all"]["reducer_n_neighbors"])
+            }}
     cluster = TextClustering(
-        embedding='tf-idf', reducer='umap', clustering='dbscan', params=params
+        embedding=config["cluster_general"]["embedding"],
+        reducer=config["cluster_general"]["reducer"],
+        clustering=config["cluster_general"]["clustering"], params=params
         )
     cluster.fit(X)
     save_cluster(cluster, output_file)
@@ -74,10 +131,19 @@ if __name__ == '__main__':
     tech_grant_data = grant_data.loc[grant_data['Tech grant?']]
     X_tech = tech_grant_data['Grant Text'].tolist()
     params = {
-        'clustering': {'min_samples': 8, 'eps': 0.15},
-        'reducer': {'metric': 'cosine', 'min_dist': 0, 'n_neighbors': 30}}
+        'clustering': {
+            'min_samples': int(config["cluster_tech"]["cluster_min_samples"]),
+            'eps': float(config["cluster_tech"]["cluster_eps"])},
+        'reducer': {
+            'metric': config["cluster_tech"]["reducer_metric"],
+            'min_dist': float(config["cluster_tech"]["reducer_min_dist"]),
+            'n_neighbors': int(config["cluster_tech"]["reducer_n_neighbors"])
+            }}
     tech_cluster = TextClustering(
-        embedding='tf-idf', reducer='umap', clustering='dbscan', params=params)
+        embedding=config["cluster_general"]["embedding"],
+        reducer=config["cluster_general"]["reducer"],
+        clustering=config["cluster_general"]["clustering"], params=params
+        )
     tech_cluster.fit(X_tech)
     save_cluster(tech_cluster, tech_output_file)
 
