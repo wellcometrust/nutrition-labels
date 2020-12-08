@@ -4,8 +4,6 @@
 <head>
 	<title>Data Representation Labels</title>
 	<meta charset="utf-8">
-	<meta name="description" content="The HTML5 Herald">
-	<meta name="author" content="SitePoint">
 	<style>
 		p {
 			margin:0;
@@ -16,27 +14,27 @@
 			padding10px;
 		}
 		@font-face {font-family: "Wellcome";  
-			src: url("//db.onlinewebfonts.com/t/0266b572f93d8951152b39652eb58613.eot")}
+			src: "Wellcome Bold.ttf"}
 				
 		.title{
 		  background-color:#003667;
-		  padding:10px;
+		  padding:10px 120px;
 		  width: 100%;
 		  color:white;
-		  font-size:50px;
+		  font-size:36px;
 		  font-family:Wellcome;
 		}
 		
 		.tiny_text{
-		  padding: 10px;
+		  padding: 8px 120px;
 		  color:#555555;
-		  font-size:16px;
+		  font-size:8px;
 		  font-family:helvetica;
 		  font-style:italic;
 		}
 		
 		.paragraph_text{
-		  padding: 10px;
+		  padding: 10px 120px;
 		  color:#555555;
 		  font-size:18px;
 		  font-family:helvetica;
@@ -56,12 +54,13 @@
 		 background-color: #ffe699 !important;
 		 }
 		.tab_container{
+		  padding:0px 120px;
 		  width: 100%;
 		  background-color: #cb9b00;
 		}
 		
 		.box{
-		  margin: 10px;
+		  margin: 10px 120px;
 		  padding: 4px;
 		  background-color: #D1EAEC;
 		  color: #555555;
@@ -82,9 +81,17 @@
 		  display:none;
 		}
 		
-		.plot{}
+		.plot{
+		   margin: 0px 120px;
+		}
+		
 		.dataset_tab{}
 		.rel_tab{}
+		
+		.rounded_tabs{
+		  border-top-right-radius:30px;
+		  border-top-left-radius:30px;
+		  }
 	</style>
 
 	<script type="text/javascript" src="button_function.js">
@@ -95,46 +102,50 @@
 <body style = "width:100%; 
 				padding:0;
 				margin:0">
-    <div class = "title">
+    <div class = "title center_pad">
 		<h1> Data Representation Labels </h1>
     </div>
 	
-    <p class = "tiny_text">
-		Created by Wellcome’s Data for Science and Health Priority Area
-    </p>
+
+	<p class = "tiny_text">
+		Created by Wellcome’s Data Labs team and the Data for Science and Health Priority Area
+	</p>
   
-    <p class = "paragraph_text"> 
+	<p class = "paragraph_text"> 
 		This is a tool for researchers to examine the demographics of commonly used datasets 
 		and how they compare to the UK population.It was created by the Wellcome Trust with 
 		the intention of comparing how the UK population is represented in these datasets, and 
 		highlighting where there are disparities. 
-    </p>
+	</p>
   
 	<p class = "paragraph_text">
 		The datasets we are highlighting are:
 	</p>
 
-    <ul class = "paragraph_text"> 
-	    <li>UK Biobank</li>
-        <li>ALSPAC</li>
-        <li>CPRD</li>
-        <li>National Child Development Study</li>
-        <li>Whitehall study II</li>
-        <li>Hospital Episode Statistics (HES)</li>				
+	<ul class = "paragraph_text" style = "padding-left:132px"> 
+		<li>UK Biobank</li>
+		<li>ALSPAC</li>
+		<li>CPRD</li>
+		<li>National Child Development Study</li>
+		<li>Whitehall study II</li>
+		<li>Hospital Episode Statistics (HES)</li>				
 	</ul>
 
+
 	<div style = "display:flex;">
-		<div class = "box two_boxes" >
+		<div class = "box two_boxes" style = "margin-right:2px">
 			<p style = "font-family:Wellcome"> How we chose the datasets </p>
 			<p> The datasets represented by these labels are some of the most commonly used and cited
 			datasets in the UK today. The data displayed here was collated using a combination of 
 			metadata available in published papers and online platforms (such as Closer Discovery and 
 			the datasets own webpages). No raw data was accessed for the purpose of this project.</p>
 		</div>
-		<div class = "box two_boxes" >
+		<div class = "box two_boxes" style = "margin-left:2px">
 			<p style = "font-family:Wellcome">Known limitations:</p> 
-			<p> We know that the groupings of sub-populations used in the datasets, e.g. ethnicity groupings, 
-			are subjective and potentially inaccurate at times.</p>	
+			<p> We know that the groupings of sub-populations used in the datasets, e.g. ethnicity 
+			groupings, are subjective and potentially inaccurate at times. Future datasets and studies 
+			need more granular categories and allow people to ‘self-describe’ their background. 
+</p>	
 		</div>
 	</div>
 	
@@ -220,11 +231,11 @@
 		information. It is often used by linking to other datasets such as the UK Biobank.</p>
 	</div>
 
-	<div class = "tab_container">
-		<div class = "tab" id = "no_rel" style = "background-color:#fec200" onclick = "plot_active('no_rel','rel')">
+	<div class = "tab_container" style = "background-color:#ffffff">
+		<div class = "tab rounded_tabs" id = "no_rel" style = "background-color:#fec200" onclick = "plot_active('no_rel','rel')">
 		Populations 
 		</div>
-		<div class = "tab" id = "rel" onclick = "plot_active('rel','no_rel')">
+		<div class = "tab rounded_tabs" id = "rel" onclick = "plot_active('rel','no_rel')">
 		Dataset and UK Population Ratio
 		</div>
 	</div>
