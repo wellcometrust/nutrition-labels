@@ -368,3 +368,24 @@ The above results are when all 4 models need to agree on a grant being relevant 
 |4|1257|0.832|0.913|0.764|
 
 All the results for this are in the `data/processed/ensemble/` folder with the '201118' tag.
+
+## Tech grants - final results
+
+After some fairness analysis in [the fairness notebook](Tech_grant_model_fairness.md), we decided to use an ensemble of models to make predictions on whether a grant was likely to produce ‘tech’. The model chosen was one where 3 out of 4 models (bert_SVM, scibert_SVM, count_SVM, and TFIDF_logreg) need to agree on a grant being a tech grant in order for the final prediction to be classified as a tech grant.
+
+Using this model there were 2956 grants predicted to be tech grants. Summary details from a large subsection of these grants (where grants from the same family are collapsed into one grant) is shown in our Wellcome’s grants Tableau dashboard ([here](https://tableau.wellcome.org/#/views/Wellcome/WellcomeOverview/GallaghE@wellcomeit.com/TechGrants-ensemble3_201118?:iid=1), but may not be available to everyone). A still from this is shown below:
+
+![](figures/ensemble_grants_201118.png)
+
+### Comparison with the Science tagging for tech tags
+
+Wellcome also has a model for tagging grants (we'll call this "the Science tags") with, so we wanted to compare our tech grant tags with theirs. We normalised both sets of data so that the same range of years were used (2005-2019). The Science tags include many different topics, and we selected the 'techy' topic tags: Data Science, Computational & Mathematical Modelling and/or Surveillance (we’ll call these the computational science tag grants).​ The Science tags come with a probability, and we were advised to only include the tags where the probability is over 0.4. This comparison was done in the notebook `Science tags - Tech grant comparison.ipynb`.
+
+In general there wasn't a huge overlap between the two sets of tags, as seen in the venn plot:
+
+![](figures/tag_comparisons_venn.png)
+
+A deeper dive showed that the proportions of grant types in both sets of tags would have been broadly similar had it not been skewed by a large number of PhD studentships in the tech grants but not in the computational science tags. Furthermore, looking at the proportion of grants in both sets of tags by grant year showed that there are more recent grants in the computational science tags.
+
+![](figures/tag_comparisons_granttype.png)
+![](figures/tag_comparisons_years.png)
