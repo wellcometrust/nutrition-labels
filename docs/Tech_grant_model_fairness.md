@@ -53,15 +53,15 @@ To calculate fairness we needed to decide which groups of the data we want to co
 
 The F1 scores for the models split by recipient organisation is:
 
-![](f1_goldentri.jpeg)
+![](figures/f1_goldentri.jpeg)
 
 The F1 scores for the models split by the regions is:
 
-![](f1_regions_incinternational.jpeg)
+![](figures/f1_regions_incinternational.jpeg)
 
 Since the international category is so much lower than the other results, and that it contains quite a smaller sample size of 10, we chose to remove it from the analysis. Thus we can compare the region groups results in more detail without them:
 
-![](f1_region.jpeg)
+![](figures/f1_region.jpeg)
 
 ### Fairness range of results
 
@@ -84,7 +84,7 @@ e.g. for the Recipient organisation grouping and F1 metric this would be
 
 We can visualise the precision (lighter) and recall (darker) differences for each model and grouping (reds - recipient organisation, blues - region):
 
-![](diff_precrec.jpeg)
+![](figures/diff_precrec.jpeg)
 
 ## Selecting the best model
 
