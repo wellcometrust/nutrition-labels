@@ -324,6 +324,12 @@ Not relevant ratio: 1
 
 ### Ensemble model
 
+Running:
+```
+python nutrition_labels.ensemble_model.py
+```
+gives us the results of using an ensemble of high performing models. The script outputs the results for tech grant classification when different numbers of models need to agree.
+
 Only choosing models which were:
 - Trained on 201022
 - F1 >= 0.8
@@ -332,33 +338,7 @@ Only choosing models which were:
 
 This returned 4 models: ['count_SVM_201022', 'bert_SVM_scibert_201022', 'bert_SVM_bert_201022', 'tfidf_log_reg_201022']
 
-It found **1257** relevant grants.
-
-On the test data:
-
-**accuracy: 0.841
-f1: 0.832
-precision_score: 0.913
-recall_score: 0.764**
-
-Test classification report:    
-
-||precision|recall|f1-score|support|
-|--|--|--|--|--|
-|0.0|0.79|0.92|0.85|52|
-|1.0|0.91|0.76|0.83|55|
-|accuracy|||0.84|107|
-|macro avg|0.85|0.84|0.84|107|
-|weighted avg|0.85|0.84|0.84|107|
-
-Test confusion matrix:
-
-||predicted tag 0 | predicted tag 1 |
-|--|--|--|
-| actual tag 0|48|4|
-| actual tag 1|13|42|
-
-The above results are when all 4 models need to agree on a grant being relevant in order for the ensemble result to say it's relevant. However we can experiment with different numbers of the models needing to agree:
+We can experiment with different numbers of the models needing to agree and find how well the model does:
 
 | Number of models that need to agree | Number of relevant grants | Test F1 | Test precision | Test recall |
 |---|---|---|---|---|
