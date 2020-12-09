@@ -44,11 +44,11 @@ Using this information, in `Tech Grant Clusters Visualisation.ipynb` we produce 
 
 This is a still from the tech grants clusters:
 
-![](tech_grant_clusters_201125.png)
+![](figures/tech_grant_clusters_201125.png)
 
 This is a still from all the grants clusters:
 
-![](all_grant_clusters_201125.png)
+![](figures/cluster_79_201125_darker.png)
 
 The top 2 or 3 words highest ranking words using TF-IDF for each cluster is given as the label for each cluster.
 
@@ -58,11 +58,12 @@ Again, in `Tech Grant Clusters Visualisation.ipynb` we look at the 'most' and 'l
 
 There are 76 clusters with varying proportions of tech grants:
 
-![](prop_tech_grants.png)
+![](figures/prop_tech_grants_each_cluster.png)
+![](figures/num_grants_each_cluster.png)
 
 We can visualise the grant clusters with the most (blue) and least (red) techy grants highlighted:
 
-![](most_least_tech_grant_clusters_201125.png)
+![](figures/most_least_tech_grant_clusters_201125.png)
 
 And in more detail, the top 5 most tech grants:
 

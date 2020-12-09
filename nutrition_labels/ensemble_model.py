@@ -16,6 +16,62 @@ from nutrition_labels.grant_tagger import GrantTagger
 from nutrition_labels.grant_data_processing import clean_grants_data
 from nutrition_labels.useful_functions import pretty_confusion_matrix
 
+class EnsembleModel():
+    def __init__(
+        self,
+        f1_cutoff,
+        precision_cutoff,
+        recall_cutoff,
+        before_date,
+        after_date):
+        self.f1_cutoff = f1_cutoff
+        self.precision_cutoff = precision_cutoff
+        self.recall_cutoff = recall_cutoff
+        self.before_date = before_date # Inclusive
+        self.after_date = after_date # Inclusive
+
+    def find_useful_models(self):
+        """
+        Find models from the models folder which have dates between (inclusive) before_date & after_date
+        and have metrics >= the cutoffs
+        """
+
+        model_dirs = os.listdir('models')
+        model_dirs.remove('.DS_Store')
+        model_dirs = [model_dir for model_dir in model_dirs if (
+                model_dir[-6:].isnumeric()) and (
+                    int(model_dir[-6:]) in range(self.after_date, self.before_date+1)
+                    )
+                ]
+
+        useful_models = [i for i in model_dirs if get_test_results(i, self.f1_cutoff, self.precision_cutoff, self.recall_cutoff)]
+
+        print(f'{len(useful_models)} useful models found')
+
+        return useful_models
+
+    def predict(self, texts, useful_models, num_agree=1):
+        """
+        Predict whether grant texts (list) are tech grants or not 
+        using an agreement of num_agree (int)
+        of the models in useful_models (list)
+        """
+        if num_agree > len(useful_models):
+            num_agree = len(useful_models)
+
+        model_predictions = {}
+        for model_name in useful_models:
+            print(f'Predicting for {model_name}...')
+            model_predictions[f'{model_name} predictions'] = label_grants(model_name, texts)
+
+        model_predictions_df = pd.DataFrame(model_predictions)
+        prediction_sums = model_predictions_df.sum(axis=1)
+        model_predictions_df['Number of models agree tech grant'] = prediction_sums
+        model_predictions_df['Ensemble prediction'] = (prediction_sums >= num_agree).astype(int)
+        self.model_predictions_df = model_predictions_df
+
+        return model_predictions_df['Ensemble prediction'].tolist()
+        
 def process_grants_data(grant_data, training_data, split_seed):
 
     # Label which training data was in the original test/train sets
@@ -117,15 +173,17 @@ if __name__ == '__main__':
     f1_cutoff = 0.8
     precision_cutoff = 0.82
     recall_cutoff = 0.82
-
-    model_dirs = os.listdir('models')
-    model_dirs.remove('.DS_Store')
     after_date = 201022
-    model_dirs = [model_dir for model_dir in model_dirs if (model_dir[-6:].isnumeric()) and (int(model_dir[-6:]) >= after_date)]
+    before_date = 201022
 
-    useful_models = [i for i in model_dirs if get_test_results(i, f1_cutoff, precision_cutoff, recall_cutoff)]
+    ensemble_model = EnsembleModel(
+        f1_cutoff =f1_cutoff,
+        precision_cutoff = precision_cutoff,
+        recall_cutoff = recall_cutoff,
+        before_date = before_date,
+        after_date = after_date)
 
-    print(f'{len(useful_models)} useful models found')
+    useful_models = ensemble_model.find_useful_models()
 
     split_seed = [get_seed_results(model_dir) for model_dir in useful_models]
     print(f'There is/are {len(set(split_seed))} unique split seeds used for these models '\
@@ -136,16 +194,16 @@ if __name__ == '__main__':
 
     # Predict for each model
     grants_text = grant_data['Grant texts'].tolist()
-
-    for model_name in useful_models:
-        print(f'Predicting for {model_name}...')
-        model_predictions = label_grants(model_name, grants_text)
-        grant_data[f'{model_name} predictions'] = model_predictions
+  
+    _ = ensemble_model.predict(grants_text, useful_models)
+    model_predictions_df = ensemble_model.model_predictions_df
+    del model_predictions_df['Ensemble prediction']
+    grant_data = pd.concat([grant_data, model_predictions_df], axis=1)
 
     # drop the 'Grant texts' column as no need to save this
     del grant_data['Grant texts']
 
-    prediction_sums = grant_data[[f'{model_name} predictions' for model_name in useful_models]].sum(axis=1)
+    prediction_sums = model_predictions_df['Number of models agree tech grant']
 
     # Calculate the different final predictions and scores for different cutoffs
 

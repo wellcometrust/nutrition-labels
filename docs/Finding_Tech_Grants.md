@@ -1,4 +1,4 @@
-# Finding Relevant Grants
+# Finding Tech Grants
 
 The first step in the Nutrition Labels project is to classify Wellcome grants as producing datasets/models/tools. Since there are 17,000 grants in the publically avaiable grants data from 2005 to 2019 this would be very time consuming to do by manually reading all the grants descriptions. Furthermore the grants description may not be enough to tell you whether the grant produced such an outcome.
 
@@ -324,6 +324,12 @@ Not relevant ratio: 1
 
 ### Ensemble model
 
+Running:
+```
+python nutrition_labels.ensemble_model.py
+```
+gives us the results of using an ensemble of high performing models. The script outputs the results for tech grant classification when different numbers of models need to agree.
+
 Only choosing models which were:
 - Trained on 201022
 - F1 >= 0.8
@@ -332,33 +338,7 @@ Only choosing models which were:
 
 This returned 4 models: ['count_SVM_201022', 'bert_SVM_scibert_201022', 'bert_SVM_bert_201022', 'tfidf_log_reg_201022']
 
-It found **1257** relevant grants.
-
-On the test data:
-
-**accuracy: 0.841
-f1: 0.832
-precision_score: 0.913
-recall_score: 0.764**
-
-Test classification report:    
-
-||precision|recall|f1-score|support|
-|--|--|--|--|--|
-|0.0|0.79|0.92|0.85|52|
-|1.0|0.91|0.76|0.83|55|
-|accuracy|||0.84|107|
-|macro avg|0.85|0.84|0.84|107|
-|weighted avg|0.85|0.84|0.84|107|
-
-Test confusion matrix:
-
-||predicted tag 0 | predicted tag 1 |
-|--|--|--|
-| actual tag 0|48|4|
-| actual tag 1|13|42|
-
-The above results are when all 4 models need to agree on a grant being relevant in order for the ensemble result to say it's relevant. However we can experiment with different numbers of the models needing to agree:
+We can experiment with different numbers of the models needing to agree and find how well the model does:
 
 | Number of models that need to agree | Number of relevant grants | Test F1 | Test precision | Test recall |
 |---|---|---|---|---|
@@ -368,3 +348,24 @@ The above results are when all 4 models need to agree on a grant being relevant 
 |4|1257|0.832|0.913|0.764|
 
 All the results for this are in the `data/processed/ensemble/` folder with the '201118' tag.
+
+## Tech grants - final results
+
+After some fairness analysis in [the fairness notebook](Tech_grant_model_fairness.md), we decided to use an ensemble of models to make predictions on whether a grant was likely to produce ‘tech’. The model chosen was one where 3 out of 4 models (bert_SVM, scibert_SVM, count_SVM, and TFIDF_logreg) need to agree on a grant being a tech grant in order for the final prediction to be classified as a tech grant.
+
+Using this model there were 2956 grants predicted to be tech grants. Summary details from a large subsection of these grants (where grants from the same family are collapsed into one grant) is shown in our Wellcome’s grants Tableau dashboard ([here](https://tableau.wellcome.org/#/views/Wellcome/WellcomeOverview/GallaghE@wellcomeit.com/TechGrants-ensemble3_201118?:iid=1), but may not be available to everyone). A still from this is shown below:
+
+![](figures/ensemble_grants_201118.png)
+
+### Comparison with the Science tagging for tech tags
+
+Wellcome also has a model for tagging grants (we'll call this "the Science tags") with, so we wanted to compare our tech grant tags with theirs. We normalised both sets of data so that the same range of years were used (2005-2019). The Science tags include many different topics, and we selected the 'techy' topic tags: Data Science, Computational & Mathematical Modelling and/or Surveillance (we’ll call these the computational science tag grants).​ The Science tags come with a probability, and we were advised to only include the tags where the probability is over 0.4. This comparison was done in the notebook `Science tags - Tech grant comparison.ipynb`.
+
+In general there wasn't a huge overlap between the two sets of tags, as seen in the venn plot:
+
+![](figures/tag_comparisons_venn.png)
+
+A deeper dive showed that the proportions of grant types in both sets of tags would have been broadly similar had it not been skewed by a large number of PhD studentships in the tech grants but not in the computational science tags. Furthermore, looking at the proportion of grants in both sets of tags by grant year showed that there are more recent grants in the computational science tags.
+
+![](figures/tag_comparisons_granttype.png)
+![](figures/tag_comparisons_years.png)
