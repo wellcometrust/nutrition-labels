@@ -62,10 +62,11 @@ def absolute_reletivise_text(values,ref_std):
     elif ref_std > values:
         val = ref_std - values
         mult = round(ref_std/values,1)
-        return('This group needs ' + str(mult) + 'X (n:' + str(val) +') more people to be representative.')
+        return('This group needs ' + str(mult) + 'X (n:' + str(val) +') more people to be representative of the UK population.')
     else:
         val = values - ref_std
-        return ('This group is overrepresented. There should be ' + str(val) + ' fewer people in this group to be representative.')
+        return ('This group is overrepresented. The dataset needs ' + str(val) + ' more people in other underrepresented groups to reduce this overrepresentation.')
+
 
 def absolute_reletivie_list(values,ref_std):
     return([absolute_reletivise_text(values[i],ref_std[i]) for i in range(len(values))])
