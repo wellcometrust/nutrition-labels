@@ -1121,7 +1121,7 @@ def full_plot(age_source,eth_source,gender_source,ses_source, name,reletivise,ou
             rel = 'rel'
         else:
             rel = 'no_rel'
-        file_name = 'represetnation_labels/web_page/'+ name + '_' + rel + '_' + 'full_plot.html'
+        file_name = 'representation_labels/web_page/'+ name + '_' + rel + '_' + 'full_plot.html'
         output_file(file_name)
         save(final_plot)
     return final_plot
@@ -1206,7 +1206,7 @@ def export_plots_as_html(plot_dict,reletivise):
 
 
 if __name__ == '__main__':
-    import represetnation_labels.useful_functions as uf
+    import representation_labels.useful_functions as uf
 
     with open('data/raw/cohort_demographics_test_data.json', 'r') as fb:
         cohorts_dic = json.load(fb)

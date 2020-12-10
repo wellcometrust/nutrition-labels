@@ -3,7 +3,7 @@ Lots of help from:
 https://stackoverflow.com/questions/46831371/how-to-update-plot-by-setting-source-with-select-widget-in-bokeh
 
 Run this in the terminal by:
-bokeh serve --show represetnation_labels/multi_plot.py
+bokeh serve --show representation_labels/multi_plot.py
 """
 
 from bokeh.plotting import figure, output_file, show, output_notebook, gridplot
@@ -18,7 +18,7 @@ import pandas as pd
 import os
 import json
 
-import useful_functions as uf
+import representation_labels.useful_functions as uf
 from plot_functions import plot_gender, plot_ethnicity, plot_age, plot_ses
 
 
