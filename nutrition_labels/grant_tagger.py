@@ -225,7 +225,7 @@ if __name__ == '__main__':
     )
 
     X_vect, y = grant_tagger.transform(data)
-    split_seed = 0
+    split_seed = 7
     X_train, X_test, y_train, y_test = grant_tagger.split_data(
         X_vect,
         y,

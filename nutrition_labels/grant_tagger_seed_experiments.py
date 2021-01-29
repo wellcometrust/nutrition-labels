@@ -8,7 +8,7 @@ from nutrition_labels.grant_tagger import GrantTagger
 
 if __name__ == '__main__':
     
-    training_data_file = 'data/processed/training_data/200807/training_data.csv'
+    training_data_file = 'data/processed/training_data/210126/training_data.csv'
 
     datestamp = datetime.now().date().strftime('%y%m%d')
 

@@ -163,7 +163,7 @@ def evaluate_ensemble(grant_data, pred_col='Ensemble predictions'):
 
 if __name__ == '__main__':
 
-    training_file = 'data/processed/training_data/200807/training_data.csv'
+    training_file = 'data/processed/training_data/210126/training_data.csv'
 
     training_data = pd.read_csv(training_file)
     grant_data = pd.read_csv('data/raw/wellcome-grants-awarded-2005-2019.csv')
@@ -173,8 +173,8 @@ if __name__ == '__main__':
     f1_cutoff = 0.8
     precision_cutoff = 0.82
     recall_cutoff = 0.82
-    after_date = 201022
-    before_date = 201022
+    after_date = 210128
+    before_date = 210128
 
     ensemble_model = EnsembleModel(
         f1_cutoff =f1_cutoff,
