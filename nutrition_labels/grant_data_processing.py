@@ -1,4 +1,8 @@
 import re
+import configparser
+from argparse import ArgumentParser
+import ast
+import os
 
 import pandas as pd
 import numpy as np
@@ -22,10 +26,11 @@ def merge_tags(data, person_cols_list):
     
     return data
 
-def clean_grants_data(grant_data):
+def clean_grants_data(old_grant_data):
     """
     Clean grant descriptions of html and remove any duplicates
     """
+    grant_data = old_grant_data.copy()
     grant_data['Description'] = grant_data['Description'].apply(remove_useless_string)
     grant_data = grant_data[grant_data['Description'] != 'Not available']
     grant_data.dropna(subset=['Description'], inplace=True)
@@ -34,12 +39,12 @@ def clean_grants_data(grant_data):
 
     return grant_data
 
-def process_epmc(epmc_tags_query_one, epmc_tags_query_two, epmc_code_dict):
+def process_epmc(epmc_tags_query_one, epmc_tags_query_two, epmc_code_dict, col_ranking_list):
 
     # Merge EPMC data and normalise the codes
     # Order of truth (if same row has been labelled): Becky > Nonie > Liz > Aoife
     epmc_tags = pd.concat([epmc_tags_query_one, epmc_tags_query_two], ignore_index=True)
-    epmc_tags = merge_tags(epmc_tags, ['Becky code', 'Nonie code', 'Liz code', 'Aoife code'])
+    epmc_tags = merge_tags(epmc_tags, col_ranking_list)
     epmc_tags['Normalised code'] = [epmc_code_dict[str(int(code))] for code in epmc_tags['Merged code']]
 
     # No need to include tags if no grant number is given or you don't want to include
@@ -105,10 +110,10 @@ def process_RF(rf_tags, rf_code_dict):
 
     return rf_df
 
-def process_grants(grant_tags, grants_code_dict):
+def process_grants(grant_tags, grants_code_dict, col_ranking_list):
 
     # If Nonie and Liz have labelled it use Nonies
-    grant_tags = merge_tags(grant_tags, ['tool relevent ', 'Liz code'])
+    grant_tags = merge_tags(grant_tags, col_ranking_list)
     grant_tags['Normalised code'] = [grants_code_dict[str(int(code))] for code in grant_tags['Merged code']]
 
     # No need to include tags if you don't want to include
@@ -129,13 +134,31 @@ def process_grants(grant_tags, grants_code_dict):
     return grants_df
 
 if __name__ == '__main__':
+
+    parser = ArgumentParser()
+    parser.add_argument(
+        '--config_path',
+        help='Path to config file',
+        default='configs/training_data/2021.01.26.ini'
+    )
+    args = parser.parse_args()
+
+    config = configparser.ConfigParser()
+    config.read(args.config_path)
     
     # load data
-    epmc_tags_query_one = pd.read_csv('data/raw/EPMC_relevant_tool_pubs_3082020.csv', encoding = "latin")
-    epmc_tags_query_two = pd.read_csv('data/raw/EPMC_relevant_pubs_query2_3082020.csv')
-    rf_tags = pd.read_csv('data/raw/ResearchFish/research_fish_manual_edit.csv')
-    grant_tags = pd.read_csv('data/raw/wellcome-grants-awarded-2005-2019_manual_edit_Lizadditions.csv')
-    grant_data = pd.read_csv('data/raw/wellcome-grants-awarded-2005-2019.csv')
+    epmc_tags_query_one = pd.read_csv(
+        config["data"]["epmc_tags_query_one_filedir"],
+        encoding = "latin"
+        )
+    epmc_tags_query_two = pd.read_csv(config["data"]["epmc_tags_query_two_filedir"])
+    rf_tags = pd.read_csv(config["data"]["rf_tags_filedir"])
+    grant_tags = pd.read_csv(config["data"]["grant_tags_filedir"])
+    grant_data = pd.read_csv(config["data"]["grant_data_filedir"])
+
+    # List of tag columns for ranking order
+    epmc_col_ranking = ast.literal_eval(config["data_col_ranking"]["epmc_col_ranking"])
+    grants_col_ranking = ast.literal_eval(config["data_col_ranking"]["grants_col_ranking"])
 
     # Normalising the codes so they are all similar for different data sources
     # 'None' if you dont want to include these tags in the training data
@@ -145,9 +168,14 @@ if __name__ == '__main__':
 
     # Process each of the 3 data sources separately and output a 
     # dataframe for each of grant numbers - cleaned tags links
-    epmc_df = process_epmc(epmc_tags_query_one, epmc_tags_query_two, epmc_code_dict)
+    epmc_df = process_epmc(
+        epmc_tags_query_one,
+        epmc_tags_query_two,
+        epmc_code_dict,
+        epmc_col_ranking
+        )
     rf_df = process_RF(rf_tags, rf_code_dict)
-    grants_df = process_grants(grant_tags, grants_code_dict)
+    grants_df = process_grants(grant_tags, grants_code_dict, grants_col_ranking)
 
     print('Tagged data to include from EPMC:')
     print(len(epmc_df))
@@ -213,4 +241,11 @@ if __name__ == '__main__':
         'Internal ID', 'RF question', 'RF Name', 'pmid', 'Relevance code',
         'Normalised code - RF', 'Normalised code - grants', 'Normalised code - EPMC',
         'Description', 'Title', 'Grant Programme:Title']]
-    grant_data.to_csv('data/processed/training_data.csv', index = False)
+
+    # Output the data to a dated folder using the config version date
+    # but convert this from 2020.08.07 -> 200807
+    config_version = ''.join(config['DEFAULT']['version'].split('.'))[2:]
+    output_path = os.path.join('data/processed/training_data', config_version)    
+    if not os.path.exists(output_path):
+        os.mkdir(output_path)
+    grant_data.to_csv(os.path.join(output_path, 'training_data.csv'), index = False)
