@@ -5,7 +5,32 @@ We extend the 'tech' grant definition to include non-UK and non-health 'tech' we
 We:
 1. Retag data points previously classified as not-tech.
 2. Check whether the old model works well enough on the newly updated data.
-3. Retrain a model with the newly updated training data.
+3. Retrain an ensemble model with the newly updated training data.
+4. Look at differences between the old and new models.
+
+## Summary
+
+The retagging of the data made the following changes:
+
+| Data type | Previous number | New number | Difference |
+| --- | --- | --- | --- |
+| RF tech data points | 23 | 144 | +122 |
+| EPMC tech data points | 143 | 191 | +48 |
+| Grants tech data points | 111 | 164 | +53 |
+| Grants not-tech data points | 1004 | 358| -646 |
+| Final training data (tech) | 214 | 347 | +133 |
+| Final training data (not-tech) | 883 | 349 | -534 |
+
+Using the 201118 ensemble model evaluated on the new data the F1 dropped from 0.87 to 0.6, the precision from 0.87 to 0.68, and the recall from 0.87 to 0.53.
+
+Thus we retraining an ensemble model. The 4 models with good metrics (>0.8) were bert_SVM_scibert_210128, tfidf_log_reg_210128, tfidf_SVM_210128 and bert_naive_bayes_scibert_210128. We chose agreement of 3 out of 4 of the models for a grant to be classified as a tech grant. This gave us an overall reduction in the F1 metric, but an increase in precision and a decrease in recall. The number of tech grants predicted has now increased as may be expected.
+
+| Ensemble model | Number of models that need to agree | Number of relevant grants | Test F1 | Test precision | Test recall |
+|---|---|---|---|---|---|
+|201118|3|2956|0.873|0.873|0.873|
+|210129|3|3719|0.857|0.889|0.828|
+
+The tech grants predicted between the 2 models didn't overlap too much - 1709 grants are in both lists, 2010 grants are in the new list but not the old, and 1247 grants are in the old list but not the new list.
 
 # Updating the data
 
@@ -70,7 +95,9 @@ As of 22nd Jan 2020:
 | 5    | 213                  |
 | Nan  | 797                  |
 
-and the most relevant RF file is 'SoftwareAndTechnicalProducts', but still only 70% of them yield tech as an output - so perhaps not a high enough proportion to automatically tag these as tech grants.
+Thus we tagged an additional 121 tech RF data points (23 to 144 with code 1, 2 or 3).
+
+The most relevant RF file is 'SoftwareAndTechnicalProducts', but still only 70% of them yield tech as an output - so perhaps not a high enough proportion to automatically tag these as tech grants.
 
 | File type | Proportion of tagged entries which are 1, 2, 3 |
 | --- | --- |
@@ -79,9 +106,6 @@ and the most relevant RF file is 'SoftwareAndTechnicalProducts', but still only 
 | ResearchDatabaseModels | 31+6+24/189 = 32% |
 | ResearchToolsAndMethods | 10+2+1/77 = 17% |
 | SoftwareAndTechnicalProducts | 56+9+2/96 = 70% |
-
-The number of grant references that could be linked to these outputs producing tech increased from 20 to 103. Note that it may be the case that these 103 grants already had 'tech' identified from EPMC or grants data, so this is not neccessarily an increase in 83 additional training data points.
-
 
 ## EPMC publication abstracts
 
@@ -108,7 +132,33 @@ We re-tagged the code 4 and 6 first since they might be low hanging fruit for no
 
 For query 2 the previously tagged as 4, 5, 6 and had a grant number resulted in 399 publications. Again, we sorted by pmid as a way to randomise the order.
 
--[] TAG more from both sets and report on data size update
+### 22nd January 2020 data update
+
+Before:
+
+| Code | Number of EPMC entries from query 1 |Number of EPMC entries from query 2|
+| ---- | --- | --- |
+|1|54|19|
+|2|18|35|
+|3|9|8|
+|4|10|5|
+|5|584|512|
+|6|51|1|
+|Nan|781|9129|
+
+
+As of 22nd Jan 2020:
+
+| Code | Number of EPMC entries from query 1 |Number of EPMC entries from query 2|
+| ---- | --- | --- |
+|1|90|19|
+|2|24|40|
+|3|10|8|
+|4|13|7|
+|5|17|28|
+|Nan|1353|9607|
+
+Thus we tagged an additional 48 tech EPMC data points (143 to 191 with code 1, 2 or 3).
 
 ## Grants data
 
@@ -167,6 +217,19 @@ Now we have (`210126/training_data.csv`):
 
 Before we used the relevant_sample_ratio as 1, so we'd always randomly select the same number of relevant and irrelevant grants for our training. However, we did have the luxury of picking a random 214 not relevant grants which optimised our model, and this time we dont have a variety to choose from.
 
+The changes are:
+
+| Previous tag | New tag | Description | Number of grants |
+|---|---|---|---|
+| 0 | 0 | Stayed as not-tech | 151 |
+| 1 | 1 | Stayed as tech | 213 |
+| 0 | 1 | Changed to be tech | 33 |
+| nan | 0 | Now in training data | 198 |
+| nan | 1 | Now in training data | 101 |
+| 0 | nan | No longer in training data | 699 |
+| 1 | nan | No longer in training data | 1 |
+
+
 # How well does the current ensemble model do?
 
 We can see how well the ensemble model from 201118 does with the newly tagged data (taking special care to not evaluate on any data used in the training though).
@@ -201,22 +264,6 @@ I reran `grant_tagger_seed_experiments.py` with the training data in `data/proce
 
 ### Variability in the results:
 
-Before:
-
-| Model | Mean/std/range test accuracy | Mean/std/range test f1 | Mean/std/range test precision_score | Mean/std/range test recall_score |
-| ----- | ------------------ | ------------ | ------------------------- | ---------------------- |
-| count_naive_bayes_201021|0.793/ 0.044/ (0.701, 0.85)|0.805/ 0.040/ (0.724, 0.864)|0.780/ 0.063/ (0.609, 0.833)|0.839/ 0.070/ (0.732, 0.927)|
-| count_log_reg_201022|0.778/ 0.035/ (0.729, 0.832)|0.783/ 0.033/ (0.729, 0.842)|0.778/ 0.036/ (0.696, 0.824)|0.791/ 0.055/ (0.696, 0.873)|
-| count_SVM_201022|0.753/ 0.043/ (0.701, 0.841)|0.750/ 0.048/ (0.687, 0.847)|0.772/ 0.045/ (0.691, 0.839)|0.736/ 0.084/ (0.607, 0.855)|
-| tfidf_naive_bayes_201021|0.750/ 0.078/ (0.57, 0.822)|0.777/ 0.059/ (0.662, 0.846)|0.730/ 0.105/ (0.506, 0.821)|0.855/ 0.100/ (0.644, 0.957)|
-| tfidf_log_reg_201021|0.776/ 0.054/ (0.701, 0.841)|0.767/ 0.062/ (0.681, 0.844)|0.817/ 0.067/ (0.651, 0.9)|0.737/ 0.121/ (0.571, 0.885)|
-| tfidf_SVM_201022|0.751/ 0.062/ (0.654, 0.832)|0.721/   0.089/ (0.584, 0.833)|0.843/ 0.081/ (0.656, 0.946)|0.660/ 0.178/ (0.441, 0.894)|
-| bert_naive_bayes_bert_201021|0.731/ 0.053/ (0.636, 0.804)|0.737/ 0.051/ (0.636, 0.817)|0.736/ 0.071/ (0.61, 0.812)|0.744/ 0.065/ (0.596, 0.825)|
-| bert_log_reg_bert_201022|0.759/ 0.037/ (0.71, 0.813)|0.761/ 0.037/ (0.713, 0.825)|0.771/ 0.066/ (0.65, 0.894)|0.761/ 0.074/ (0.643, 0.855)|
-| bert_SVM_bert_201022|0.767/ 0.042/ (0.72, 0.869)|0.785/ 0.036/ (0.754, 0.881)|0.743/ 0.052/ (0.647, 0.825)|0.838/ 0.063/ (0.763, 0.945)|
-| bert_SVM_scibert_201022|0.776/ 0.039/ (0.748, 0.879)|0.780/ 0.038/ (0.75, 0.879)|0.787/ 0.080/ (0.656, 0.904)|0.784/ 0.080/ (0.684, 0.904)|
-| bert_log_reg_scibert_201022|0.783/ 0.035/ (0.738, 0.832)|0.791/ 0.030/ (0.727, 0.826)|0.782/ 0.045/ (0.738, 0.865)|0.806/ 0.073/ (0.643, 0.894)|
-
 
 New results:
 
@@ -245,18 +292,7 @@ It was less obvious which random seed would produce consistently high scores reg
 We ran:
 
 ```
-python nutrition_labels/grant_tagger.py --training_data_file 'data/processed/training_data/210126/training_data.csv' --vectorizer_type count --model_type naive_bayes
-python nutrition_labels/grant_tagger.py --training_data_file 'data/processed/training_data/210126/training_data.csv' --vectorizer_type count --model_type SVM
-python nutrition_labels/grant_tagger.py --training_data_file 'data/processed/training_data/210126/training_data.csv' --vectorizer_type count --model_type log_reg
-python nutrition_labels/grant_tagger.py --training_data_file 'data/processed/training_data/210126/training_data.csv' --vectorizer_type tfidf --model_type naive_bayes
-python nutrition_labels/grant_tagger.py --training_data_file 'data/processed/training_data/210126/training_data.csv' --vectorizer_type tfidf --model_type SVM
-python nutrition_labels/grant_tagger.py --training_data_file 'data/processed/training_data/210126/training_data.csv' --vectorizer_type tfidf --model_type log_reg
-python nutrition_labels/grant_tagger.py --training_data_file 'data/processed/training_data/210126/training_data.csv' --vectorizer_type bert --model_type naive_bayes --bert_type bert
-python nutrition_labels/grant_tagger.py --training_data_file 'data/processed/training_data/210126/training_data.csv' --vectorizer_type bert --model_type SVM --bert_type bert
-python nutrition_labels/grant_tagger.py --training_data_file 'data/processed/training_data/210126/training_data.csv' --vectorizer_type bert --model_type log_reg --bert_type bert
-python nutrition_labels/grant_tagger.py --training_data_file 'data/processed/training_data/210126/training_data.csv' --vectorizer_type bert --model_type naive_bayes --bert_type scibert
-python nutrition_labels/grant_tagger.py --training_data_file 'data/processed/training_data/210126/training_data.csv' --vectorizer_type bert --model_type SVM --bert_type scibert
-python nutrition_labels/grant_tagger.py --training_data_file 'data/processed/training_data/210126/training_data.csv' --vectorizer_type bert --model_type log_reg --bert_type scibert
+python nutrition_labels/grant_tagger.py --training_data_file 'data/processed/training_data/210126/training_data.csv' --vectorizer_type count --model_type naive_bayes --bert_type scibert
 ```
 with the different values for vectorizer_type, model_type and bert_type.
 
@@ -288,3 +324,98 @@ A comparison with the previous results shows a drop in performance on this new t
 | 210128 | bert | SVM | scibert | 0.831 | 0.851 | 0.819 | 0.885 |
 | 201022 | bert | log_reg | scibert | 1.000 | 0.814 | 0.762 | 0.873 |
 | 210128 | bert | log_reg | scibert | 1.000 | 0.775 | 0.758 | 0.793 |
+
+
+### Ensemble model
+
+I ran:
+```
+python nutrition_labels.ensemble_model.py
+```
+with:
+- Training data from 210126
+- F1 >= 0.8
+- Precision >= 0.8
+- Recall >= 0.8
+- Models trained after = 210128
+- Models trained before = 210128
+
+This returned 4 models:
+- 'bert_SVM_scibert_210128' - the equivalent of these models was included in the previous 201118 ensemble model.
+- 'tfidf_log_reg_210128' - the equivalent of these models was included in the previous 201118 ensemble model.
+- 'tfidf_SVM_210128'
+- 'bert_naive_bayes_scibert_210128'
+
+(The previous 201118 ensemble model included the 'count_SVM_201022' and 'bert_SVM_bert_201022' models).
+
+We can experiment with different numbers of the models needing to agree and find how well the model does:
+
+Previous 201118 ensemble model results:
+
+| Number of models that need to agree | Number of relevant grants | Test F1 | Test precision | Test recall |
+|---|---|---|---|---|
+|1|5926|0.860|0.788|0.945|
+|2|4125|0.885|0.862|0.909|
+|3|2956|0.873|0.873|0.873|
+|4|1257|0.832|0.913|0.764|
+
+New 210129 ensemble model results:
+
+| Number of models that need to agree | Number of relevant grants | Test F1 | Test precision | Test recall |
+|---|---|---|---|---|
+|1|8059|0.804|0.689|0.966|
+|2|5137|0.839|0.788|0.897|
+|3|3719|0.857|0.889|0.828|
+|4|2910|0.841|0.896|0.793|
+
+All the results for this are in the `data/processed/ensemble/` folder with the '210129' tag.
+
+As before we chose the final model as when 3 out of 4 of the models need to agree as our final ensemble model. Compared to 201118 this model is more precise (0.89 vs 0.87) but less good at recall (0.83 vs 0.87). Overall the F1 is 0.86, before it was 0.87. We also see that the number of predicted tech grants is higher (3719 vs 2956) a result that might be expected since we have expanded our definition of tech.
+
+# How different are the results?
+
+In `Comparison of 201118 to 210129 ensemble model.ipynb` I compare the 2956 tech grants identified from the 201118 ensemble model with the 3719 tech grants found in the 210129 ensemble model.
+
+58% of the tech grants from the old model are also in the list of tech grants with the new model. 46% of the new tech grants were also in the old list.
+
+1709 grants are in both lists, 2010 grants are in the new list but not the old, and 1247 grants are in the old list but not the new list.
+
+It may have been expected that the old list would be a subset of the new list, but it appears the new model makes quite different predictions. I wondered whether these predictions were particularly different for certain grants, so I had a look at the proportion of grants in both lists by grant programme and recipient location.
+
+There are many grant programmes, and these are just the results from programmes with over 75 grants:
+
+|  	 Grant Programme:Title| Number of grants 	| Number in both lists 	| Number in old list only 	| Number in new list only 	| Proportion of grants in both lists 	| Proportion of old list grants only in the old list	|
+|-	|-	|-	|-	|-	|-	|-	|
+| Studentship: Inactive scheme 	| 86 	| 4 	| 77 	| 5 	| 0.05 	| 0.95 	|
+| Small grant in H&SS 	| 80 	| 7 	| 69 	| 4 	| 0.09 	| 0.91 	|
+| Vacation Scholarships 	| 155 	| 19 	| 92 	| 44 	| 0.12 	| 0.83 	|
+| Multi-User Equipment Grant 	| 88 	| 12 	| 1 	| 75 	| 0.14 	| 0.08 	|
+| PhD Studentship (Basic) 	| 518 	| 94 	| 246 	| 178 	| 0.18 	| 0.72 	|
+| Investigator Award in Science 	| 228 	| 56 	| 17 	| 155 	| 0.25 	| 0.23 	|
+| Project Grant 	| 353 	| 115 	| 18 	| 220 	| 0.33 	| 0.14 	|
+| Sir Henry Dale Fellowship 	| 110 	| 37 	| 1 	| 72 	| 0.34 	| 0.03 	|
+| Seed Award in Science 	| 125 	| 46 	| 7 	| 72 	| 0.37 	| 0.13 	|
+| Sir Henry Wellcome Postdoctoral   Fellowship 	| 171 	| 64 	| 2 	| 105 	| 0.37 	| 0.03 	|
+| PhD Training Fellowship for Clinicians 	| 103 	| 43 	| 19 	| 41 	| 0.42 	| 0.31 	|
+| Research Training Fellowship 	| 174 	| 87 	| 9 	| 78 	| 0.5 	| 0.09 	|
+| Programme Grant 	| 186 	| 95 	| 21 	| 70 	| 0.51 	| 0.18 	|
+| Biomedical Resources Grant 	| 141 	| 73 	| 2 	| 66 	| 0.52 	| 0.03 	|
+| Strategic Award - Science 	| 160 	| 99 	| 7 	| 54 	| 0.62 	| 0.07 	|
+| Institutional Strategic Support Fund 	| 84 	| 60 	| 21 	| 3 	| 0.71 	| 0.26 	|
+
+And the proportions for UK or not-UK based recipient organisations:
+
+| Recipient Org:Country 	| Number of grants 	| Number in both lists 	| Number in old list only 	| Proportion of grants in both lists 	| Proportion of old list grants only in the old   list 	|
+|-	|-	|-	|-	|-	|-	|
+| Not UK 	| 472 	| 168 	| 166 	| 0.36 	| 0.50 	|
+| UK 	| 4494 	| 1541 	| 1081 	| 0.34 	| 0.41 	|
+
+Thus it appears that the models compare differently depending on which grant programme the grant is from.
+
+The old model results are a subset of the new model's results for some awards (when the proportion of old list grants only in the old list is close to 0), e.g. Research Training Fellowship, Strategic Award - Science, Sir Henry Wellcome Postdoctoral Fellowship and Biomedical Resources Grant.
+
+But the old model had several scholarships/studentships which were identified as tech grants, which the new model didn't categorise as tech grants - e.g. PhD Studentship (Basic) and Vacation Scholarships.
+
+The old and new models performed similarly between not UK and UK grants.
+
+I suspect that because I tagged a large number of new grants which didn't match the keywords - explained above - the training data is quite different, so it makes sense that the model is quite different now.
