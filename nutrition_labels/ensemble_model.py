@@ -171,8 +171,8 @@ if __name__ == '__main__':
     datestamp = datetime.now().date().strftime('%y%m%d')
 
     f1_cutoff = 0.8
-    precision_cutoff = 0.82
-    recall_cutoff = 0.82
+    precision_cutoff = 0.8
+    recall_cutoff = 0.8
     after_date = 210128
     before_date = 210128
 

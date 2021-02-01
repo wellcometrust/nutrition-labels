@@ -36,7 +36,7 @@ def clean_grants_data(old_grant_data):
     grant_data.dropna(subset=['Description'], inplace=True)
     grant_data.drop_duplicates('Internal ID', inplace=True)
     grant_data['Internal ID 6 digit'] = grant_data['Internal ID'].apply(lambda x: re.sub('/.*','',x))
-
+    grant_data.reset_index(inplace=True) # After dropping rows you need to reset this
     return grant_data
 
 def process_epmc(epmc_tags_query_one, epmc_tags_query_two, epmc_code_dict, col_ranking_list):
