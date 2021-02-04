@@ -372,6 +372,71 @@ All the results for this are in the `data/processed/ensemble/` folder with the '
 
 As before we chose the final model as when 3 out of 4 of the models need to agree as our final ensemble model. Compared to 201118 this model is more precise (0.89 vs 0.87) but less good at recall (0.83 vs 0.87). Overall the F1 is 0.86, before it was 0.87. We also see that the number of predicted tech grants is higher (3719 vs 2956) a result that might be expected since we have expanded our definition of tech.
 
+## How well does the model perform?
+
+In `Results analysis.ipynb` I looked at how well the test data performed using the 210129 ensemble model using different subsets of the test data.
+
+
+|Recipient Org:Country |Sample size |Proportion actually tech   |accuracy|f1|precision_score |recall_score|
+|---|---|---|---|---|  ---| ---|          
+|Not UK|17|0.29|0.71|0.29|0.50|0.20|
+|UK  |157| 0.52|0.88|0.88|0.90|0.87|
+
+|Financial Year|Sample size |Proportion actually tech   |accuracy|f1|precision_score |recall_score|
+|---|---|---|---|---|  ---| ---|  
+|<2010|22 | 0.5|0.86|0.86|0.90|0.82|
+|2010-2015|83 | 0.58|0.86|0.86|0.97|0.77|
+|2015-2017|40 |0.4 |0.90|0.88|0.83|0.94|            
+|>=2017|29 | 0.41|0.83|0.81|0.73|0.92|
+
+|Description length|Sample size |Proportion actually tech   |accuracy|f1|precision_score |recall_score|
+|---|---|---|---|---|  ---| ---|  
+|(0, 1300]|46|0.44|0.83|0.78|0.88|0.70|                  
+|(1300, 4000]|128 |0.52|0.88|0.88|0.89|0.87|
+
+
+|Cost Centre Division Name |Sample size |Proportion actually tech   |accuracy|f1|precision_score |recall_score|
+|---|---|---|---|---|  ---| ---|            
+|Science |122 |0.631|0.836|0.867|0.89|0.844|
+|Innovations| 9|0.556|0.778|0.800|0.80|0.800|
+|Culture & Society|40|0.125|0.950|0.750|1.00|0.600|
+|Directorate |3|0.00|1.000|0.000|0.00|0.000|
+
+|Master Grant Type Funding Type |Sample size |Proportion actually tech   |accuracy|f1|precision_score |recall_score|
+|---|---|---|---|---|  ---| ---|  					
+|Seed funding|	17|	0.059|	1.000|	1.000|	1.000|	1.000|
+|Collaborative & Project Funding|	33|	0.636|	0.909|	0.927|	0.950|	0.905|
+|Intermediate Fellowships|	20|	0.500|	0.900|	0.889|	1.000|	0.800|
+|Early Career Fellowships|	13|	0.692|	0.846|	0.889|	0.889|	0.889|
+|Equipment & Resources|	16|	0.625|	0.812|	0.870|	0.769|	1.000|
+|Senior Fellowships|	11|	0.727|	0.727|	0.800|	0.857|	0.750|
+|Studentships|	27|	0.481|	0.815|	0.800|	0.833|	0.769|
+|Investigator Awards|	13|	0.538|	0.692|	0.667|	0.800|	0.571|
+|Other|	17|	0.059|	0.941|	0.000|	0.000|	0.000|
+
+\* Any with sample size <10 have been removed (AAPs & Centres, Principal Fellowships, Same as its parent)
+
+
+
+Thus the model performs best for UK, Science division grants, and if the description is over 1300 characters then it performs particularly well on all metrics.
+
+- It'd be good to look for correlations in these variables too - do not UK grants also have short descriptions?
+
+By running
+
+```
+python -i nutrition_labels/tech_grant_tagger.py --models_path 'models/ensemble_210129_models/' --input_path 'data/processed/tech_grantIDs_210126_training_data_fortytwo_info.csv' --output_path 'data/processed/tech_grantIDs_210126_training_data_fortytwo_info_predictions.csv' --num_agree 3 --grant_text_cols "Synopsis,Title" grant_id_col "Reference"
+```
+I predicted tech grants using the synopsis+title text from the fortytwo warehouse, rather than the usual Title+Grant Programme:Title+Description combination text combination from the 360 giving data used in this project. This gives us an indication of how the model will preform when productionised - when the data will come straight from fortytwo.
+
+|Data | Sample size|	Proportion actually tech|	accuracy|	f1|	precision_score|	recall_score|
+|---|---|---|---|---|---|---|
+|Train 360	|520	|0.5	|0.960	|0.958	|1.000	|0.919|
+|Train 42	|520	|0.5	|0.960	|0.958	|0.992	|0.927|
+|Test 360	|174	|0.5	|0.862	|0.857	|0.889	|0.828|
+|Test 42	|174	|0.5	|0.868	|0.867	|0.872	|0.862|
+
+
 # How different are the results?
 
 In `Comparison of 201118 to 210129 ensemble model.ipynb` I compare the 2956 tech grants identified from the 201118 ensemble model with the 3719 tech grants found in the 210129 ensemble model.
