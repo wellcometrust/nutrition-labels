@@ -19,7 +19,7 @@ import os
 
 import pandas as pd
 
-from grant_tagger import GrantTagger
+from nutrition_labels.grant_tagger import GrantTagger
 from nutrition_labels.useful_functions import remove_useless_string
 
 class TechGrantModel():
@@ -29,12 +29,14 @@ class TechGrantModel():
         input_path,
         output_path,
         num_agree=3,
-        grant_text_cols = ['Title', 'Grant Programme:Title', 'Description']):
+        grant_text_cols = ['Title', 'Grant Programme:Title', 'Description'],
+        grant_id_col = 'Internal ID'):
         self.models_path = models_path
         self.input_path = input_path
         self.output_path = output_path
         self.num_agree = num_agree
         self.grant_text_cols = grant_text_cols
+        self.grant_id_col = grant_id_col
 
     def load_model(self, model_path):
 
@@ -78,6 +80,7 @@ class TechGrantModel():
         grant_data = pd.read_csv(self.input_path)
         grant_data = self.clean_grants_data(grant_data)
         grants_text = grant_data['Grant texts'].tolist()
+        self.grants_ids = grant_data[self.grant_id_col].tolist()
 
         return grants_text
 
@@ -89,7 +92,8 @@ class TechGrantModel():
         """
 
         models = os.listdir(self.models_path)
-        models.remove('.DS_Store')
+        if '.DS_Store' in models:
+            models.remove('.DS_Store')
 
         model_predictions = {}
         for model_name in models:
@@ -108,8 +112,10 @@ class TechGrantModel():
     def output_tagged_grants(self):
 
         pd.DataFrame(
-            self.final_predictions,
-            columns=['Tech grant prediction']
+            {
+            'Tech grant prediction': self.final_predictions,
+            'Grant ID': self.grants_ids
+            }
             ).to_csv(self.output_path, index=False)
 
 if __name__ == '__main__':
@@ -137,9 +143,15 @@ if __name__ == '__main__':
     )
     parser.add_argument(
         '--grant_text_cols',
-        help='A list of the columns in input_path which you want to merge and predict on',
-        default=['Title', 'Grant Programme:Title', 'Description'],
-        type=list
+        help='A comma seperated list (no spaces unless in the name) of the columns in input_path which you want to merge and predict on',
+        default='Title,Grant Programme:Title,Description',
+        type=str
+    )
+    parser.add_argument(
+        '--grant_id_col',
+        help='The column name from input_path for grant ID',
+        default='Internal ID',
+        type=str
     )
     args = parser.parse_args()
 
@@ -148,7 +160,8 @@ if __name__ == '__main__':
         input_path=args.input_path,
         output_path=args.output_path,
         num_agree=args.num_agree,
-        grant_text_cols=args.grant_text_cols)
+        grant_text_cols=args.grant_text_cols.split(','),
+        grant_id_col=args.grant_id_col)
 
     grants_text = tech_grant_model.load_grants_text()
     final_predictions = tech_grant_model.predict(grants_text)
