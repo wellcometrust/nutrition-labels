@@ -32,6 +32,23 @@ Thus we retraining an ensemble model. The 4 models with good metrics (>0.8) were
 
 The tech grants predicted between the 2 models didn't overlap too much - 1709 grants are in both lists, 2010 grants are in the new list but not the old, and 1247 grants are in the old list but not the new list.
 
+
+An analysis was performed to see how well the new model performed on data from fortytwo (rather than the 360 giving data the model has been previously trained and tested on). It generalises to this data well, so using the fortytwo data in production should be fine.
+
+|Data | Sample size|    Proportion actually tech|   accuracy|   f1| precision_score|    recall_score|
+|---|---|---|---|---|---|---|
+|Test 360 giving  |174    |0.5    |0.862  |0.857  |0.889  |0.828|
+|Test 42 warehouse  |174    |0.5    |0.868  |0.867  |0.872  |0.862|
+
+An analysis showed that the model performs best when the synopsis text given is >1300 characters in length.
+
+|Synopsis length|Sample size |Proportion actually tech   |accuracy|f1|precision_score |recall_score|
+|---|---|---|---|---|  ---| ---|
+|(0, 1300]|61 | 0.410  | 0.820  | 0.744 |  0.889  | 0.640      |           
+|(1300, 4000]|113 |0.549 |  0.885  |0.896  | 0.889 |  0.903|
+
+
+
 # Updating the data
 
 Previously the tagged training data came from the 4 files:
@@ -389,10 +406,15 @@ In `Results analysis.ipynb` I looked at how well the test data performed using t
 |2015-2017|40 |0.4 |0.90|0.88|0.83|0.94|            
 |>=2017|29 | 0.41|0.83|0.81|0.73|0.92|
 
-|Description length|Sample size |Proportion actually tech   |accuracy|f1|precision_score |recall_score|
+|Description (from 360 giving) length|Sample size |Proportion actually tech   |accuracy|f1|precision_score |recall_score|
 |---|---|---|---|---|  ---| ---|  
 |(0, 1300]|46|0.44|0.83|0.78|0.88|0.70|                  
 |(1300, 4000]|128 |0.52|0.88|0.88|0.89|0.87|
+
+|Synopsis (from 42) length|Sample size |Proportion actually tech   |accuracy|f1|precision_score |recall_score|
+|---|---|---|---|---|  ---| ---|
+|(0, 1300]|61 | 0.410  | 0.820  | 0.744 |  0.889  | 0.640      |           
+|(1300, 4000]|113 |0.549 |  0.885  |0.896  | 0.889 |  0.903|
 
 
 |Cost Centre Division Name |Sample size |Proportion actually tech   |accuracy|f1|precision_score |recall_score|
@@ -416,9 +438,9 @@ In `Results analysis.ipynb` I looked at how well the test data performed using t
 
 \* Any with sample size <10 have been removed (AAPs & Centres, Principal Fellowships, Same as its parent)
 
+![](figures/synposis_length.png)
 
-
-Thus the model performs best for UK, Science division grants, and if the description is over 1300 characters then it performs particularly well on all metrics.
+Thus the model performs best for UK, Science division grants, and if the description/synopsis is over 1300 characters then it performs particularly well on all metrics.
 
 - It'd be good to look for correlations in these variables too - do not UK grants also have short descriptions?
 
