@@ -1,12 +1,13 @@
 # Expanding the tech grants definition
 
-We extend the 'tech' grant definition to include non-UK and non-health 'tech' we need to retag some of the training data.
+We extended our 'tech' grant definition to include non-UK and non-health 'tech'. Because of this we needed to retag some of the training data, and retrain and analyse the model.
 
-We:
-1. Retag data points previously classified as not-tech.
-2. Check whether the old model works well enough on the newly updated data.
+In this document we will explain our procedure and results for:
+1. Retagging data points previously classified as not-tech.
+2. How well does the previous model work on the newly updated data.
 3. Retrain an ensemble model with the newly updated training data.
-4. Look at differences between the old and new models.
+4. Differences between the old and new models.
+5. Performance analysis of the new model.
 
 ## Summary
 
@@ -23,7 +24,7 @@ The retagging of the data made the following changes:
 
 Using the 201118 ensemble model evaluated on the new data the F1 dropped from 0.87 to 0.6, the precision from 0.87 to 0.68, and the recall from 0.87 to 0.53.
 
-Thus we retraining an ensemble model. The 4 models with good metrics (>0.8) were bert_SVM_scibert_210128, tfidf_log_reg_210128, tfidf_SVM_210128 and bert_naive_bayes_scibert_210128. We chose agreement of 3 out of 4 of the models for a grant to be classified as a tech grant. This gave us an overall reduction in the F1 metric, but an increase in precision and a decrease in recall. The number of tech grants predicted has now increased as may be expected.
+Thus we retrained an ensemble model. The 4 models with good metrics (>0.8) were bert_SVM_scibert_210128, tfidf_log_reg_210128, tfidf_SVM_210128 and bert_naive_bayes_scibert_210128. We chose agreement of 3 out of 4 of the models for a grant to be classified as a tech grant. This gave us an overall reduction in the F1 metric, but an increase in precision and a decrease in recall. The number of tech grants predicted has now increased as may be expected.
 
 | Ensemble model | Number of models that need to agree | Number of relevant grants | Test F1 | Test precision | Test recall |
 |---|---|---|---|---|---|
@@ -48,8 +49,7 @@ An analysis showed that the model performs best when the synopsis text given is 
 |(1300, 4000]|113 |0.549 |  0.885  |0.896  | 0.889 |  0.903|
 
 
-
-# Updating the data
+# 1. Retagging data points previously classified as not-tech
 
 Previously the tagged training data came from the 4 files:
 - 'data/raw/EPMC_relevant_tool_pubs_3082020.csv'
@@ -88,29 +88,17 @@ The dataset can be highly biological, e.g. 'An online database of antigen-specif
 
 It can't just be 'performed analysis', e.g. "performed proteomic analysis of paatient cells and skeletal muscle samples", this doenst have enough information of whether their analysis was outputted into something concrete (this would be a 4).
 
-### 22nd January 2020 data update
+### Data update
 
-Before:
 
-| Code | Number of RF entries |
-| ---- | -------------------- |
-| 1    | 9                    |
-| 2    | 3                    |
-| 3    | 11                   |
-| 4    | 100                  |
-| 5    | 1137                 |
-| Nan  | 4                    |
-
-As of 22nd Jan 2020:
-
-| Code | Number of RF entries |
-| ---- | -------------------- |
-| 1    | 99                   |
-| 2    | 17                   |
-| 3    | 28                   |
-| 4    | 110                  |
-| 5    | 213                  |
-| Nan  | 797                  |
+| Code | Number of RF entries before | Number of RF entries 22/01/21 |
+| ---- | -------------------- |---|
+| 1    | 9                    | 99|
+| 2    | 3                    |17|
+| 3    | 11                   |28|
+| 4    | 100                  |110|
+| 5    | 1137                 |213|
+| Nan  | 4                    |797|
 
 Thus we tagged an additional 121 tech RF data points (23 to 144 with code 1, 2 or 3).
 
@@ -149,31 +137,19 @@ We re-tagged the code 4 and 6 first since they might be low hanging fruit for no
 
 For query 2 the previously tagged as 4, 5, 6 and had a grant number resulted in 399 publications. Again, we sorted by pmid as a way to randomise the order.
 
-### 22nd January 2020 data update
+### Data update
 
-Before:
+Number of EPMC entries:
 
-| Code | Number of EPMC entries from query 1 |Number of EPMC entries from query 2|
-| ---- | --- | --- |
-|1|54|19|
-|2|18|35|
-|3|9|8|
-|4|10|5|
-|5|584|512|
-|6|51|1|
-|Nan|781|9129|
-
-
-As of 22nd Jan 2020:
-
-| Code | Number of EPMC entries from query 1 |Number of EPMC entries from query 2|
-| ---- | --- | --- |
-|1|90|19|
-|2|24|40|
-|3|10|8|
-|4|13|7|
-|5|17|28|
-|Nan|1353|9607|
+| Code | Query 1 - before |Query 2 - before|Query 1 - 22/01/21 |Query 2 - 22/01/21|
+| ---- | --- | --- |---|---|
+|1|54|19|90|19|
+|2|18|35|24|40|
+|3|9|8|10|8|
+|4|10|5|13|7|
+|5|584|512|17|28|
+|6|51|1|0|0|
+|Nan|781|9129|1353|9607|
 
 Thus we tagged an additional 48 tech EPMC data points (143 to 191 with code 1, 2 or 3).
 
@@ -218,19 +194,12 @@ New tagging:
 
 ## New training data
 
-Previously (`200807/training_data.csv`), our 7th August training data had:
+A comparison of the final training data sets (`200807/training_data.csv` and `210126/training_data.csv`):
 
-| Tag code | Meaning | Number of grants |
-|---|---|--- |
-| 1 | Relevant | 214 |
-| 0 | Not relevant | 883 |
-
-Now we have (`210126/training_data.csv`):
-
-| Tag code | Meaning | Number of grants |
-|---|---|--- |
-| 1 | Relevant | 347 |
-| 0 | Not relevant | 349 |
+| Tag code | Meaning | Number of grants - 200807 | Number of grants - 210126 |
+|---|---|--- |--- |
+| 1 | Relevant | 214 |347 |
+| 0 | Not relevant | 883 |349 |
 
 Before we used the relevant_sample_ratio as 1, so we'd always randomly select the same number of relevant and irrelevant grants for our training. However, we did have the luxury of picking a random 214 not relevant grants which optimised our model, and this time we dont have a variety to choose from.
 
@@ -247,7 +216,7 @@ The changes are:
 | 1 | nan | No longer in training data | 1 |
 
 
-# How well does the current ensemble model do?
+# 2. How well does the previous model work on the newly updated data?
 
 We can see how well the ensemble model from 201118 does with the newly tagged data (taking special care to not evaluate on any data used in the training though).
 
@@ -275,7 +244,7 @@ Expanded definition confusion matrix:
 
 We see the old model performing worse overall on this new data.
 
-# Retraining a model
+# 3. Retrain an ensemble model with the newly updated training data.
 
 I reran `grant_tagger_seed_experiments.py` with the training data in `data/processed/training_data/210126/training_data.csv`. This script trains several models with different random seeds and teamed with the `Seed variability.ipynb` notebook we can pick a new 'best' random seed to choose our training/test split for all models.
 
@@ -389,10 +358,60 @@ All the results for this are in the `data/processed/ensemble/` folder with the '
 
 As before we chose the final model as when 3 out of 4 of the models need to agree as our final ensemble model. Compared to 201118 this model is more precise (0.89 vs 0.87) but less good at recall (0.83 vs 0.87). Overall the F1 is 0.86, before it was 0.87. We also see that the number of predicted tech grants is higher (3719 vs 2956) a result that might be expected since we have expanded our definition of tech.
 
-## How well does the model perform?
+# 4. Differences between the old and new models
+
+In `Comparison of 201118 to 210129 ensemble model.ipynb` I compare the 2956 tech grants identified from the 201118 ensemble model with the 3719 tech grants found in the 210129 ensemble model.
+
+58% of the tech grants from the old model are also in the list of tech grants with the new model. 46% of the new tech grants were also in the old list.
+
+1709 grants are in both lists, 2010 grants are in the new list but not the old, and 1247 grants are in the old list but not the new list.
+
+It may have been expected that the old list would be a subset of the new list, but it appears the new model makes quite different predictions. I wondered whether these predictions were particularly different for certain grants, so I had a look at the proportion of grants in both lists by grant programme and recipient location.
+
+There are many grant programmes, and these are just the results from programmes with over 75 grants:
+
+|  	 Grant Programme:Title| Number of grants 	| Number in both lists 	| Number in old list only 	| Number in new list only 	| Proportion of grants in both lists 	| Proportion of old list grants only in the old list	|
+|-	|-	|-	|-	|-	|-	|-	|
+| Studentship: Inactive scheme 	| 86 	| 4 	| 77 	| 5 	| 0.05 	| 0.95 	|
+| Small grant in H&SS 	| 80 	| 7 	| 69 	| 4 	| 0.09 	| 0.91 	|
+| Vacation Scholarships 	| 155 	| 19 	| 92 	| 44 	| 0.12 	| 0.83 	|
+| Multi-User Equipment Grant 	| 88 	| 12 	| 1 	| 75 	| 0.14 	| 0.08 	|
+| PhD Studentship (Basic) 	| 518 	| 94 	| 246 	| 178 	| 0.18 	| 0.72 	|
+| Investigator Award in Science 	| 228 	| 56 	| 17 	| 155 	| 0.25 	| 0.23 	|
+| Project Grant 	| 353 	| 115 	| 18 	| 220 	| 0.33 	| 0.14 	|
+| Sir Henry Dale Fellowship 	| 110 	| 37 	| 1 	| 72 	| 0.34 	| 0.03 	|
+| Seed Award in Science 	| 125 	| 46 	| 7 	| 72 	| 0.37 	| 0.13 	|
+| Sir Henry Wellcome Postdoctoral   Fellowship 	| 171 	| 64 	| 2 	| 105 	| 0.37 	| 0.03 	|
+| PhD Training Fellowship for Clinicians 	| 103 	| 43 	| 19 	| 41 	| 0.42 	| 0.31 	|
+| Research Training Fellowship 	| 174 	| 87 	| 9 	| 78 	| 0.5 	| 0.09 	|
+| Programme Grant 	| 186 	| 95 	| 21 	| 70 	| 0.51 	| 0.18 	|
+| Biomedical Resources Grant 	| 141 	| 73 	| 2 	| 66 	| 0.52 	| 0.03 	|
+| Strategic Award - Science 	| 160 	| 99 	| 7 	| 54 	| 0.62 	| 0.07 	|
+| Institutional Strategic Support Fund 	| 84 	| 60 	| 21 	| 3 	| 0.71 	| 0.26 	|
+
+And the proportions for UK or not-UK based recipient organisations:
+
+| Recipient Org:Country 	| Number of grants 	| Number in both lists 	| Number in old list only 	| Proportion of grants in both lists 	| Proportion of old list grants only in the old   list 	|
+|-	|-	|-	|-	|-	|-	|
+| Not UK 	| 472 	| 168 	| 166 	| 0.36 	| 0.50 	|
+| UK 	| 4494 	| 1541 	| 1081 	| 0.34 	| 0.41 	|
+
+Thus it appears that the models compare differently depending on which grant programme the grant is from.
+
+The old model results are a subset of the new model's results for some awards (when the proportion of old list grants only in the old list is close to 0), e.g. Research Training Fellowship, Strategic Award - Science, Sir Henry Wellcome Postdoctoral Fellowship and Biomedical Resources Grant.
+
+But the old model had several scholarships/studentships which were identified as tech grants, which the new model didn't categorise as tech grants - e.g. PhD Studentship (Basic) and Vacation Scholarships.
+
+The old and new models performed similarly between not UK and UK grants.
+
+I suspect that because I tagged a large number of new grants which didn't match the keywords - explained above - the training data is quite different, so it makes sense that the model is quite different now.
+
+# 5. Performance analysis of the new model
+
 
 In `Results analysis.ipynb` I looked at how well the test data performed using the 210129 ensemble model using different subsets of the test data.
 
+A comparison of different subsets of the test data results are given below:
 
 |Recipient Org:Country |Sample size |Proportion actually tech   |accuracy|f1|precision_score |recall_score|
 |---|---|---|---|---|  ---| ---|          
@@ -440,16 +459,14 @@ In `Results analysis.ipynb` I looked at how well the test data performed using t
 
 ![](figures/synposis_length.png)
 
-Thus the model performs best for UK, Science division grants, and if the description/synopsis is over 1300 characters then it performs particularly well on all metrics.
-
-- It'd be good to look for correlations in these variables too - do not UK grants also have short descriptions?
+Thus the model performs best for UK, Science division grants, and if the description/synopsis is over 1300 characters then it performs particularly well on all metrics. There could be correlations between these variables too.
 
 By running
 
 ```
 python -i nutrition_labels/tech_grant_tagger.py --models_path 'models/ensemble_210129_models/' --input_path 'data/processed/tech_grantIDs_210126_training_data_fortytwo_info.csv' --output_path 'data/processed/tech_grantIDs_210126_training_data_fortytwo_info_predictions.csv' --num_agree 3 --grant_text_cols "Synopsis,Title" grant_id_col "Reference"
 ```
-I predicted tech grants using the synopsis+title text from the fortytwo warehouse, rather than the usual Title+Grant Programme:Title+Description combination text combination from the 360 giving data used in this project. This gives us an indication of how the model will preform when productionised - when the data will come straight from fortytwo.
+I predicted tech grants using the synopsis+title text from the fortytwo warehouse, rather than the usual Title+Grant Programme:Title+Description combination text combination from the 360 giving data used in this project. This gives us an indication of how the model will preform when productionised - when the data will come straight from fortytwo. The results show the model works well with this data - overall the F1 is better.
 
 |Data | Sample size|	Proportion actually tech|	accuracy|	f1|	precision_score|	recall_score|
 |---|---|---|---|---|---|---|
@@ -457,52 +474,3 @@ I predicted tech grants using the synopsis+title text from the fortytwo warehous
 |Train 42	|520	|0.5	|0.960	|0.958	|0.992	|0.927|
 |Test 360	|174	|0.5	|0.862	|0.857	|0.889	|0.828|
 |Test 42	|174	|0.5	|0.868	|0.867	|0.872	|0.862|
-
-
-# How different are the results?
-
-In `Comparison of 201118 to 210129 ensemble model.ipynb` I compare the 2956 tech grants identified from the 201118 ensemble model with the 3719 tech grants found in the 210129 ensemble model.
-
-58% of the tech grants from the old model are also in the list of tech grants with the new model. 46% of the new tech grants were also in the old list.
-
-1709 grants are in both lists, 2010 grants are in the new list but not the old, and 1247 grants are in the old list but not the new list.
-
-It may have been expected that the old list would be a subset of the new list, but it appears the new model makes quite different predictions. I wondered whether these predictions were particularly different for certain grants, so I had a look at the proportion of grants in both lists by grant programme and recipient location.
-
-There are many grant programmes, and these are just the results from programmes with over 75 grants:
-
-|  	 Grant Programme:Title| Number of grants 	| Number in both lists 	| Number in old list only 	| Number in new list only 	| Proportion of grants in both lists 	| Proportion of old list grants only in the old list	|
-|-	|-	|-	|-	|-	|-	|-	|
-| Studentship: Inactive scheme 	| 86 	| 4 	| 77 	| 5 	| 0.05 	| 0.95 	|
-| Small grant in H&SS 	| 80 	| 7 	| 69 	| 4 	| 0.09 	| 0.91 	|
-| Vacation Scholarships 	| 155 	| 19 	| 92 	| 44 	| 0.12 	| 0.83 	|
-| Multi-User Equipment Grant 	| 88 	| 12 	| 1 	| 75 	| 0.14 	| 0.08 	|
-| PhD Studentship (Basic) 	| 518 	| 94 	| 246 	| 178 	| 0.18 	| 0.72 	|
-| Investigator Award in Science 	| 228 	| 56 	| 17 	| 155 	| 0.25 	| 0.23 	|
-| Project Grant 	| 353 	| 115 	| 18 	| 220 	| 0.33 	| 0.14 	|
-| Sir Henry Dale Fellowship 	| 110 	| 37 	| 1 	| 72 	| 0.34 	| 0.03 	|
-| Seed Award in Science 	| 125 	| 46 	| 7 	| 72 	| 0.37 	| 0.13 	|
-| Sir Henry Wellcome Postdoctoral   Fellowship 	| 171 	| 64 	| 2 	| 105 	| 0.37 	| 0.03 	|
-| PhD Training Fellowship for Clinicians 	| 103 	| 43 	| 19 	| 41 	| 0.42 	| 0.31 	|
-| Research Training Fellowship 	| 174 	| 87 	| 9 	| 78 	| 0.5 	| 0.09 	|
-| Programme Grant 	| 186 	| 95 	| 21 	| 70 	| 0.51 	| 0.18 	|
-| Biomedical Resources Grant 	| 141 	| 73 	| 2 	| 66 	| 0.52 	| 0.03 	|
-| Strategic Award - Science 	| 160 	| 99 	| 7 	| 54 	| 0.62 	| 0.07 	|
-| Institutional Strategic Support Fund 	| 84 	| 60 	| 21 	| 3 	| 0.71 	| 0.26 	|
-
-And the proportions for UK or not-UK based recipient organisations:
-
-| Recipient Org:Country 	| Number of grants 	| Number in both lists 	| Number in old list only 	| Proportion of grants in both lists 	| Proportion of old list grants only in the old   list 	|
-|-	|-	|-	|-	|-	|-	|
-| Not UK 	| 472 	| 168 	| 166 	| 0.36 	| 0.50 	|
-| UK 	| 4494 	| 1541 	| 1081 	| 0.34 	| 0.41 	|
-
-Thus it appears that the models compare differently depending on which grant programme the grant is from.
-
-The old model results are a subset of the new model's results for some awards (when the proportion of old list grants only in the old list is close to 0), e.g. Research Training Fellowship, Strategic Award - Science, Sir Henry Wellcome Postdoctoral Fellowship and Biomedical Resources Grant.
-
-But the old model had several scholarships/studentships which were identified as tech grants, which the new model didn't categorise as tech grants - e.g. PhD Studentship (Basic) and Vacation Scholarships.
-
-The old and new models performed similarly between not UK and UK grants.
-
-I suspect that because I tagged a large number of new grants which didn't match the keywords - explained above - the training data is quite different, so it makes sense that the model is quite different now.
