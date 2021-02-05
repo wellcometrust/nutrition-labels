@@ -5,7 +5,7 @@ pandas
 sklearn
 beautifulsoup4
 lxml
-wellcomeml[deep-learning]
+wellcomeml[deep-learning]==2020.11.1
 docutils==0.15.2
 bokeh==2.1.0
 scholarly

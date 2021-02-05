@@ -62,6 +62,17 @@ We compare the tech grants with another set of grants tagged by a different mode
 
 We perform cluster analysis to look at themes within the tech grants. This analysis is written up in [Tech_grant_clusters.md](docs/Tech_grant_clusters.md).
 
+## Using the tech grants tagger
+
+If you run
+
+```
+python nutrition_labels.tech_grant_tagger.py --input_path data/raw/wellcome-grants-awarded-2005-2019_test_sample.csv --output_path data/processed/wellcome-grants-awarded-2005-2019_test_sample_tagged.csv  --models_path models/ensemble_210129_models/ --num_agree 3 --grant_text_cols ['Title', 'Grant Programme:Title', 'Description']
+```
+
+you will predict whether grants given in `input_path` are tech grants using the models given in `models_path` (an ensemble where 3 models have to agree in order for a grant to be tagged as a tech grant). The text predicted on is the merged text from any text given in `grant_text_cols`. The predictions are outputted in `output_path`.
+
+
 ## Data Representation Labels
 
 In the [Top_Datasets.md](docs/Top_Datasets.md) document you can find how we identified some of the datasets to include in the data representation labels.
