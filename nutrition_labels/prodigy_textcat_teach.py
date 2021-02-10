@@ -8,6 +8,8 @@ prodigy textcat.teach-tech tech_grants
 """
 
 import json
+import random
+import itertools
 
 import sklearn
 import pandas as pd
@@ -144,9 +146,12 @@ def textcat_teach(
 
     def my_prefer_uncertain(stream, model, vectorizer, bin2cat):
         """
-        Output stream will be ordered by most uncertain first
+        Output stream will be ordered by a random assortment of the most uncertain first
+        Since the data set is imbalanced in the favour of non-tech grants
+        we also include a high probability tech grant every other example
         """
 
+        # Use the model to predict the scores
         stream_list = list(stream)
         stream_texts = [s['text'] for s in stream_list]
         stream_probs = model.predict_proba(vectorizer.transform(stream_texts))
@@ -154,11 +159,32 @@ def textcat_teach(
             stream_list[i]['label'] = bin2cat[s.argmax()]
             stream_list[i]['score'] = s[s.argmax()]
 
-        # Sort by probability score
-        stream_list = sorted(stream_list, key=lambda k: k['score'])
+        # Find the most likely predicted tech grants
+        # Randomly sort the top 25% of them
+        tech_stream = [s for s in stream_list if s['label']==bin2cat[1]]
+        tech_stream_sorted = sorted(tech_stream, key=lambda k: k['score'], reverse=True)
+        top_tech_stream = tech_stream_sorted[0:round((len(tech_stream)/4))]
+        random.shuffle(top_tech_stream)
+        
+        # Randomly sort the worst 10% of all the stream predictions
+        stream_list_sorted = sorted(stream_list, key=lambda k: k['score'])
+        num_worst = round((len(stream_list_sorted)/10))
+        stream_list = stream_list_sorted[0:num_worst]
+        random.shuffle(stream_list)
+        print(len(stream_list))
+
+        # Intersperse the low probability scores with the high tech predictions
+        # Effectively stream_list[0], top_tech_stream[0], stream_list[1], top_tech_stream[1], ...
+        stream_list = [x for x in itertools.chain.from_iterable(
+            itertools.zip_longest(stream_list, top_tech_stream)
+            ) if x]
+        print(len(stream_list))
+        # Add on the better 90% of the stream list
+        stream_list += stream_list_sorted[num_worst:]
+        print(len(stream_list))
 
         for s in stream_list[0:5]:
-            print(f"{s['score']}: {s['label']}: {s['text'][0:100]}")
+            print(f"{s['score']}: {s['label']}: {s['text'][0:50]}")
         # return as generator object
         stream = (s for s in stream_list)
         return stream
