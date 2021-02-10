@@ -7,8 +7,6 @@ prodigy textcat.teach-tech tech_grants
 
 """
 
-import os
-import pickle
 import json
 
 import sklearn
@@ -84,11 +82,6 @@ def textcat_teach(
 
     bin2cat = {0: 'Not tech grant', 1: 'Tech grant'}
     cat2bin = {'Not tech grant': 0, 'Tech grant': 1}
-
-    # Load the trained vectorizer
-    model_path = 'models/tfidf_svm_210128'
-    with open(os.path.join(model_path, 'vectorizer.pickle'), 'rb') as f:
-        vectorizer = pickle.load(f)
 
     # Load the current training dataset
     db = connect()
