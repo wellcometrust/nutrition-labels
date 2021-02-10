@@ -14,7 +14,8 @@ import json
 import sklearn
 import pandas as pd
 from sklearn.linear_model import LogisticRegression
-from sklearn.metrics import f1_score
+from sklearn.metrics import f1_score, classification_report
+from sklearn.feature_extraction.text import TfidfVectorizer
 import prodigy
 from prodigy.components.loaders import JSONL
 from prodigy.components.db import connect
@@ -43,6 +44,7 @@ def get_prodigy_x_y(data, cat2bin):
     If the answer is reject then use the other tag, 
     e.g. reject 'Not tech grant' means accept 'tech grant'
     """
+    data = [eg for eg in data if eg["answer"] != "ignore"]
     X = [annotation['text'] for annotation in data]
     y = []
     for annotation in data:
@@ -91,16 +93,23 @@ def textcat_teach(
     # Load the current training dataset
     db = connect()
     dataset_examples = db.get_dataset(dataset)
-    dataset_examples = [eg for eg in dataset_examples if eg["answer"] != "ignore"]
     training_X, training_y = get_prodigy_x_y(dataset_examples, cat2bin)
 
     # Load the original test data
     test_X, test_y = get_jsonl_x_y('data/prodigy/existing_test_data.jsonl', cat2bin)
+
+    # Train vectorizer
+    vectorizer = TfidfVectorizer(
+        analyzer='word',
+        token_pattern=r'(?u)\b\w+\b',
+        ngram_range=(1, 2)
+        )
+    train_X_vect = vectorizer.fit_transform(training_X)
     test_X_vec = vectorizer.transform(test_X)
 
     # Train model
     model = LogisticRegression(max_iter=1000)
-    model = model.fit(vectorizer.transform(training_X), training_y)
+    model = model.fit(train_X_vect, training_y)
 
     # Get the beginning test score, before adding new data points
     y_test_pred = model.predict(test_X_vec)
@@ -111,24 +120,34 @@ def textcat_teach(
         This function is triggered when Prodigy receives annotations
         Train model with new annotations added
         """
-        nonlocal test_f1
+        nonlocal test_f1, model, vectorizer
 
         print(f"Received {len(examples)} annotations.. adding these to the training data")
 
-        # Collate old training data with new
         new_X, new_y = get_prodigy_x_y(examples, cat2bin)
-        X = vectorizer.transform(training_X + new_X)
+
+        # Refit with collated old training data with new
+        vectorizer = TfidfVectorizer(
+            analyzer='word',
+            token_pattern=r'(?u)\b\w+\b',
+            ngram_range=(1, 2)
+            )
+        X = vectorizer.fit_transform(training_X + new_X)
         y = training_y + new_y
 
         model = LogisticRegression(max_iter=1000)
         model = model.fit(X, y)
 
         y_pred = model.predict(X)
-        y_test_pred = model.predict(test_X_vec)
+        y_test_pred = model.predict(vectorizer.transform(test_X))
         train_f1 = f1_score(y, y_pred, average='weighted')
         test_f1 = f1_score(test_y, y_test_pred, average='weighted')
         print(f"Training F1: {round(train_f1, 3)}")
         print(f"Test F1: {round(test_f1, 3)}")
+        print("Train classification report:")
+        print(classification_report(y, y_pred))
+        print("Test classification report:")
+        print(classification_report(test_y, y_test_pred))
 
     def my_prefer_uncertain(stream, model, vectorizer, bin2cat):
         """
@@ -144,6 +163,9 @@ def textcat_teach(
 
         # Sort by probability score
         stream_list = sorted(stream_list, key=lambda k: k['score'])
+
+        for s in stream_list[0:5]:
+            print(f"{s['score']}: {s['label']}: {s['text'][0:100]}")
         # return as generator object
         stream = (s for s in stream_list)
         return stream
