@@ -4,7 +4,6 @@ This is inspired from textcat.teach
 prodigy textcat.teach-tech tech_grants 
     data/prodigy/grants_data.jsonl 
     -F nutrition_labels/prodigy_textcat_teach.py --label 'Tech grant','Not tech grant'
-
 """
 
 import json
@@ -19,6 +18,7 @@ from sklearn.feature_extraction.text import TfidfVectorizer
 import prodigy
 from prodigy.components.loaders import JSONL
 from prodigy.components.db import connect
+from prodigy.components.sorters import prefer_low_scores, prefer_uncertain
 from prodigy.util import split_string
 from typing import List, Optional
 
@@ -59,6 +59,92 @@ def get_prodigy_x_y(data, cat2bin):
 
     return X, y
 
+class LogRegTFIDF(object):
+    def __init__(self, dataset):
+
+        self.bin2cat = {0: 'Not tech grant', 1: 'Tech grant'}
+        self.cat2bin = {'Not tech grant': 0, 'Tech grant': 1}
+
+        # Load the current training dataset
+        db = connect()
+        dataset_examples = db.get_dataset(dataset)
+        self.training_X, self.training_y = get_prodigy_x_y(dataset_examples, self.cat2bin)
+
+        # Load the original test data
+        self.test_X, self.test_y = get_jsonl_x_y('data/prodigy/existing_test_data.jsonl', self.cat2bin)
+
+        # Train vectorizer
+        self.vectorizer = TfidfVectorizer(
+            analyzer='word',
+            token_pattern=r'(?u)\b\w+\b',
+            ngram_range=(1, 2)
+            )
+        train_X_vect = self.vectorizer.fit_transform(self.training_X)
+        test_X_vec = self.vectorizer.transform(self.test_X)
+
+        # Train model
+        self.model = LogisticRegression(max_iter=1000)
+        self.model = self.model.fit(train_X_vect, self.training_y)
+
+        # Get the beginning test score, before adding new data points
+        test_y_pred = self.model.predict(test_X_vec)
+        self.test_f1 = f1_score(self.test_y, test_y_pred, average='weighted')
+
+    def __call__(self, stream):
+        """
+        For each example in the stream use the model to predict
+        a label and get the score
+        """
+
+        for eg in stream:
+            stream_prob = self.model.predict_proba(self.vectorizer.transform([eg['text']]))[0]
+            eg["label"] = self.bin2cat[stream_prob.argmax()]
+            score = stream_prob[stream_prob.argmax()]
+            yield (score, eg)
+
+    def update(self, examples):
+        """
+        Rebuild and train the vectorizer and model everytime
+        Prodigy updates. Calculate the text F1 and print out
+        some train/test scores.
+        """
+
+        batch_X, batch_y = get_prodigy_x_y(examples, self.cat2bin)
+
+        if len(batch_X) != 0:
+            # Update if the 
+            self.training_X = self.training_X + batch_X
+            self.training_y = self.training_y + batch_y
+
+            # Refit with collated old training data with new
+            self.vectorizer = TfidfVectorizer(
+                analyzer='word',
+                token_pattern=r'(?u)\b\w+\b',
+                ngram_range=(1, 2)
+                )
+            train_X_vect = self.vectorizer.fit_transform(self.training_X)
+            
+            self.model = LogisticRegression(max_iter=1000)
+            self.model = self.model.fit(train_X_vect, self.training_y)
+
+            new_y_pred = self.model.predict(train_X_vect)
+            test_y_pred = self.model.predict(self.vectorizer.transform(self.test_X))
+
+            train_f1 = f1_score(self.training_y, new_y_pred, average='weighted')
+            self.test_f1 = f1_score(self.test_y, test_y_pred, average='weighted')
+            print(f"Training F1: {round(train_f1, 3)}")
+            print(f"Test F1: {round(self.test_f1, 3)}")
+            print("Train classification report:")
+            print(classification_report(self.training_y, new_y_pred))
+            print("Test classification report:")
+            print(classification_report(self.test_y, test_y_pred))
+
+    def get_progress(self, *args, **kwargs):
+        """
+        Set the progress bar to be the test F1 score
+        """
+        return self.test_f1
+
 # Recipe decorator with argument annotations: (description, argument type,
 # shortcut, type / converter function called on value before it's passed to
 # the function). Descriptions are also shown when typing --help.
@@ -66,143 +152,30 @@ def get_prodigy_x_y(data, cat2bin):
     "textcat.teach-tech",
     dataset=("The dataset to use", "positional", None, str),
     source=("The source data as a JSONL file", "positional", None, str),
-    exclude=("Names of datasets to exclude", "option", "e", split_string),
 )
 def textcat_teach(
     dataset: str,
     source: str,
-    exclude: Optional[List[str]] = None,
 ):
     """
     Collect the best possible training data for a text classification model
     with the model in the loop. Based on your annotations, Prodigy will decide
     which questions to ask next.
     """
-    # Load the stream from a JSONL file and return a generator that yields a
-    # dictionary for each example in the data.
-    stream = JSONL(source)
+    
+    model = LogRegTFIDF(dataset)
+    stream = JSONL(source)              # load the data
+    stream = model(stream)              # call custom predict function
 
-    bin2cat = {0: 'Not tech grant', 1: 'Tech grant'}
-    cat2bin = {'Not tech grant': 0, 'Tech grant': 1}
-
-    # Load the current training dataset
-    db = connect()
-    dataset_examples = db.get_dataset(dataset)
-    training_X, training_y = get_prodigy_x_y(dataset_examples, cat2bin)
-
-    # Load the original test data
-    test_X, test_y = get_jsonl_x_y('data/prodigy/existing_test_data.jsonl', cat2bin)
-
-    # Train vectorizer
-    vectorizer = TfidfVectorizer(
-        analyzer='word',
-        token_pattern=r'(?u)\b\w+\b',
-        ngram_range=(1, 2)
-        )
-    train_X_vect = vectorizer.fit_transform(training_X)
-    test_X_vec = vectorizer.transform(test_X)
-
-    # Train model
-    model = LogisticRegression(max_iter=1000)
-    model = model.fit(train_X_vect, training_y)
-
-    # Get the beginning test score, before adding new data points
-    y_test_pred = model.predict(test_X_vec)
-    test_f1 = f1_score(test_y, y_test_pred, average='weighted')
-
-    def update(examples):
-        """
-        This function is triggered when Prodigy receives annotations
-        Train model with new annotations added
-        """
-        nonlocal test_f1, model, vectorizer
-
-        print(f"Received {len(examples)} annotations.. adding these to the training data")
-
-        new_X, new_y = get_prodigy_x_y(examples, cat2bin)
-
-        # Refit with collated old training data with new
-        vectorizer = TfidfVectorizer(
-            analyzer='word',
-            token_pattern=r'(?u)\b\w+\b',
-            ngram_range=(1, 2)
-            )
-        X = vectorizer.fit_transform(training_X + new_X)
-        y = training_y + new_y
-
-        model = LogisticRegression(max_iter=1000)
-        model = model.fit(X, y)
-
-        y_pred = model.predict(X)
-        y_test_pred = model.predict(vectorizer.transform(test_X))
-        train_f1 = f1_score(y, y_pred, average='weighted')
-        test_f1 = f1_score(test_y, y_test_pred, average='weighted')
-        print(f"Training F1: {round(train_f1, 3)}")
-        print(f"Test F1: {round(test_f1, 3)}")
-        print("Train classification report:")
-        print(classification_report(y, y_pred))
-        print("Test classification report:")
-        print(classification_report(test_y, y_test_pred))
-
-    def my_prefer_uncertain(stream, model, vectorizer, bin2cat):
-        """
-        Output stream will be ordered by a random assortment of the most uncertain first
-        Since the data set is imbalanced in the favour of non-tech grants
-        we also include a high probability tech grant every other example
-        """
-
-        # Use the model to predict the scores
-        stream_list = list(stream)
-        stream_texts = [s['text'] for s in stream_list]
-        stream_probs = model.predict_proba(vectorizer.transform(stream_texts))
-        for i, s in enumerate(stream_probs):
-            stream_list[i]['label'] = bin2cat[s.argmax()]
-            stream_list[i]['score'] = s[s.argmax()]
-
-        # Find the most likely predicted tech grants
-        # Randomly sort the top 25% of them
-        tech_stream = [s for s in stream_list if s['label']==bin2cat[1]]
-        tech_stream_sorted = sorted(tech_stream, key=lambda k: k['score'], reverse=True)
-        top_tech_stream = tech_stream_sorted[0:round((len(tech_stream)/4))]
-        random.shuffle(top_tech_stream)
-        
-        # Randomly sort the worst 10% of all the stream predictions
-        stream_list_sorted = sorted(stream_list, key=lambda k: k['score'])
-        num_worst = round((len(stream_list_sorted)/10))
-        stream_list = stream_list_sorted[0:num_worst]
-        random.shuffle(stream_list)
-        print(len(stream_list))
-
-        # Intersperse the low probability scores with the high tech predictions
-        # Effectively stream_list[0], top_tech_stream[0], stream_list[1], top_tech_stream[1], ...
-        stream_list = [x for x in itertools.chain.from_iterable(
-            itertools.zip_longest(stream_list, top_tech_stream)
-            ) if x]
-        print(len(stream_list))
-        # Add on the better 90% of the stream list
-        stream_list += stream_list_sorted[num_worst:]
-        print(len(stream_list))
-
-        for s in stream_list[0:5]:
-            print(f"{s['score']}: {s['label']}: {s['text'][0:50]}")
-        # return as generator object
-        stream = (s for s in stream_list)
-        return stream
-
-    def get_progress(*args, **kwargs):
-        """
-        Set the progress bar to be the test F1 score
-        """
-        return test_f1
-
-    stream = my_prefer_uncertain(stream, model, vectorizer, bin2cat)
+    # Prodigy's prefer_uncertain looks for scores around 0.5 
+    # and assumes scores to be in the 0-1 range, but in our
+    # model scores are in the range 0.5-1
+    stream = prefer_uncertain(stream)   # sort to prefer uncertain scores
 
     return {
-        "view_id": "classification",  # Annotation interface to use
-        "dataset": dataset,  # Name of dataset to save annotations
-        "stream": stream,  # Incoming stream of examples
-        "update": update,  # Update callback, called with batch of answers
-        "exclude": exclude,  # List of dataset names to exclude
-        "progress": get_progress
+        "dataset": dataset,          # dataset to save annotations to
+        "stream": stream,            # the incoming stream of examples
+        "update": model.update,      # the update callback
+        "view_id": "classification",  # annotation interface to use
+        "progress": model.get_progress
     }
-    
