@@ -9,16 +9,17 @@ prodigy textcat.teach-tech tech_grants
 import json
 import random
 import itertools
+from datetime import datetime
 
 import sklearn
 import pandas as pd
 from sklearn.linear_model import LogisticRegression
-from sklearn.metrics import f1_score, classification_report
+from sklearn.metrics import f1_score, classification_report, confusion_matrix
 from sklearn.feature_extraction.text import TfidfVectorizer
 import prodigy
 from prodigy.components.loaders import JSONL
 from prodigy.components.db import connect
-from prodigy.components.sorters import prefer_low_scores, prefer_uncertain
+from prodigy.components.sorters import prefer_low_scores, prefer_high_scores, prefer_uncertain
 from prodigy.util import split_string
 from typing import List, Optional
 
@@ -60,11 +61,14 @@ def get_prodigy_x_y(data, cat2bin):
     return X, y
 
 class LogRegTFIDF(object):
-    def __init__(self, dataset):
+    def __init__(self, dataset, session_name, label=['Tech grant', 'Not tech grant']):
 
         self.bin2cat = {0: 'Not tech grant', 1: 'Tech grant'}
         self.cat2bin = {'Not tech grant': 0, 'Tech grant': 1}
-
+ 
+        self.session_name = session_name
+        self.label = label
+        
         # Load the current training dataset
         db = connect()
         dataset_examples = db.get_dataset(dataset)
@@ -93,14 +97,19 @@ class LogRegTFIDF(object):
     def __call__(self, stream):
         """
         For each example in the stream use the model to predict
-        a label and get the score
+        a label and get the score.
+        If the label has a very low probability score, then that means
+        it has a high probability of the other label.
+        Only output the results when the label is in the self.label list
         """
-
+        
         for eg in stream:
             stream_prob = self.model.predict_proba(self.vectorizer.transform([eg['text']]))[0]
             eg["label"] = self.bin2cat[stream_prob.argmax()]
-            score = stream_prob[stream_prob.argmax()]
-            yield (score, eg)
+            if eg["label"] in self.label:
+                eg["session_name"] = self.session_name
+                score = stream_prob[stream_prob.argmax()]
+                yield (score, eg)
 
     def update(self, examples):
         """
@@ -138,6 +147,8 @@ class LogRegTFIDF(object):
             print(classification_report(self.training_y, new_y_pred))
             print("Test classification report:")
             print(classification_report(self.test_y, test_y_pred))
+            print("Test confusion:")
+            print(confusion_matrix(self.test_y, test_y_pred))
 
     def get_progress(self, *args, **kwargs):
         """
@@ -152,25 +163,38 @@ class LogRegTFIDF(object):
     "textcat.teach-tech",
     dataset=("The dataset to use", "positional", None, str),
     source=("The source data as a JSONL file", "positional", None, str),
+    label=("One or more comma-separated labels", "option", "l", split_string),
+    session_name=("A name for this annotation session, can be anything", "option", "s", str),
+    sorter=("Which Prodigy stream sorting algorithm to use", "option", "p", str)
 )
 def textcat_teach(
     dataset: str,
     source: str,
+    label: Optional[List[str]] = None,
+    session_name: Optional[str] = None,
+    sorter: Optional[str] = None
 ):
     """
     Collect the best possible training data for a text classification model
     with the model in the loop. Based on your annotations, Prodigy will decide
     which questions to ask next.
     """
-    
-    model = LogRegTFIDF(dataset)
+    if not session_name:
+        session_name = datetime.now().strftime('%y%m%d:%H%M')
+
+    model = LogRegTFIDF(dataset, session_name, label)
     stream = JSONL(source)              # load the data
     stream = model(stream)              # call custom predict function
 
     # Prodigy's prefer_uncertain looks for scores around 0.5 
     # and assumes scores to be in the 0-1 range, but in our
     # model scores are in the range 0.5-1
-    stream = prefer_uncertain(stream)   # sort to prefer uncertain scores
+    if sorter == 'prefer_high_scores':
+        stream = prefer_high_scores(stream)   # sort to prefer high scores
+    elif sorter == 'prefer_low_scores':
+        stream = prefer_low_scores(stream)   # sort to prefer low scores
+    else:
+        stream = prefer_uncertain(stream)   # sort to prefer uncertain scores
 
     return {
         "dataset": dataset,          # dataset to save annotations to
