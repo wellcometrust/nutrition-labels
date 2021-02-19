@@ -37,9 +37,11 @@ class GrantTagger():
 
     def transform(self, data):
 
-        data['Grant texts'] = data[['Title', 'Grant Programme:Title', 'Description']].agg(
-            '. '.join, axis=1
-            )
+        if 'Grant texts' not in data:
+            # If the training data hasn't come through Prodigy tagging then this won't exist
+            data['Grant texts'] = data[['Title', 'Grant Programme:Title', 'Description']].agg(
+                '. '.join, axis=1
+                )
         self.X = data['Grant texts'].tolist()
         y = data['Relevance code']
 
@@ -135,13 +137,6 @@ class GrantTagger():
             print(pretty_confusion_matrix(y, y_predict))
 
         return scores, classification_report(y, y_predict), pretty_confusion_matrix(y, y_predict)
-
-    def return_mislabeled_data(self, y_actual, y_pred, X_indices):
-        X_text = [self.X[i] for i in X_indices]
-        X_text_df = pd.DataFrame({'Description': X_text,
-                                'True_label':y_actual,
-                                'Predicted_label':y_pred})
-        return X_text_df
 
     def save_model(self, output_path, split_info, evaluation_results=None):
         if not os.path.exists(output_path):
