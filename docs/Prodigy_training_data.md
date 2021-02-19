@@ -63,21 +63,23 @@ prodigy db-merge tech_grants_2,test_data merged_tech_grants
 prodigy db-out merged_tech_grants data/prodigy/merged_tech_grants
 ```
 
+## What did Progigy add?
+
+In the notebook `notebooks/Prodigy evaluation.ipynb` I looked at the difference the Prodigy data made to the performance of a TFIDF- logistic regression model. The following plot shows the train and test metrics as the training data increases in size (x-axis). x=0:520 is a random assortment of the originally tagged data, x=521:620 is the Prodigy actively learnt with `prefer_uncertain` sorting data tagging (in order), and x=621:820 is the Prodigy actively learnt with `prefer_high_scores` sorting data tagging (in order).
+
+![](figures/prodigy_sametest.png)
+
+## 210218 training data
+
 Since we tag the text with accept or reject 'tech model' or accept or reject 'not tech model', it's important to remember that an accept=False result means the opposite tag is true.
 
 The Prodigy data needed reformatting to a format suitable for training data. This can be created by running:
 ```
 python nutrition_labels/prodigy_training_data.py --prodigy_data_dir 'data/prodigy/merged_tech_grants/merged_tech_grants.jsonl'
 ```
-which will output the training data in a datestamped folder (e.g. 'data/processed/training_data/210210/training_data.csv').
+which will output the training data in a datestamped folder.
 
-Then, as usual, you use can this `grant_tagger.py` to train your model, e.g. by running:
-```
-python nutrition_labels/grant_tagger.py --training_data_file 'data/processed/training_data/210210/training_data.csv' --vectorizer_type count --model_type naive_bayes
-```
-with the different values for vectorizer_type, model_type and bert_type.
-
-## 210218 training data results
+This outputted the `data/processed/training_data/210218/training_data.csv` training dataset:
 
 | Tag code | Meaning | Number of grants |
 |---|---|--- |
