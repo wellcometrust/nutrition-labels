@@ -168,7 +168,15 @@ A comparison with the previous results (201022 - old definition, 210128 - new de
 
 In the previous method we ran the script `ensemble_model.py` to make predictions using an ensemble of models which satisfied precision and recall value thresholds. However in this iteration we improved the process by testing which ensemble of models and which number of models that needs to agree is optimal.
 
-These experiments were run in `notebooks/Ensemble parameter exploration.ipynb`. In this we plot the precision/recall for each of the 12 models plus every single combination of those 12 models for different values of the number of models that need to agree.
+We first make predictions using the test data for each of the 12 models. This is done by running:
+```
+python nutrition_labels/predict_tech.py 
+    --training_data_file data/processed/training_data/210221/training_data.csv
+    --grants_data_file data/raw/wellcome-grants-awarded-2005-2019.csv
+    --models_date 210221
+```
+
+The ensemble parameter experiments were run in `notebooks/Ensemble parameter exploration.ipynb`. In this we plot the precision/recall for each of the 12 models plus every single combination of those 12 models for different values of the number of models that need to agree.
 
 ![](figures/model_performance_ensemble_vs_single.png)
 
