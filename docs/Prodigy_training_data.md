@@ -41,7 +41,7 @@ The optional "sorter" parameter is where you choose which Prodigy sorting method
 
 All in the dataset `tech_grants_2`:
 
-|session_name | Description | Number not ignored | 
+|session_name | Description | Number not ignored |
 |---|---|---|
 | Originally labelled training data | Without using Prodigy | 520 |
 | Low scoring tech grant predictions | Using Prodigy with `prefer_uncertain` sorting | 100 |
@@ -79,63 +79,47 @@ python nutrition_labels/prodigy_training_data.py --prodigy_data_dir 'data/prodig
 ```
 which will output the training data in a datestamped folder.
 
-This outputted the `data/processed/training_data/210218/training_data.csv` training dataset:
+This outputted the `data/processed/training_data/210221/training_data.csv` training dataset:
 
 | Tag code | Meaning | Number of grants |
 |---|---|--- |
-| 1 | Relevant | 592 |
-| 0 | Not relevant | 576 |
+| 1 | Relevant | 495 |
+| 0 | Not relevant | 485 |
 
 ### Variability in the results:
 
-I reran `grant_tagger_seed_experiments.py` with the training data in `data/processed/training_data/210218/training_data.csv`. This script trains several models with different random seeds and teamed with the `Seed variability.ipynb` notebook we can pick a new 'best' random seed to choose our training/test split for all models.
+
+I reran `grant_tagger_seed_experiments.py` with the training data in `data/processed/training_data/210221/training_data.csv`. This script trains several models with different random seeds and teamed with the `Seed variability.ipynb` notebook we can pick a new 'best' random seed to choose our training/test split for all models.
 
 New results:
 
 | Model | Mean/std/range test accuracy | Mean/std/range test f1 | Mean/std/range test precision_score | Mean/std/range test recall_score |
 | ----- | ------------------ | ------------ | ------------------------- | ---------------------- |
-|bert_SVM_bert_210218|0.772/0.024/(0.729, 0.805)|0.775/0.026/(0.739, 0.818)|0.772/0.027/(0.724, 0.804)|0.78/0.039/(0.742, 0.861)|
-|bert_SVM_scibert_210218|0.782/0.025/(0.736, 0.818)|0.784/0.028/(0.739, 0.817)|0.788/0.03/(0.741, 0.849)|0.781/0.041/(0.722, 0.854)|
-|bert_log_reg_bert_210218|0.81/0.024/(0.781, 0.849)|0.814/0.028/(0.779, 0.866)|0.803/0.027/(0.765, 0.845)|0.827/0.047/(0.762, 0.918)|
-|bert_log_reg_scibert_210218|0.824/0.033/(0.781, 0.866)|0.826/0.034/(0.775, 0.863)|0.825/0.027/(0.786, 0.872)|0.828/0.047/(0.762, 0.887)|
-|bert_naive_bayes_bert_210218|0.744/0.024/(0.702, 0.781)|0.749/0.023/(0.715, 0.781)|0.745/0.019/(0.708, 0.77)|0.754/0.034/(0.697, 0.806)|
-|bert_naive_bayes_scibert_210218|0.773/0.016/(0.75, 0.798)|0.779/0.014/(0.754, 0.8)|0.767/0.022/(0.732, 0.814)|0.792/0.024/(0.754, 0.833)|
-|count_SVM_210218|0.78/0.027/(0.736, 0.822)|0.781/0.023/(0.755, 0.821)|0.789/0.039/(0.732, 0.877)|0.776/0.041/(0.735, 0.854)|
-|count_log_reg_210218|0.8/0.022/(0.767, 0.842)|0.804/0.021/(0.764, 0.84)|0.802/0.031/(0.772, 0.877)|0.808/0.04/(0.728, 0.861)|
-|count_naive_bayes_210218|0.812/0.023/(0.781, 0.849)|0.827/0.021/(0.797, 0.86)|0.774/0.02/(0.751, 0.823)|0.89/0.032/(0.833, 0.937)|
-|tfidf_SVM_210218|0.814/0.019/(0.788, 0.842)|0.817/0.02/(0.788, 0.841)|0.817/0.029/(0.788, 0.888)|0.818/0.042/(0.762, 0.903)|
-|tfidf_log_reg_210218|0.808/0.019/(0.788, 0.839)|0.812/0.017/(0.792, 0.836)|0.807/0.031/(0.771, 0.881)|0.819/0.034/(0.781, 0.882)|
-|tfidf_naive_bayes_210218|0.767/0.028/(0.726, 0.815)|0.805/0.022/(0.775, 0.839)|0.702/0.037/(0.651, 0.758)|0.945/0.021/(0.901, 0.979)|
+|bert_SVM_bert_210221|0.769/0.011/(0.759, 0.796)|0.775/0.016/(0.755, 0.8)|0.785/0.034/(0.722, 0.828)|0.768/0.028/(0.718, 0.811)|
+|bert_SVM_scibert_210221|0.765/0.017/(0.735, 0.8)|0.769/0.019/(0.743, 0.797)|0.791/0.052/(0.718, 0.856)|0.752/0.031/(0.721, 0.817)|
+|bert_log_reg_bert_210221|0.756/0.022/(0.718, 0.788)|0.762/0.016/(0.737, 0.789)|0.777/0.026/(0.736, 0.817)|0.748/0.028/(0.696, 0.792)|
+|bert_log_reg_scibert_210221|0.775/0.023/(0.739, 0.808)|0.779/0.021/(0.739, 0.807)|0.796/0.029/(0.75, 0.839)|0.765/0.039/(0.707, 0.817)|
+|bert_naive_bayes_bert_210221|0.736/0.015/(0.71, 0.755)|0.738/0.018/(0.703, 0.766)|0.764/0.052/(0.677, 0.845)|0.717/0.027/(0.688, 0.754)|
+|bert_naive_bayes_scibert_210221|0.762/0.02/(0.739, 0.8)|0.771/0.019/(0.745, 0.802)|0.774/0.043/(0.697, 0.837)|0.771/0.031/(0.714, 0.811)|
+|count_SVM_210221|0.707/0.031/(0.665, 0.759)|0.696/0.029/(0.661, 0.749)|0.759/0.033/(0.705, 0.827)|0.646/0.055/(0.581, 0.765)|
+|count_log_reg_210221|0.747/0.029/(0.706, 0.796)|0.751/0.025/(0.71, 0.781)|0.774/0.045/(0.703, 0.856)|0.732/0.033/(0.696, 0.783)|
+|count_naive_bayes_210221|0.762/0.02/(0.731, 0.8)|0.787/0.02/(0.766, 0.816)|0.735/0.031/(0.691, 0.782)|0.849/0.03/(0.808, 0.896)|
+|tfidf_SVM_210221|0.744/0.033/(0.694, 0.784)|0.736/0.038/(0.678, 0.789)|0.802/0.046/(0.728, 0.871)|0.689/0.093/(0.564, 0.861)|
+|tfidf_log_reg_210221|0.75/0.029/(0.698, 0.784)|0.751/0.032/(0.692, 0.789)|0.784/0.047/(0.716, 0.876)|0.73/0.085/(0.593, 0.878)|
+|tfidf_naive_bayes_210221|0.716/0.06/(0.588, 0.788)|0.766/0.037/(0.689, 0.817)|0.685/0.091/(0.533, 0.803)|0.887/0.068/(0.786, 0.974)|
 
-
-Comparison to the results before Prodigy data additions:
-
-| Model | Mean test f1 - 210126 | Mean test f1 - 210218 |  Mean test precision_score - 210126|  Mean test precision_score - 210218| Mean test recall_score - 210126| Mean test recall_score - 210218|
-| ----- | ------------------ | ------------ | ------------------------- | ---------------------- |------------------------- | ---------------------- |
-| count_naive_bayes|0.809|0.827|0.755|0.774|0.875|0.890|
-| count_log_reg|0.769|0.804|0.793|0.802 |0.751|0.808 |
-| count_SVM|0.711| 0.781|0.767|0.789|0.670|0.776  |
-| tfidf_naive_bayes|0.784| 0.805 |0.714|0.702 |0.886|0.945 |
-| tfidf_log_reg|0.768|0.812 |0.819|0.807|0.736|0.819  |
-| tfidf_SVM|0.748|0.817|0.836|0.817|0.688|0.818 |
-| bert_naive_bayes_bert|0.738|0.749|0.723|0.745|0.757|0.754 |
-| bert_log_reg_bert|0.768|0.814|0.770|0.803|0.769|0.827|
-| bert_SVM_bert|0.780|0.775|0.773|0.772|0.794|0.78|
-| bert_naive_bayes_scibert   |  0.789|0.779| 0.772  |0.767|0.812|0.792|
-| bert_SVM_scibert|0.782|0.784|0.810|0.788|0.764|0.781|
-| bert_log_reg_scibert|0.798|0.826|0.807|0.825|0.791|0.828|
 
 ### Best seed:
 We calculated the highest average metrics over all models for the different random seeds used in `Seed variability.ipynb`.
 
-The seed 7 gives good results like last time.
+The seed `1` gave good results, so we will use this in `grant_tagger.py`.
 
 ### Rerunning all models
 
 We ran:
 
 ```
-python nutrition_labels/grant_tagger.py --training_data_file 'data/processed/training_data/210218/training_data.csv' --vectorizer_type count --model_type naive_bayes --bert_type scibert
+python nutrition_labels/grant_tagger.py --training_data_file 'data/processed/training_data/210221/training_data.csv' --vectorizer_type count --model_type naive_bayes --bert_type scibert
 ```
 with the different values for vectorizer_type, model_type and bert_type.
 
@@ -145,53 +129,75 @@ A comparison with the previous results (201022 - old definition, 210128 - new de
 | --- | --- | --- | --- | --- | --- | --- | --- |
 | 201022 | count | log_reg | - | 1.000 | 0.842 | 0.814 | 0.873 |
 | 210128 | count | log_reg | - | 1.000 | 0.795 | 0.787 | 0.805 |
-| 210218 | count | log_reg | - | 0.998| 0.840 | 0.877 | 0.807 |
+| 210221 | count | log_reg | - | 1.000 | 0.772 | 0.806 | 0.741 |
 | 201022 | count | naive_bayes | - | 1.000 | 0.864 | 0.810 | 0.927 |
 | 210128 | count | naive_bayes | - | 1.000 | 0.827 | 0.743 | 0.931 |
-| 210218 | count | naive_bayes | - | 0.998 | 0.860 | 0.823 | 0.9 |
+| 210221 | count | naive_bayes | - |  1.000 | 0.774 | 0.820 | 0.732 |
 | 201022 | count | SVM | - | 0.994 | 0.847 | 0.839 | 0.855 |
 | 210128 | count | SVM | - | 0.981 | 0.786 | 0.791 | 0.782 |
-| 210218 | count | SVM | - | 0.981 | 0.814 | 0.877 | 0.76 |
+| 210221 | count | SVM | - | 0.969 | 0.720 | 0.827 | 0.637 |
 | 201022 | tfidf | log_reg | - | 1.000 | 0.844 | 0.852 | 0.836 |
 | 210128 | tfidf | log_reg | - | 0.996 | 0.849 | 0.859 | 0.839 |
-| 210218 | tfidf | log_reg | - | 0.996| 0.835 | 0.881 | 0.793 |
+| 210221 | tfidf | log_reg | - | 0.997 | 0.759 | 0.814 | 0.711 |
 | 201022 | tfidf | naive_bayes | - | 1.000 | 0.846 | 0.765 | 0.945 |
 | 210128 | tfidf | naive_bayes | - | 1.000 | 0.830 | 0.735 | 0.954 |
-| 210218 | tfidf | naive_bayes | - | 0.988 | |0.839 | 0.758 | 0.94 |
+| 210221 | tfidf | naive_bayes | - | 0.999 | 0.817 | 0.779 | 0.859 |
 | 201022 | tfidf | SVM | - | 1.000 | 0.822 | 0.846 | 0.800 |
 | 210128 | tfidf | SVM | - | 1.000 | 0.828 | 0.854 | 0.805 |
-| 210218 | tfidf | SVM | - |0.998| 0.838 | 0.888 | 0.793 |
+| 210221 | tfidf | SVM | - | 1.000 | 0.736 | 0.846 | 0.652 |
 | 201022 | bert | naive_bayes | bert | 0.713 | 0.757 | 0.813 | 0.709 |
 | 210128 | bert | naive_bayes | bert | 0.748 | 0.789 | 0.745 | 0.839 |
-| 210218 | bert | naive_bayes | bert | 0.730| 0.744 | 0.762 | 0.727 |
+| 210221 | bert | naive_bayes | bert | 0.730 | 0.746 | 0.803 | 0.696 |
 | 201022 | bert | SVM | bert | 0.819 | 0.881 | 0.825 | 0.945 |
 | 210128 | bert | SVM | bert | 0.822 | 0.809 | 0.752 | 0.874 |
-| 210218 | bert | SVM | bert | 0.815| 0.785 | 0.804 | 0.767 |
+| 210221 | bert | SVM | bert | 0.803 | 0.780 | 0.815 | 0.748 |
 | 201022 | bert | log_reg | bert | 1.000 | 0.825 | 0.797 | 0.855 |
 | 210128 | bert | log_reg | bert | 1.000 | 0.775 | 0.758 | 0.793 |
-| 210218 | bert | log_reg | bert | 0.992| 0.824 | 0.822 | 0.827 |
+| 210221 | bert | log_reg | bert | 0.993 | 0.789 | 0.817 | 0.763|
 | 201022 | bert | naive_bayes | scibert | 0.772 | 0.796 | 0.811 | 0.782 |
 | 210128 | bert | naive_bayes | scibert | 0.816 | 0.842 | 0.802 | 0.885 |
-| 210218 | bert | naive_bayes | scibert | 0.776| 0.800 | 0.814 | 0.787 |
+| 210221 | bert | naive_bayes | scibert | 0.764 | 0.779 | 0.803 | 0.756 |
 | 201022 | bert | SVM | scibert | 0.776 | 0.879 | 0.904 | 0.855 |
 | 210128 | bert | SVM | scibert | 0.831 | 0.851 | 0.819 | 0.885 |
-| 210218 | bert | SVM | scibert | 0.813| 0.817 | 0.849 | 0.787 |
+| 210221 | bert | SVM | scibert | 0.793 | 0.783 | 0.839 | 0.733 |
 | 201022 | bert | log_reg | scibert | 1.000 | 0.814 | 0.762 | 0.873 |
 | 210128 | bert | log_reg | scibert | 1.000 | 0.775 | 0.758 | 0.793 |
-| 210218 | bert | log_reg | scibert | 0.997| 0.853 | 0.853 | 0.853 |
+| 210221 | bert | log_reg | scibert | 1.000 | 0.794 | 0.819 | 0.770 |
 
 ### Ensemble model
 
-I ran:
-```
-python nutrition_labels/ensemble_model.py
-```
-with:
-- split_seed = 7 (in grant_tagger.py)
-- Training data from 210218
-- F1 >= 0.8
-- Precision >= 0.8
-- Recall >= 0.8
-- Models trained after = 210218
-- Models trained before = 210218
+In the previous method we ran the script `ensemble_model.py` to make predictions using an ensemble of models which satisfied precision and recall value thresholds. However in this iteration we improved the process by testing which ensemble of models and which number of models that needs to agree is optimal.
 
+These experiments were run in `notebooks/Ensemble parameter exploration.ipynb`. In this we plot the precision/recall for each of the 12 models plus every single combination of those 12 models for different values of the number of models that need to agree.
+
+![](figures/model_performance_ensemble_vs_single.png)
+
+The models found with the 'best' recall and precision were:
+
+- Ensemble of 3 models with 2 needing to agree ('bert_log_reg_bert_210221', 'bert_SVM_bert_210221', 'count_naive_bayes_210221')
+- Ensemble of 4 models with 3 needing to agree ('bert_naive_bayes_bert_210221', 'bert_log_reg_bert_210221', 'bert_SVM_bert_210221', 'count_naive_bayes_210221')
+- Ensemble of 4 models with 3 needing to agree ('bert_log_reg_bert_210221', 'bert_SVM_bert_210221', 'bert_naive_bayes_scibert_210221', 'count_naive_bayes_210221')
+- Ensemble of 3 models with 4 needing to agree ('bert_naive_bayes_bert_210221', 'bert_log_reg_bert_210221', 'bert_SVM_bert_210221', 'bert_naive_bayes_scibert_210221', 'count_naive_bayes_210221')
+
+out of these we chose the ensemble with:
+- 3 models ('bert_log_reg_bert_210221', 'bert_SVM_bert_210221', 'count_naive_bayes_210221')
+- 2 need to agree on the grant being a tech grant in order for final prediction to be tech.
+
+we chose this since making predictions using fewer models is preferred in terms of time resource.
+
+The classification report for this ensemble model is:
+
+||precision|recall|f1-score|support|
+|--|--|--|--|--|
+|0|0.78|0.82|0.80|110|
+|1|0.85|0.81|0.83|135|
+|accuracy|||0.82|245|
+|macro avg|0.81|0.82|0.82|245|
+|weighted avg|0.82|0.82|0.82|245|
+
+Finally these details were put into a config file and
+```
+python nutrition_labels/tech_grants_tagger.py --config_path configs/ensemble/2020.02.21.ini
+```
+
+was run to make predictions for all the grants.

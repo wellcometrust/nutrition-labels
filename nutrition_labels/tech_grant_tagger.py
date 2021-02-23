@@ -146,3 +146,4 @@ if __name__ == '__main__':
     final_predictions = tech_grant_model.predict(grants_text)
     tech_grant_model.output_tagged_grants(output_path)
 
+    print(f'{sum(final_predictions)} tech grants predicted in {len(final_predictions)} grants')
