@@ -63,3 +63,7 @@ sync_models_to_s3:
 .PHONY:sync_models_from_s3
 sync_models_from_s3:
 	aws s3 sync s3://$(PROJECT_BUCKET)/models/ models/
+
+.PHONY: test
+test:
+	$(VIRTUALENV)/bin/pytest --tb=line ./tests
