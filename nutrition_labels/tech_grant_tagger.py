@@ -1,21 +1,20 @@
 """
 
-Ensemble model from 201118
-Hardcoded:
-- The names of the 4 models included in this
-- That we are using agreement of 3 out of 4 models.
+Get predictions using an ensemble of models.
 
-By hardcoding it this way, the ensemble model stays 
-static for production and doesn't do any recalculations
-of e.g. which of the 12 models are best to use in the ensemble,
-or how many models should agree
+The data to predict on and the number of models to agree on, 
+and the names of all the models to include should be stored in 
+a config file, e.g. configs/ensemble/2021.02.19.ini
 
-python tech_grant_tagger.py --input_path grants.csv --output_path tagged_grants.csv 
-    --models_path models/ensemble_201118/
+The output will be a csv of IDs and tech predictions.
+
+python tech_grant_tagger.py --config_path configs/ensemble/2021.02.19.ini
 
 """
 from argparse import ArgumentParser
+import configparser
 import os
+from datetime import datetime
 
 import pandas as pd
 
@@ -25,18 +24,42 @@ from nutrition_labels.useful_functions import remove_useless_string
 class TechGrantModel():
     def __init__(
         self,
-        models_path,
-        input_path,
-        output_path,
+        model_dirs,
         num_agree=3,
         grant_text_cols = ['Title', 'Grant Programme:Title', 'Description'],
         grant_id_col = 'Internal ID'):
-        self.models_path = models_path
-        self.input_path = input_path
-        self.output_path = output_path
+        self.model_dirs = model_dirs
         self.num_agree = num_agree
         self.grant_text_cols = grant_text_cols
         self.grant_id_col = grant_id_col
+
+
+    def clean_grants_data(self, previous_grant_data):
+        """
+        Clean grant descriptions of html
+        Merge the grant descriptions columns into one
+        """
+        grant_data = previous_grant_data.copy()
+        grant_data.fillna('', inplace=True)
+        grant_data[self.grant_text_cols] = grant_data[self.grant_text_cols].applymap(
+            remove_useless_string
+            )
+
+        grant_data['Grant texts'] = grant_data[self.grant_text_cols].agg(
+                '. '.join, axis=1
+                ).tolist()
+        return grant_data
+
+    def load_grants_text(self, grants_data_path):
+        """
+        Field names need an update here!
+        """
+        grant_data = pd.read_csv(grants_data_path)
+        grant_data = self.clean_grants_data(grant_data)
+        grants_text = grant_data['Grant texts'].tolist()
+        self.grants_ids = grant_data[self.grant_id_col].tolist()
+
+        return grants_text
 
     def load_model(self, model_path):
 
@@ -57,47 +80,19 @@ class TechGrantModel():
 
         return predictions
 
-    def clean_grants_data(self, previous_grant_data):
-        """
-        Clean grant descriptions of html
-        Merge the grant descriptions columns into one
-        """
-        grant_data = previous_grant_data.copy()
-        grant_data.fillna('', inplace=True)
-        grant_data[self.grant_text_cols] = grant_data[self.grant_text_cols].applymap(
-            remove_useless_string
-            )
-
-        grant_data['Grant texts'] = grant_data[self.grant_text_cols].agg(
-                '. '.join, axis=1
-                ).tolist()
-        return grant_data
-
-    def load_grants_text(self):
-        """
-        Field names need an update here!
-        """
-        grant_data = pd.read_csv(self.input_path)
-        grant_data = self.clean_grants_data(grant_data)
-        grants_text = grant_data['Grant texts'].tolist()
-        self.grants_ids = grant_data[self.grant_id_col].tolist()
-
-        return grants_text
 
     def predict(self, grants_text):
         """
         Predict whether grant texts (list) are tech grants or not 
         using an agreement of num_agree
-        of the models in models_path
+        of the models in model_dirs
         """
 
-        models = os.listdir(self.models_path)
-        if '.DS_Store' in models:
-            models.remove('.DS_Store')
-
         model_predictions = {}
-        for model_name in models:
-            grant_tagger_loaded = self.load_model(os.path.join(self.models_path, model_name))
+        for model_dir in self.model_dirs:
+            model_name = os.path.basename(model_dir)
+            print(f'Predicting for {model_name}...')
+            grant_tagger_loaded = self.load_model(model_dir)
             model_predictions[f'{model_name} predictions'] = self.predict_tags(
                 grant_tagger_loaded,
                 grants_text
@@ -109,61 +104,45 @@ class TechGrantModel():
         self.final_predictions = (prediction_sums >= self.num_agree).astype(int).tolist()
         return self.final_predictions
 
-    def output_tagged_grants(self):
+    def output_tagged_grants(self, output_path):
+
+        if not os.path.exists(os.path.dirname(output_path)):
+            os.makedirs(os.path.dirname(output_path))
 
         pd.DataFrame(
             {
             'Tech grant prediction': self.final_predictions,
             'Grant ID': self.grants_ids
             }
-            ).to_csv(self.output_path, index=False)
+            ).to_csv(output_path, index=False)
 
 if __name__ == '__main__':
     parser = ArgumentParser()
+
     parser.add_argument(
-        '--models_path',
-        help='Path to folder of models included in the ensemble',
-        default='models/ensemble_210129_models/'
+        '--config_path',
+        help='Path to config file',
+        default='configs/ensemble/2021.02.20.ini'
     )
-    parser.add_argument(
-        '--input_path',
-        help='Path to file with grants to predict',
-        default='data/raw/wellcome-grants-awarded-2005-2019_test_sample.csv'
-    )
-    parser.add_argument(
-        '--output_path',
-        help='Path to output',
-        default='data/processed/wellcome-grants-awarded-2005-2019_test_sample_tagged.csv'
-    )
-    parser.add_argument(
-        '--num_agree',
-        help='Number of models in models_path which need to agree to tag as tech',
-        default=3,
-        type=int
-    )
-    parser.add_argument(
-        '--grant_text_cols',
-        help='A comma seperated list (no spaces unless in the name) of the columns in input_path which you want to merge and predict on',
-        default='Title,Grant Programme:Title,Description',
-        type=str
-    )
-    parser.add_argument(
-        '--grant_id_col',
-        help='The column name from input_path for grant ID',
-        default='Internal ID',
-        type=str
-    )
+
     args = parser.parse_args()
 
-    tech_grant_model = TechGrantModel(
-        models_path=args.models_path,
-        input_path=args.input_path,
-        output_path=args.output_path,
-        num_agree=args.num_agree,
-        grant_text_cols=args.grant_text_cols.split(','),
-        grant_id_col=args.grant_id_col)
+    config = configparser.ConfigParser()
+    config.read(args.config_path)
 
-    grants_text = tech_grant_model.load_grants_text()
+    datestamp = datetime.now().date().strftime('%y%m%d')
+
+    grants_data_path = config["prediction_data"]["grants_data_path"]
+    input_file_name = os.path.basename(grants_data_path).split('.')[0]
+    output_path = f'data/processed/ensemble/{datestamp}/{input_file_name}_tagged2.csv'
+
+    tech_grant_model = TechGrantModel(
+        model_dirs=config["ensemble_model"]["model_dirs"].split(','), # ['models/count_naive_bayes_210218']
+        num_agree=config.getint("ensemble_model", "num_agree"),
+        grant_text_cols=config["prediction_data"]["grant_text_cols"].split(','),
+        grant_id_col=config["prediction_data"]["grant_id_col"])
+
+    grants_text = tech_grant_model.load_grants_text(grants_data_path)
     final_predictions = tech_grant_model.predict(grants_text)
-    tech_grant_model.output_tagged_grants()
+    tech_grant_model.output_tagged_grants(output_path)
 
