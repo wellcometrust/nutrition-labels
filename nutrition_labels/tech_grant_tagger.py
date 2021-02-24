@@ -134,7 +134,7 @@ if __name__ == '__main__':
 
     grants_data_path = config["prediction_data"]["grants_data_path"]
     input_file_name = os.path.basename(grants_data_path).split('.')[0]
-    output_path = f'data/processed/ensemble/{datestamp}/{input_file_name}_tagged2.csv'
+    output_path = f'data/processed/ensemble/{datestamp}/{input_file_name}_tagged.csv'
 
     tech_grant_model = TechGrantModel(
         model_dirs=config["ensemble_model"]["model_dirs"].split(','), # ['models/count_naive_bayes_210218']
