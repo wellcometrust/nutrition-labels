@@ -64,6 +64,24 @@ sync_models_to_s3:
 sync_models_from_s3:
 	aws s3 sync s3://$(PROJECT_BUCKET)/models/ models/
 
+.PHONY:sync_latest_files_to_s3
+sync_latest_files_to_s3:
+	@while read line; do \
+		if [ -d  $$line ]; \
+		then aws s3 cp --recursive $$line s3://$(PROJECT_BUCKET)/$$line; \
+		else aws s3 cp $$line s3://$(PROJECT_BUCKET)/$$line; \
+		fi; \
+	done < latest_files.txt ;
+
+.PHONY:sync_latest_files_from_s3
+sync_latest_files_from_s3:
+	@while read line; do \
+		if [ -d  $$line ]; \
+		then aws s3 cp --recursive s3://$(PROJECT_BUCKET)/$$line $$line; \
+		else aws s3 cp s3://$(PROJECT_BUCKET)/$$line $$line; \
+		fi; \
+	done < latest_files.txt ;
+	
 .PHONY: test
 test:
 	$(VIRTUALENV)/bin/pytest --tb=line ./tests
