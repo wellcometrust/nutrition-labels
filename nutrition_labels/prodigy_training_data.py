@@ -43,7 +43,8 @@ if __name__ == '__main__':
                 training_data.append(annotation)
 
     training_data = pd.DataFrame(training_data)
-    training_data.drop_duplicates(subset=['Internal ID']).reset_index()
+    training_data.drop_duplicates(subset=['Internal ID'], inplace=True)
+    training_data.reset_index()
 
     output_path = os.path.join('data/processed/training_data', datestamp)
 

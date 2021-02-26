@@ -64,13 +64,13 @@ We perform cluster analysis to look at themes within the tech grants. This analy
 
 ## Using the tech grants tagger
 
-If you run
+Create a config file with the name of the grants data csv file you want to predict on, the names of the columns of text, and which models to use and how many need to agree (see `configs/ensemble/2020.02.21.ini` for structure). Then input this config as an argument to `ensemble_grant_tagger.py`, for example:
 
 ```
-python nutrition_labels.tech_grant_tagger.py --input_path data/raw/wellcome-grants-awarded-2005-2019_test_sample.csv --output_path data/processed/wellcome-grants-awarded-2005-2019_test_sample_tagged.csv  --models_path models/ensemble_210129_models/ --num_agree 3 --grant_text_cols ['Title', 'Grant Programme:Title', 'Description']
+python nutrition_labels/ensemble_grant_tagger.py --config_path configs/ensemble/2020.02.21.ini
 ```
 
-you will predict whether grants given in `input_path` are tech grants using the models given in `models_path` (an ensemble where 3 models have to agree in order for a grant to be tagged as a tech grant). The text predicted on is the merged text from any text given in `grant_text_cols`. The predictions are outputted in `output_path`.
+This will output a csv file of grant ID - tech or not predictions.
 
 
 ## Data Representation Labels
