@@ -8,7 +8,7 @@ a config file, e.g. configs/ensemble/2021.02.19.ini
 
 The output will be a csv of IDs and tech predictions.
 
-python tech_grant_tagger.py --config_path configs/ensemble/2021.02.19.ini
+python ensemble_grant_tagger.py --config_path configs/ensemble/2021.02.19.ini
 
 """
 from argparse import ArgumentParser
@@ -21,7 +21,7 @@ import pandas as pd
 from nutrition_labels.grant_tagger import GrantTagger
 from nutrition_labels.useful_functions import remove_useless_string
 
-class TechGrantModel():
+class EnsembleGrantTagger():
     def __init__(
         self,
         model_dirs,
@@ -136,7 +136,7 @@ if __name__ == '__main__':
     input_file_name = os.path.basename(grants_data_path).split('.')[0]
     output_path = f'data/processed/ensemble/{datestamp}/{input_file_name}_tagged.csv'
 
-    tech_grant_model = TechGrantModel(
+    tech_grant_model = EnsembleGrantTagger(
         model_dirs=config["ensemble_model"]["model_dirs"].split(','), # ['models/count_naive_bayes_210218']
         num_agree=config.getint("ensemble_model", "num_agree"),
         grant_text_cols=config["prediction_data"]["grant_text_cols"].split(','),

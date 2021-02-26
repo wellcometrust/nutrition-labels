@@ -4,7 +4,7 @@ import os
 
 import pandas as pd
 
-from nutrition_labels.tech_grant_tagger import TechGrantModel
+from nutrition_labels.ensemble_grant_tagger import EnsembleGrantTagger
 
 
 grants_data = pd.DataFrame([
@@ -18,7 +18,7 @@ def test_load_grants_text():
         grants_data_dir = os.path.join(tmp_dir, 'test.csv')
         grants_data.to_csv(grants_data_dir)
 
-        tech_grant_model = TechGrantModel(
+        tech_grant_model = EnsembleGrantTagger(
             model_dirs=['models/count_naive_bayes_210221'],
             num_agree=1,
             grant_text_cols=['Title'],
@@ -33,7 +33,7 @@ def test_predict():
         grants_data_dir = os.path.join(tmp_dir, 'test.csv')
         grants_data.to_csv(grants_data_dir)
 
-        tech_grant_model = TechGrantModel(
+        tech_grant_model = EnsembleGrantTagger(
             model_dirs=['models/count_naive_bayes_210221'],
             num_agree=1,
             grant_text_cols=['Title'],

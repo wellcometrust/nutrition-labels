@@ -205,7 +205,7 @@ The classification report for this ensemble model is:
 
 Finally these details were put into a config file and
 ```
-python nutrition_labels/tech_grants_tagger.py --config_path configs/ensemble/2020.02.21.ini
+python nutrition_labels/ensemble_grant_tagger.py --config_path configs/ensemble/2020.02.21.ini
 ```
 
 was run to make predictions for all the grants. Out of 16914 grants, 3057 were predicted to be tech grants. These are outputted in `data/processed/ensemble/210223/wellcome-grants-awarded-2005-2019_tagged.csv`.
