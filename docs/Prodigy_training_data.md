@@ -185,7 +185,7 @@ The models found with the 'best' recall and precision were:
 - Ensemble of 3 models with 2 needing to agree ('bert_log_reg_bert_210221', 'bert_SVM_bert_210221', 'count_naive_bayes_210221')
 - Ensemble of 4 models with 3 needing to agree ('bert_naive_bayes_bert_210221', 'bert_log_reg_bert_210221', 'bert_SVM_bert_210221', 'count_naive_bayes_210221')
 - Ensemble of 4 models with 3 needing to agree ('bert_log_reg_bert_210221', 'bert_SVM_bert_210221', 'bert_naive_bayes_scibert_210221', 'count_naive_bayes_210221')
-- Ensemble of 3 models with 4 needing to agree ('bert_naive_bayes_bert_210221', 'bert_log_reg_bert_210221', 'bert_SVM_bert_210221', 'bert_naive_bayes_scibert_210221', 'count_naive_bayes_210221')
+- Ensemble of 5 models with 4 needing to agree ('bert_naive_bayes_bert_210221', 'bert_log_reg_bert_210221', 'bert_SVM_bert_210221', 'bert_naive_bayes_scibert_210221', 'count_naive_bayes_210221')
 
 out of these we chose the ensemble with:
 - 3 models ('bert_log_reg_bert_210221', 'bert_SVM_bert_210221', 'count_naive_bayes_210221')
