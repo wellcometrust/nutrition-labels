@@ -3,6 +3,7 @@ import configparser
 from argparse import ArgumentParser
 import ast
 import os
+import json
 
 import pandas as pd
 import numpy as np
@@ -39,7 +40,7 @@ def clean_grants_data(old_grant_data):
     grant_data.reset_index(inplace=True) # After dropping rows you need to reset this
     return grant_data
 
-def process_epmc(epmc_tags_query_one, epmc_tags_query_two, epmc_code_dict, col_ranking_list):
+def process_epmc(epmc_tags_query_one, epmc_tags_query_two, epmc_code_dict, col_ranking_list, pmid2grants):
 
     # Merge EPMC data and normalise the codes
     # Order of truth (if same row has been labelled): Becky > Nonie > Liz > Aoife
@@ -54,31 +55,12 @@ def process_epmc(epmc_tags_query_one, epmc_tags_query_two, epmc_code_dict, col_r
     # Create list of dicts for each WT grant number given
     epmc_list = []
     for i, row in epmc_tags.iterrows():
-        grant_num = row['WTgrants']
-        if len(grant_num) == 5:
-            grant_num = ['0' + grant_num]
-        elif len(grant_num) > 6:
-            count = 1
-            merged_grant_chunk = ''
-            merge_grant_nums = list()
-            for grant_chunk in grant_num.split(','):
-                if len(grant_chunk) ==2:
-                    grant_chunk = '0' + grant_chunk
-                if count == 2:
-                    merge_grant_nums.append(merged_grant_chunk + grant_chunk)
-                    merged_grant_chunk = ''
-                    count = 1
-                elif count == 1:
-                    merged_grant_chunk = grant_chunk
-                    count = count + 1
-            merge_grant_nums = [nums for nums in merge_grant_nums if nums != '000000']
-            grant_num = merge_grant_nums
-        else:
-            grant_num = [grant_num]
-        for num in grant_num:
-            epmc_list.append({'pmid':row['pmid'],
-                              'Normalised code - EPMC':int(row['Normalised code']),
-                              'Internal ID 6 digit':num,})
+        pmid = str(row['pmid']) # Can sometimes be int
+        grants = pmid2grants.get(pmid)
+        for grant in grants:
+            epmc_list.append({'pmid': pmid,
+                              'Normalised code - EPMC': int(row['Normalised code']),
+                              'Internal ID 6 digit': grant,})
 
     epmc_df = pd.DataFrame(epmc_list)
     epmc_df.drop_duplicates(subset=['Internal ID 6 digit', 'Normalised code - EPMC'], inplace=True)
@@ -166,13 +148,18 @@ if __name__ == '__main__':
     rf_code_dict = {'1': 1, '2': 2, '3': 3, '4': None, '5': None}
     grants_code_dict = {'1': 1, '4': None, '5': 5}
 
+    # Load pmid2grants dict for EPMC data
+    with open(config["data"]["epmc_pmid2grants_dir"]) as f:
+        pmid2grants = json.load(f)
+
     # Process each of the 3 data sources separately and output a 
     # dataframe for each of grant numbers - cleaned tags links
     epmc_df = process_epmc(
         epmc_tags_query_one,
         epmc_tags_query_two,
         epmc_code_dict,
-        epmc_col_ranking
+        epmc_col_ranking,
+        pmid2grants
         )
     rf_df = process_RF(rf_tags, rf_code_dict)
     grants_df = process_grants(grant_tags, grants_code_dict, grants_col_ranking)
