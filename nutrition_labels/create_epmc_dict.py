@@ -11,23 +11,44 @@ The rounding caused the wrong grants linked or grants not being found.
 """
 
 import json
+from argparse import ArgumentParser
 
 import pandas as pd
 
-# Original EPMC data from fortytwo (not manually labelled)
-epmc_query_one = pd.read_csv('data/raw/EPMC/EPMC_relevant_tool_pubs.csv')
-epmc_query_two = pd.read_csv('data/raw/EPMC/EPMC_relevant_pubs_query2.csv')
+if __name__ == '__main__':
+    parser = ArgumentParser()
+    parser.add_argument(
+        '--epmc_query_one_path',
+        help='Path to first query EPMC raw data csv',
+        default='data/raw/EPMC/EPMC_relevant_tool_pubs.csv'
+    )
+    parser.add_argument(
+        '--epmc_query_two_path',
+        help='Path to second query EPMC raw data csv',
+        default='data/raw/EPMC/EPMC_relevant_pubs_query2.csv'
+    )
+    parser.add_argument(
+        '--output_path',
+        help='Path for outputted PMID-grantID dict',
+        default='data/raw/EPMC/pmid2grants.json'
+    )
+    args = parser.parse_args()
 
-epmc_data = pd.concat([epmc_query_one, epmc_query_two], ignore_index=True)
+    # Original EPMC data from fortytwo (not manually labelled)
+    epmc_query_one = pd.read_csv(args.epmc_query_one_path)
+    epmc_query_two = pd.read_csv(args.epmc_query_two_path)
 
-# No use adding to the dictionary if no grant numbers are given
-epmc_data.dropna(subset=['WTgrants'], inplace=True)
+    epmc_data = pd.concat([epmc_query_one, epmc_query_two], ignore_index=True)
 
-# Split grants by comma
-epmc_data['WTgrants'] = epmc_data['WTgrants'].apply(lambda x: x.split(','))
-epmc_data['pmid'] = epmc_data['pmid'].astype(str)
+    # No use adding to the dictionary if no grant numbers are given
+    epmc_data.dropna(subset=['WTgrants'], inplace=True)
 
-pmid2grants = epmc_data.set_index('pmid').to_dict()['WTgrants']
+    # Split grants by comma
+    epmc_data['WTgrants'] = epmc_data['WTgrants'].apply(lambda x: x.split(','))
+    epmc_data['pmid'] = epmc_data['pmid'].astype(str)
 
-with open('data/raw/EPMC/pmid2grants.json', 'w') as json_file:
-    json.dump(pmid2grants, json_file)
+    pmid2grants = epmc_data.set_index('pmid').to_dict()['WTgrants']
+
+    with open(args.output_path, 'w') as json_file:
+        json.dump(pmid2grants, json_file)
+

@@ -99,6 +99,14 @@ We didn't include publications already found from the first query.
 
 This yielded 9709 publications outputted in `EPMC_relevant_pubs_query2.csv`.
 
+#### Excel EPMC grants list corruption
+
+The EPMC data has a comma separated list of grant numbers associated with each pmid. During the tagging of the EPMC data using Excel this list is corrupted - Excel converts it to one number and will round to 15 significant figures - therefore a list of more than 2 6-digit grant numbers will be corrupted. For example, "086151,104104,196287" becomes "86,151,104,104,196,200". Therefore we process the raw EPMC data into a dictionary of `pmid: list of grant numbers`. This dictionary can be used to get the grant numbers rather than using the corrupted numbers in the tagged EPMC csvs. This is done by running:
+ 
+```
+python nutrition_labels/create_epmc_dict.py --epmc_query_one_path data/raw/EPMC/EPMC_relevant_tool_pubs.csv --epmc_query_two_path data/raw/EPMC/EPMC_relevant_pubs_query2.csv --output_path data/raw/EPMC/pmid2grants.json
+```
+
 ## Compiling the training data
 
 By running `python nutrition_labels/grant_data_processing.py` the three sets of tagged training data are combined with the publically available grants data `data/raw/wellcome-grants-awarded-2005-2019.csv`. This is outputted in `data/processed/training_data.csv`.

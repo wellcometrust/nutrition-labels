@@ -40,11 +40,7 @@ def clean_grants_data(old_grant_data):
     grant_data.reset_index(inplace=True) # After dropping rows you need to reset this
     return grant_data
 
-def process_epmc(epmc_tags_query_one, epmc_tags_query_two, epmc_code_dict, col_ranking_list):
-
-    # Get pmid2grants dict
-    with open('data/raw/EPMC/pmid2grants.json') as f:
-        pmid2grants = json.load(f)
+def process_epmc(epmc_tags_query_one, epmc_tags_query_two, epmc_code_dict, col_ranking_list, pmid2grants):
 
     # Merge EPMC data and normalise the codes
     # Order of truth (if same row has been labelled): Becky > Nonie > Liz > Aoife
@@ -152,13 +148,18 @@ if __name__ == '__main__':
     rf_code_dict = {'1': 1, '2': 2, '3': 3, '4': None, '5': None}
     grants_code_dict = {'1': 1, '4': None, '5': 5}
 
+    # Load pmid2grants dict for EPMC data
+    with open(config["data"]["epmc_pmid2grants_dir"]) as f:
+        pmid2grants = json.load(f)
+
     # Process each of the 3 data sources separately and output a 
     # dataframe for each of grant numbers - cleaned tags links
     epmc_df = process_epmc(
         epmc_tags_query_one,
         epmc_tags_query_two,
         epmc_code_dict,
-        epmc_col_ranking
+        epmc_col_ranking,
+        pmid2grants
         )
     rf_df = process_RF(rf_tags, rf_code_dict)
     grants_df = process_grants(grant_tags, grants_code_dict, grants_col_ranking)
