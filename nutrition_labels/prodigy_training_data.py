@@ -10,22 +10,12 @@ import json
 
 import pandas as pd
 
-if __name__ == '__main__':
-    
-    parser = ArgumentParser()
-    parser.add_argument(
-        '--prodigy_data_dir',
-        help='Path to prodigy output dataset file',
-        default='data/prodigy/tech_grants/tech_grants.jsonl'
-    )
-    args = parser.parse_args()
-
-    datestamp = datetime.now().date().strftime('%y%m%d')
+def load_prodigy_tags(prodigy_data_dir):
 
     cat2bin = {'Not tech grant': 0, 'Tech grant': 1}
 
     training_data = []
-    with open(args.prodigy_data_dir, 'r') as json_file:
+    with open(prodigy_data_dir, 'r') as json_file:
         for json_str in list(json_file):
             data = json.loads(json_str)
             if data['answer'] != 'ignore':
@@ -42,6 +32,23 @@ if __name__ == '__main__':
                     annotation['Relevance code'] = abs(label - 1)
                 training_data.append(annotation)
 
+    return training_data
+
+
+if __name__ == '__main__':
+    
+    parser = ArgumentParser()
+    parser.add_argument(
+        '--prodigy_data_dir',
+        help='Path to prodigy output dataset file',
+        default='data/prodigy/tech_grants/tech_grants.jsonl'
+    )
+    args = parser.parse_args()
+
+    datestamp = datetime.now().date().strftime('%y%m%d')
+
+    training_data = load_prodigy_tags(args.prodigy_data_dir)
+
     training_data = pd.DataFrame(training_data)
     training_data.drop_duplicates(subset=['Internal ID'], inplace=True)
     training_data.reset_index()
@@ -51,4 +58,5 @@ if __name__ == '__main__':
     if not os.path.exists(output_path):
         os.mkdir(output_path)
     training_data.to_csv(os.path.join(output_path, 'training_data.csv'), index = False)
-    
+
+ 
