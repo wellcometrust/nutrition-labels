@@ -27,17 +27,19 @@ def merge_tags(data, person_cols_list):
     
     return data
 
-def clean_grants_data(old_grant_data):
+def clean_grants_data(old_grant_data, text_column='Description', grant_id_column='Internal ID'):
     """
     Clean grant descriptions of html and remove any duplicates
     """
     grant_data = old_grant_data.copy()
-    grant_data['Description'] = grant_data['Description'].apply(remove_useless_string)
-    grant_data = grant_data[grant_data['Description'] != 'Not available']
-    grant_data.dropna(subset=['Description'], inplace=True)
-    grant_data.drop_duplicates('Internal ID', inplace=True)
-    grant_data['Internal ID 6 digit'] = grant_data['Internal ID'].apply(lambda x: re.sub('/.*','',x))
-    grant_data.reset_index(inplace=True) # After dropping rows you need to reset this
+    grant_data[text_column] = grant_data[text_column].apply(remove_useless_string)
+    grant_data = grant_data[grant_data[text_column] != 'Not available']
+    grant_data.dropna(subset=[text_column], inplace=True)
+    grant_data.drop_duplicates(grant_id_column, inplace=True)
+    grant_data['Internal ID 6 digit'] = grant_data[grant_id_column].apply(lambda x: re.sub('/.*','',x))
+
+    # After dropping rows you need to reset the index
+    grant_data.reset_index(inplace=True)
     return grant_data
 
 def process_epmc(epmc_tags_query_one, epmc_tags_query_two, epmc_code_dict, col_ranking_list, pmid2grants):
@@ -115,63 +117,50 @@ def process_grants(grant_tags, grants_code_dict, col_ranking_list):
 
     return grants_df
 
-if __name__ == '__main__':
-
-    parser = ArgumentParser()
-    parser.add_argument(
-        '--config_path',
-        help='Path to config file',
-        default='configs/training_data/2021.01.26.ini'
-    )
-    args = parser.parse_args()
-
-    config = configparser.ConfigParser()
-    config.read(args.config_path)
-    
-    # load data
-    epmc_tags_query_one = pd.read_csv(
-        config["data"]["epmc_tags_query_one_filedir"],
-        encoding = "latin"
-        )
-    epmc_tags_query_two = pd.read_csv(config["data"]["epmc_tags_query_two_filedir"])
-    rf_tags = pd.read_csv(config["data"]["rf_tags_filedir"])
-    grant_tags = pd.read_csv(config["data"]["grant_tags_filedir"])
-    grant_data = pd.read_csv(config["data"]["grant_data_filedir"])
-
-    # List of tag columns for ranking order
-    epmc_col_ranking = ast.literal_eval(config["data_col_ranking"]["epmc_col_ranking"])
-    grants_col_ranking = ast.literal_eval(config["data_col_ranking"]["grants_col_ranking"])
-
-    # Normalising the codes so they are all similar for different data sources
-    # 'None' if you dont want to include these tags in the training data
-    epmc_code_dict = {'1': 1, '2': 2, '3': 3, '4': None, '5': None, '6': None}
-    rf_code_dict = {'1': 1, '2': 2, '3': 3, '4': None, '5': None}
-    grants_code_dict = {'1': 1, '4': None, '5': 5}
-
-    # Load pmid2grants dict for EPMC data
-    with open(config["data"]["epmc_pmid2grants_dir"]) as f:
-        pmid2grants = json.load(f)
-
-    # Process each of the 3 data sources separately and output a 
-    # dataframe for each of grant numbers - cleaned tags links
-    epmc_df = process_epmc(
-        epmc_tags_query_one,
-        epmc_tags_query_two,
-        epmc_code_dict,
+def load_process_data_sources(
+        epmc_tags_query_one_filedir,
+        epmc_tags_query_two_filedir,
+        rf_tags_filedir,
+        grant_tags_filedir,
         epmc_col_ranking,
-        pmid2grants
-        )
-    rf_df = process_RF(rf_tags, rf_code_dict)
-    grants_df = process_grants(grant_tags, grants_code_dict, grants_col_ranking)
+        grants_col_ranking,
+        epmc_pmid2grants_dir):
+        """
+        Load data from EPMC, RF and grants tags.
+        Process each of these datasets into the form needed for merging together.
+        Return processed versions of the  EPMC, RF and grants tags data.
+        """
 
-    print('Tagged data to include from EPMC:')
-    print(len(epmc_df))
-    print('Tagged data to include from RF:')
-    print(len(rf_df))
-    print('Tagged data to include from grant descriptions:')
-    print(len(grants_df))
+        epmc_tags_query_one = pd.read_csv(epmc_tags_query_one_filedir, encoding = "latin")
+        epmc_tags_query_two = pd.read_csv(epmc_tags_query_two_filedir)
+        rf_tags = pd.read_csv(rf_tags_filedir)
+        grant_tags = pd.read_csv(grant_tags_filedir)
 
-    grant_data = clean_grants_data(grant_data)
+        # Normalising the codes so they are all similar for different data sources
+        # 'None' if you dont want to include these tags in the training data
+        epmc_code_dict = {'1': 1, '2': 2, '3': 3, '4': None, '5': None, '6': None}
+        rf_code_dict = {'1': 1, '2': 2, '3': 3, '4': None, '5': None}
+        grants_code_dict = {'1': 1, '4': None, '5': 5}
+
+        # Load pmid2grants dict for EPMC data
+        with open(epmc_pmid2grants_dir) as f:
+            pmid2grants = json.load(f)
+
+        # Process each of the 3 data sources separately and output a 
+        # dataframe for each of grant numbers - cleaned tags links
+        epmc_df = process_epmc(
+            epmc_tags_query_one,
+            epmc_tags_query_two,
+            epmc_code_dict,
+            epmc_col_ranking,
+            pmid2grants
+            )
+        rf_df = process_RF(rf_tags, rf_code_dict)
+        grants_df = process_grants(grant_tags, grants_code_dict, grants_col_ranking)
+
+        return epmc_df, rf_df, grants_df
+
+def merge_grants_sources(grant_data, epmc_df, rf_df, grants_df, print_out=False):
 
     # Link with RF data (which uses 13 digit)
     grant_data = pd.merge(grant_data, rf_df, how = 'left', on = 'Internal ID')
@@ -185,12 +174,13 @@ if __name__ == '__main__':
     # Link with EPMC data (which uses 6 digit)
     grant_data = pd.merge(grant_data, epmc_df, how = 'left', on = 'Internal ID 6 digit')
 
-    print("Grants flagged as relevant in EPMC publications not found in grants data: ")
-    print(set(epmc_df['Internal ID 6 digit']).difference(set(grant_data['Internal ID 6 digit'])))
-    print("PMIDs flagged as relevant in Wellcome EPMC publications but not found to link to any grants in the grants data: ")
-    print(set(epmc_df['pmid']).difference(set(grant_data['pmid'])))
-    print("Grants flagged as relevant in RF data not found in grants data: ")
-    print(set(rf_df['Internal ID']).difference(set(grant_data['Internal ID'])))
+    if print_out:
+        print("Grants flagged as relevant in EPMC publications not found in grants data: ")
+        print(set(epmc_df['Internal ID 6 digit']).difference(set(grant_data['Internal ID 6 digit'])))
+        print("PMIDs flagged as relevant in Wellcome EPMC publications but not found to link to any grants in the grants data: ")
+        print(set(epmc_df['pmid']).difference(set(grant_data['pmid'])))
+        print("Grants flagged as relevant in RF data not found in grants data: ")
+        print(set(rf_df['Internal ID']).difference(set(grant_data['Internal ID'])))
 
     # Final list
     grant_data = grant_data.dropna(
@@ -216,14 +206,60 @@ if __name__ == '__main__':
     relevance_dict = {1:1, 2:1, 3:1, 5:0}
     grant_data['Relevance code'] = [relevance_dict[int(c)] for c in code]
 
-    # It seems like some descriptions have some spaces deleted, which means
-    # they are classed as different but should really be the same
-    grant_data['Description to deduplicate with'] = grant_data['Description'].str.replace(r'\W','')
-    grant_data = grant_data.drop_duplicates(['Internal ID 6 digit', 'Description to deduplicate with'])
+    return grant_data
+
+def deduplicate_similar_grants(grant_data, text_column='Description', grant_id_column='Internal ID 6 digit'):
+    """
+    Some descriptions have some spaces deleted. We don't want to include
+    grants from the same family (6 digit ID) if they have effectively the same description
+    """
+    grant_data = grant_data.copy()
+    grant_data['Temporary column'] = grant_data[text_column].str.replace(r'\W','')
+    grant_data = grant_data.drop_duplicates([grant_id_column, 'Temporary column'])
+    grant_data.drop('Temporary column', axis=1, inplace=True)
+
+    return grant_data
+
+
+if __name__ == '__main__':
+
+    parser = ArgumentParser()
+    parser.add_argument(
+        '--config_path',
+        help='Path to config file',
+        default='configs/training_data/2021.01.26.ini'
+    )
+    args = parser.parse_args()
+
+    config = configparser.ConfigParser()
+    config.read(args.config_path)
+
+    epmc_df, rf_df, grants_df = load_process_data_sources(
+        config["data"]["epmc_tags_query_one_filedir"],
+        config["data"]["epmc_tags_query_two_filedir"],
+        config["data"]["rf_tags_filedir"],
+        config["data"]["grant_tags_filedir"],
+        ast.literal_eval(config["data_col_ranking"]["epmc_col_ranking"]),
+        ast.literal_eval(config["data_col_ranking"]["grants_col_ranking"]),
+        config["data"]["epmc_pmid2grants_dir"]
+        )
+
+    print(f'Tagged data to include from EPMC: {len(epmc_df)}')
+    print(f'Tagged data to include from RF: {len(rf_df)}')
+    print(f'Tagged data to include from grant descriptions: {len(grants_df)}')
+
+    grant_data = pd.read_csv(config["data"]["grant_data_filedir"])
+    grant_data = clean_grants_data(grant_data)
+
+    grant_data = merge_grants_sources(grant_data, epmc_df, rf_df, grants_df, print_out=True)
+
+    grant_data = deduplicate_similar_grants(grant_data)
+    # Note: This deduplication is after the general cleaning since it deduplicates on 
+    # 6 digit number, which needs to come after the merging with RF/Grants data
 
     num_irrelevant = len([i for i in grant_data['Relevance code'] if i==0])
-    print(num_irrelevant)
-    print(len(grant_data) - num_irrelevant)
+    print(f'Number tagged as 0: {num_irrelevant}')
+    print(f'Number tagged as 1: {len(grant_data) - num_irrelevant}')
     grant_data = grant_data[[
         'Internal ID', 'RF question', 'RF Name', 'pmid', 'Relevance code',
         'Normalised code - RF', 'Normalised code - grants', 'Normalised code - EPMC',
