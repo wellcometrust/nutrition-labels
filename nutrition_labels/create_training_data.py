@@ -38,9 +38,9 @@ In this script:
 """
 
 from argparse import ArgumentParser
+from datetime import datetime
 import configparser
 import os
-from datetime import datetime
 import json
 import ast
 
@@ -75,49 +75,65 @@ def combine_original_prodigy(training_data_original, prodigy_output):
     which data point came from each source
     """
 
-    training_data_original_dict = {}
-    for i, row in training_data_original.iterrows():
-        training_data_original_dict[row["Internal ID"]] = {
-            "Original tag": row["Relevance code"],
-            "RF": None if pd.isnull(row["Normalised code - RF"]) else 1,
-            "EPMC": None if pd.isnull(row["Normalised code - EPMC"]) else 1,
-            "Grants": None
-            if pd.isnull(row["Normalised code - grants"])
-            else (0 if int(row["Normalised code - grants"]) == 5 else 1),
-            "Prodigy grants": None,
-        }
+    original_data = pd.DataFrame(training_data_original.copy())
+    original_data.drop_duplicates(subset="Internal ID", inplace=True)
+    original_data.rename({"Relevance code": "Original tag"}, axis=1, inplace=True)
+    original_data["RF"] = original_data["Normalised code - RF"].apply(
+        lambda x: None if pd.isnull(x) else 1
+    )
+    original_data["EPMC"] = original_data["Normalised code - EPMC"].apply(
+        lambda x: None if pd.isnull(x) else 1
+    )
+    original_data["Grants"] = original_data["Normalised code - grants"].apply(
+        lambda x: None if pd.isnull(x) else (0 if int(x) == 5 else 1)
+    )
 
-    # Add Prodigy tags to original tags
-    for grant_number, tech_cat in prodigy_output.items():
-        # Add this grant number if not in the original data
-        if not training_data_original_dict.get(grant_number):
-            training_data_original_dict[grant_number] = {
-                "Original tag": None,
-                "RF": None,
-                "EPMC": None,
-                "Grants": None,
-                "Prodigy grants": tech_cat,
-            }
+    prodigy_data = pd.DataFrame.from_dict(
+        prodigy_output, orient="index", columns=["Prodigy grants"]
+    )
+    prodigy_data["Internal ID"] = prodigy_data.index
 
-    training_data = pd.DataFrame(training_data_original_dict).T
-    training_data["Internal ID"] = training_data.index
+    training_data = pd.merge(original_data, prodigy_data, how="outer", on="Internal ID")
+
+    # If in original then set Prodigy grants to nan
+    training_data.loc[
+        pd.notnull(training_data["Original tag"]), "Prodigy grants"
+    ] = np.nan
+
+    return training_data[
+        ["Internal ID", "Original tag", "RF", "EPMC", "Grants", "Prodigy grants"]
+    ]
+
+
+def process_filter_data_sources(
+    grant_data, epmc_df, rf_df, grants_df, prodigy_output, sources_include
+):
+
+    grant_data = clean_grants_data(grant_data)
+
+    # Training data without Prodigy
+    training_data_original = merge_grants_sources(grant_data, epmc_df, rf_df, grants_df)
+
+    # Combine with the Prodigy data (if any)
+    training_data = combine_original_prodigy(training_data_original, prodigy_output)
+
+    # Only include data with tags from the sources to include list
+    training_data.dropna(subset=sources_include, how="all", inplace=True)
+
+    # Get the tags for these from the columns in sources_include
+    training_data["Relevance code"] = np.nan
+    for source in sources_include:
+        training_data["Relevance code"] = training_data["Relevance code"].fillna(
+            training_data[source]
+        )
+
+    training_data = pd.merge(training_data, grant_data, how="left", on="Internal ID")
+    training_data = deduplicate_similar_grants(training_data)
 
     return training_data
 
 
-if __name__ == "__main__":
-    parser = ArgumentParser()
-
-    parser.add_argument(
-        "--config_path",
-        help="Path to config file",
-        default="configs/training_data/2021.03.08.ini",
-    )
-
-    args = parser.parse_args()
-
-    config = configparser.ConfigParser()
-    config.read(args.config_path)
+def create_training_data(config):
 
     # Load Prodigy data
     use_prodigy_directly = False
@@ -130,7 +146,7 @@ if __name__ == "__main__":
         # Prodigy output directly for the training data
         if not config["data"].get("sources_include") or set(
             ast.literal_eval(config["data"]["sources_include"])
-            ) == set(SOURCES):
+        ) == set(SOURCES):
             use_prodigy_directly = True
     else:
         prodigy_output = {}
@@ -153,6 +169,7 @@ if __name__ == "__main__":
                 f"The list sources_include in {args.config_path} needs to be a subset of {SOURCES}"
             )
 
+        # Load datasets
         epmc_df, rf_df, grants_df = load_process_data_sources(
             config["data"]["epmc_tags_query_one_filedir"],
             config["data"]["epmc_tags_query_two_filedir"],
@@ -163,33 +180,12 @@ if __name__ == "__main__":
             config["data"]["epmc_pmid2grants_dir"],
         )
         grant_data = pd.read_csv(config["data"]["grant_data_filedir"])
-        grant_data = clean_grants_data(grant_data)
 
-        # Training data without Prodigy
-        training_data_original = merge_grants_sources(
-            grant_data, epmc_df, rf_df, grants_df
+        # Process datasets - combine, remove sources
+        training_data = process_filter_data_sources(
+            grant_data, epmc_df, rf_df, grants_df, prodigy_output, sources_include
         )
-
-        # Combine with the Prodigy data (if any)
-        training_data = combine_original_prodigy(training_data_original, prodigy_output)
-
-        # Only include data with tags from the sources to include list
-        training_data.dropna(subset=sources_include, how="all", inplace=True)
-
-        # Get the tags for these from the columns in sources_include
-        training_data["Relevance code"] = np.nan
-        for source in sources_include:
-            training_data["Relevance code"] = training_data["Relevance code"].fillna(
-                training_data[source]
-            )
-
-        training_data = pd.merge(
-            training_data, grant_data, how="left", on="Internal ID"
-        )
-        training_data = deduplicate_similar_grants(training_data)
-
         output_counts(training_data)
-
         training_data = training_data[["Internal ID", "Relevance code"]]
 
     print(f"Number tagged as 0: {sum(training_data['Relevance code']==0)}")
@@ -197,9 +193,25 @@ if __name__ == "__main__":
 
     # Output the data to a dated folder using the config version date
     # but convert this from 2020.08.07 -> 200807
-    config_version = ''.join(config['DEFAULT']['version'].split('.'))[2:]
-    output_path = os.path.join('data/processed/training_data', config_version)
+    config_version = "".join(config["DEFAULT"]["version"].split("."))[2:]
+    output_path = os.path.join("data/processed/training_data", config_version)
     if not os.path.exists(output_path):
         os.mkdir(output_path)
-    training_data.to_csv(os.path.join(output_path, 'training_data.csv'), index = False)
+    training_data.to_csv(os.path.join(output_path, "training_data.csv"), index=False)
 
+
+if __name__ == "__main__":
+    parser = ArgumentParser()
+
+    parser.add_argument(
+        "--config_path",
+        help="Path to config file",
+        default="configs/training_data/2021.03.08.ini",
+    )
+
+    args = parser.parse_args()
+
+    config = configparser.ConfigParser()
+    config.read(args.config_path)
+
+    create_training_data(config)
