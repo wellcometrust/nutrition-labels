@@ -11,6 +11,7 @@ from nutrition_labels.grant_data_processing import (
     deduplicate_similar_grants,
 )
 from nutrition_labels.prodigy_training_data import load_prodigy_tags
+from nutrition_labels.create_training_data import process_filter_data_sources
 
 uncleaned_grant_data = pd.DataFrame(
     [
@@ -195,4 +196,69 @@ def test_load_prodigy_tags():
     assert len(training_data) == 4
     assert all(
         [correct_labels[t["Internal ID"]] == t["Relevance code"] for t in training_data]
+    )
+
+
+def test_process_filter_data_sources():
+
+    made_up_data = []
+    for i in range(1, 8):
+        made_up_data.append(
+            {
+                "Description": "This is a grant description",
+                "Internal ID": f"{str(i)*6}/A/19/Z",
+                "Award Date": "01/01/2000",
+            }
+        )
+    grant_data = pd.DataFrame(made_up_data)
+
+    epmc_df = pd.DataFrame(
+        [
+            {"Internal ID 6 digit": "111111", "Normalised code - EPMC": 2},
+            {"Internal ID 6 digit": "222222", "Normalised code - EPMC": 1},
+        ]
+    )
+
+    rf_df = pd.DataFrame(
+        [
+            {"Internal ID": "111111/A/19/Z", "Normalised code - RF": 3},
+            {"Internal ID": "333333/A/19/Z", "Normalised code - RF": 1},
+        ]
+    )
+
+    grants_df = pd.DataFrame(
+        [
+            {"Internal ID": "111111/A/19/Z", "Normalised code - grants": 5},
+            {"Internal ID": "444444/A/19/Z", "Normalised code - grants": 1},
+            {"Internal ID": "555555/A/19/Z", "Normalised code - grants": 5},
+        ]
+    )
+
+    prodigy_output = {
+        "111111/A/19/Z": 1,
+        "444444/A/19/Z": 0,
+        "666666/A/19/Z": 0,
+        "777777/A/19/Z": 1,
+    }
+
+    sources_include = ["EPMC", "RF", "Grants", "Prodigy grants"]
+    training_data1 = process_filter_data_sources(
+        grant_data, epmc_df, rf_df, grants_df, prodigy_output, sources_include
+    )
+
+    assert set(rf_df["Internal ID"]) < set(training_data1["Internal ID"])
+    assert set(epmc_df["Internal ID 6 digit"]) < set(
+        training_data1["Internal ID 6 digit"]
+    )
+    assert set(grants_df["Internal ID"]) < set(training_data1["Internal ID"])
+    assert prodigy_output.keys() < set(training_data1["Internal ID"])
+    assert training_data1["Prodigy grants"].notnull().sum() == 2
+
+    sources_include = ["Grants", "Prodigy grants"]
+    training_data2 = process_filter_data_sources(
+        grant_data, epmc_df, rf_df, grants_df, prodigy_output, sources_include
+    )
+
+    assert set(["222222/A/19/Z", "333333/A/19/Z"]).isdisjoint(
+        set(training_data2["Internal ID"])
     )
