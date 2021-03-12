@@ -13,9 +13,8 @@ def remove_useless_string(string):
 
     soup = BeautifulSoup(string, features="lxml")
     string_out = soup.get_text()
-    string_out = string_out.strip('\n')
-    string_out = string_out.strip('\xa0')
-    string_out = re.sub('  ','',string_out)
+    string_out = string_out.replace('\n', ' ')
+    string_out = string_out.replace('\xa0', ' ')
     return(string_out)
 
 def only_text(string):

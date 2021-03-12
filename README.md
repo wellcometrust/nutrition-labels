@@ -40,6 +40,24 @@ The code for this project is in the `nutrition_labels` and `notebooks` folder. M
 - [Tech_grant_model_fairness.md](docs/Tech_grant_model_fairness.md)
 - [Tech_grant_clusters.md](docs/Tech_grant_clusters.md)
 
+### Creating training data
+
+In [Finding_Tech_Grants.md](docs/Finding_Tech_Grants.md) we describe the first stage of tagging data to create the training data - this was last updated on the 7th August 2020. In 2021 we updated the definition of 'tech' as described in [Expanding_tech_grants.md](docs/Expanding_tech_grants.md) - this created a new training data set on 26th January 2021. Then, we decided to use active learning in Prodigy to tag more training data, this process is described in [Prodigy_training_data.md](docs/Prodigy_training_data.md), this resulted in a training data set on the 21st February 2021.
+
+Finally, we found that adding grants tagged via EPMC and ResearchFish actually may decrease the model scores, so we created some training data not containing these data points - this was done on 8th March 2021.
+
+| Tag code | Meaning | Number of grants - 200807 | Number of grants - 210126 | Number of grants - 210221 | Number of grants - 210308|
+|---|---|--- |--- | --- | --- |
+| 1 | Relevant | 214 |347 | 495 | 313 |
+| 0 | Not relevant | 883 |349 | 485 | 488 |
+
+To create these datasets you should run:
+```
+python nutrition_labels/create_training_data.py --config_path configs/training_data/2021.03.08.ini
+```
+with config files from '2020.08.07.ini', '2021.01.26.ini', '2021.02.21.ini' or 2021.03.08.ini'.
+
+
 ### Training a tech tagging model
 
 You can train and save a model to classify grants as being to do with tech or not (see definitions for this in [Finding_Tech_Grants.md](docs/Finding_Tech_Grants.md)) by running:
