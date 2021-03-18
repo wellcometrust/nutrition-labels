@@ -60,13 +60,19 @@ with config files from '2020.08.07.ini', '2021.01.26.ini', '2021.02.21.ini' or 2
 
 ### Training a tech tagging model
 
-You can train and save a model to classify grants as being to do with tech or not (see definitions for this in [Finding_Tech_Grants.md](docs/Finding_Tech_Grants.md)) by running:
+You can train and save a model, or several models, to classify grants as being to do with tech or not (see definitions for this in [Finding_Tech_Grants.md](docs/Finding_Tech_Grants.md)) by creating a config file which contains various training arguments for the experiments. The main arguments in this config file are:
 
-```
-python nutrition_labels/grant_tagger.py --training_data_file data/processed/training_data.csv --vectorizer_type count --relevant_sample_ratio 1 --model_type naive_bayes --bert_type bert
-```
+- `training_data_file`, e.g. `data/processed/training_data/210308/training_data.csv`, the training data file.
+- `vectorizer_types`, e.g. `['count', 'tfidf', 'bert', 'scibert']`, the vectorizers you want to use.
+- `classifier_types`, e.g. `['naive_bayes', 'SVM', 'log_reg']`, the classifier types you want to use.
 
-where `vectorizer_type` can be 'count', 'tfidf' or 'bert', `model_type` can be 'naive_bayes', 'SVM' and 'log_reg', and `bert_type` (if using bert) can be 'bert' and 'scibert'.
+Then by running 
+```
+python nutrition_labels/grant_tagger.py --config_path configs/train_model/2021.03.16.ini
+```
+every combination from `vectorizer_types` and `classifier_types` will be run.
+
+This will create a folder in `models/` named after the config version, and each trained model will be stored in their own subfolders. A summary json file with the model predictions will be stored in e.g. `models/210316/training_information.json`, this will be important in evaluating the ensemble model.
 
 ### Fairness
 
