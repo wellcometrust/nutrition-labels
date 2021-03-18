@@ -124,7 +124,7 @@ class GrantTagger:
             )
         self.X_ids = data[train_data_id].tolist()
         self.X = data["Grant texts"].tolist()
-        self.y = data[self.label_name]
+        self.y = data[self.label_name].tolist()
 
         if self.vectorizer_type == "count":
             self.vectorizer = CountVectorizer(
@@ -152,7 +152,6 @@ class GrantTagger:
 
     def split_data(self, X_vect, y):
 
-        y = y.tolist()
         # Randomly shuffle the data
         random_index = list(range(len(y)))
         seed(self.split_seed)
