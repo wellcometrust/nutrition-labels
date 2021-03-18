@@ -194,7 +194,7 @@ class GrantTagger:
         if self.classifier_type == "naive_bayes":
             model = MultinomialNB()
         elif self.classifier_type == "SVM":
-            model = SVC()
+            model = SVC(probability=True)
         elif self.classifier_type == "log_reg":
             model = LogisticRegression(max_iter=1000)
         else:
