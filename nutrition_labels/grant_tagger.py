@@ -138,7 +138,7 @@ class GrantTagger:
                 token_pattern=r"(?u)\b\w+\b",
                 ngram_range=(1, 2),
             )
-        elif self.vectorizer_type == "bert":
+        elif "bert" in self.vectorizer_type:
             self.vectorizer = BertVectorizer(pretrained=self.vectorizer_type)
         else:
             print("Vectorizer type not recognised")
@@ -333,7 +333,6 @@ def train_several_models(config):
     config_version = "".join(config["DEFAULT"]["version"].split("."))[2:]
 
     # Train and save several models
-    all_training_info = {}
     for vectorizer_type in vectorizer_types:
         for classifier_type in classifier_types:
             print(f"Training for {vectorizer_type} + {classifier_type} ...")
@@ -371,12 +370,12 @@ def train_several_models(config):
                 os.path.join("models", config_version, outout_name),
                 evaluation_results=evaluation_results,
             )
-            all_training_info[outout_name] = grant_info
 
-    with open(
-        os.path.join("models", config_version, "training_information.json"), "w"
-    ) as f:
-        f.write(json.dumps(all_training_info))
+            with open(
+                os.path.join("models", config_version, "training_information.json"), "a"
+            ) as f:
+                f.write(json.dumps({outout_name: grant_info}))
+                f.write('\n')
 
 
 if __name__ == "__main__":
