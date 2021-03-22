@@ -15,3 +15,7 @@ dist
 
 # Folders
 **/models/*
+**/model_repeats/*
+**/data/*
+**/docs/*
+**/notebooks/*

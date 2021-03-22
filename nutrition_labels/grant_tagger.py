@@ -1,7 +1,35 @@
+"""
+Usage
+----------
+python nutrition_labels/grant_tagger.py 
+    --config_path configs/train_model/2021.03.16.ini
+
+Description
+----------
+This code will train several models (as specified in the config argument) using the same 
+training data and parameters inputted in the config file. 
+The trained models and their evaluation results, as well as overall training information 
+will be saved in folder unique to the config file e.g 'models/210316/'
+
+Config notes
+----------
+split_seed in the config file can be kept blank "split_seed = "
+In this case the seed is different for every model trained, which means
+the training data will be different for each model and so to evaluate
+an ensemble model properly you will need a hold-out test set which hasn't
+been used in the training of any of the models.
+"""
+
 from sklearn.feature_extraction.text import CountVectorizer, TfidfVectorizer
 from sklearn.naive_bayes import MultinomialNB
 from sklearn.model_selection import train_test_split
-from sklearn.metrics import accuracy_score, classification_report,  f1_score, precision_score, recall_score
+from sklearn.metrics import (
+    accuracy_score,
+    classification_report,
+    f1_score,
+    precision_score,
+    recall_score,
+)
 from wellcomeml.ml.bert_vectorizer import BertVectorizer
 from sklearn.preprocessing import MinMaxScaler
 from sklearn.linear_model import LogisticRegression
@@ -11,72 +39,124 @@ import numpy as np
 
 from random import sample, seed, shuffle
 from argparse import ArgumentParser
-import pickle
 from datetime import datetime
+import pickle
+import configparser
 import os
+import ast
+import json
 
 from nutrition_labels.useful_functions import pretty_confusion_matrix
 
 
-class GrantTagger():
+class GrantTagger:
+    """
+    A class to train a binary classifier for grants text.
+    ...
+
+    Attributes
+    ----------
+    test_size : float (default 0.25)
+        Proportion of data to use in test set.
+    relevant_sample_ratio : float (default 1)
+        The ratio of tech (1) data points to not-tech (0) data points
+        to include in the test/train data. The remainder is disgarded.
+        This is not random - if not-tech points need to be disgarded they
+        are selected uniformly through the data.
+    split_seed : int (default 1)
+        The seed used to randomly shuffle the data for the test/train split.
+    vectorizer_type : str (default "count")
+        The vectorizer to use, can be from ['count', 'tfidf', 'bert', 'scibert'] 
+    classifier_type : str (default "naive_bayes")
+        The classifier to use, can be from ['naive_bayes', 'SVM', 'log_reg'] 
+    prediction_cols : list (default ["Title", "Grant Programme:Title", "Description"])
+        The column names for the text you want to train the model on. If len > 1 then
+        they will be merged into one. 
+    label_name : str (default "Relevance code")
+        The column name of the classification truth label.
+
+    Methods
+    -------
+    transform(data, train_data_id)
+        Fit a vectorizer using the text data
+    split_data(X_vect, y)
+        Split the data into train and test sets
+    fit(X, y)
+        Train the model
+    predict(X)
+        Make predictions using the trained model
+    predict_proba(X)
+        Output prediction probabilities using the trained model
+    evaluate(X, y, extra_scores, average)
+        Evaluate various metrics using the model.
+    train_test_info()
+        Create an output dictionary with information about
+        which data points were used in the test or training, and
+        the model predictions for each.
+    save_model(output_path, evaluation_results)
+    load_model(output_path)
+    """
+
     def __init__(
         self,
-        ngram_range=(1,2),
         test_size=0.25,
-        vectorizer_type='count',
-        model_type ='naive_bayes',
-        bert_type = 'bert',
-        relevant_sample_ratio = 1
-        ):
-        self.ngram_range = ngram_range
+        relevant_sample_ratio=1,
+        split_seed=1,
+        vectorizer_type="count",
+        classifier_type="naive_bayes",
+        prediction_cols=["Title", "Grant Programme:Title", "Description"],
+        label_name="Relevance code",
+    ):
         self.test_size = test_size
-        self.vectorizer_type = vectorizer_type
-        self.model_type = model_type
-        self.bert_type = bert_type
         self.relevant_sample_ratio = relevant_sample_ratio
+        self.split_seed = split_seed
+        self.vectorizer_type = vectorizer_type
+        self.classifier_type = classifier_type
+        self.prediction_cols = (*prediction_cols,)
+        self.label_name = label_name
 
-    def transform(self, data):
+    def transform(self, data, train_data_id="Internal ID"):
 
-        if 'Grant texts' not in data:
+        if "Grant texts" not in data:
             # If the training data hasn't come through Prodigy tagging then this won't exist
-            data['Grant texts'] = data[['Title', 'Grant Programme:Title', 'Description']].agg(
-                '. '.join, axis=1
-                )
-        self.X = data['Grant texts'].tolist()
-        y = data['Relevance code']
+            data["Grant texts"] = data[list(self.prediction_cols)].agg(
+                ". ".join, axis=1
+            )
+        self.X_ids = data[train_data_id].tolist()
+        self.X = data["Grant texts"].tolist()
+        self.y = data[self.label_name].tolist()
 
-        if self.vectorizer_type == 'count':
+        if self.vectorizer_type == "count":
             self.vectorizer = CountVectorizer(
-                analyzer='word',
-                token_pattern=r'(?u)\b\w+\b',
-                ngram_range=self.ngram_range
-                )
-        elif self.vectorizer_type == 'tfidf':
+                analyzer="word",
+                token_pattern=r"(?u)\b\w+\b",
+                ngram_range=(1, 2),
+            )
+        elif self.vectorizer_type == "tfidf":
             self.vectorizer = TfidfVectorizer(
-                analyzer='word',
-                token_pattern=r'(?u)\b\w+\b',
-                ngram_range=self.ngram_range
-                )
-        elif self.vectorizer_type == 'bert':
-            self.vectorizer = BertVectorizer(pretrained=self.bert_type)
+                analyzer="word",
+                token_pattern=r"(?u)\b\w+\b",
+                ngram_range=(1, 2),
+            )
+        elif "bert" in self.vectorizer_type:
+            self.vectorizer = BertVectorizer(pretrained=self.vectorizer_type)
         else:
-            print('Vectorizer type not recognised')
-        X_vect = self.vectorizer.fit_transform(self.X)
+            print("Vectorizer type not recognised")
+        self.X_vect = self.vectorizer.fit_transform(self.X)
 
-        if self.vectorizer_type == 'bert' and self.model_type == 'naive_bayes':
+        if "bert" in self.vectorizer_type and self.classifier_type == "naive_bayes":
             scaler = MinMaxScaler()
-            X_vect = scaler.fit_transform(X_vect)
+            self.X_vect = scaler.fit_transform(self.X_vect)
 
-        return X_vect, y
+        return self.X_vect, self.y
 
-    def split_data(self, X_vect, y, split_seed):
+    def split_data(self, X_vect, y):
 
-        y = y.tolist()
         # Randomly shuffle the data
         random_index = list(range(len(y)))
-        seed(split_seed)
+        seed(self.split_seed)
         shuffle(random_index)
-        if self.vectorizer_type == 'bert':
+        if self.vectorizer_type == "bert":
             X_vect = [X_vect[i] for i in random_index]
         else:
             X_vect = X_vect[random_index]
@@ -84,175 +164,233 @@ class GrantTagger():
 
         relevant_sample_index = [ind for ind, x in enumerate(y) if x != 0]
         irrelevant_sample_index = [ind for ind, x in enumerate(y) if x == 0]
-        sample_size = int(round(len(relevant_sample_index) * self.relevant_sample_ratio))
+        sample_size = int(
+            round(len(relevant_sample_index) * self.relevant_sample_ratio)
+        )
         if sample_size < len(irrelevant_sample_index):
             # Take sample_size equally spaced irrelevant points
-            idx = np.round(np.linspace(0, len(irrelevant_sample_index) - 1, sample_size)).astype(int)
-            sample_index = relevant_sample_index + [irrelevant_sample_index[i] for i in idx]
+            idx = np.round(
+                np.linspace(0, len(irrelevant_sample_index) - 1, sample_size)
+            ).astype(int)
+            sample_index = relevant_sample_index + [
+                irrelevant_sample_index[i] for i in idx
+            ]
             # Make sure they are in order otherwise it'll be all 1111s and then 0000s
             sample_index.sort()
             y = [y[i] for i in sample_index]
-            if self.vectorizer_type == 'bert':
+            if self.vectorizer_type == "bert":
                 X_vect = [X_vect[i] for i in sample_index]
             else:
                 X_vect = X_vect[sample_index]
 
         # Randomly shuffled at the beginning so turn this off
         X_train, X_test, y_train, y_test = train_test_split(
-            X_vect,
-            y,
-            test_size=self.test_size,
-            shuffle=False
-            )
+            X_vect, y, test_size=self.test_size, shuffle=False
+        )
 
         return X_train, X_test, y_train, y_test
 
     def fit(self, X, y):
-        if self.model_type == 'naive_bayes':
+        if self.classifier_type == "naive_bayes":
             model = MultinomialNB()
-        elif self.model_type == 'SVM':
-            model = SVC()
-        elif self.model_type == 'log_reg':
+        elif self.classifier_type == "SVM":
+            model = SVC(probability=True)
+        elif self.classifier_type == "log_reg":
             model = LogisticRegression(max_iter=1000)
         else:
-            print('Model type not recognised')
+            print("Model type not recognised")
         self.model = model.fit(X, y)
 
     def predict(self, X):
         return self.model.predict(X)
 
-    def evaluate(self, X, y, print_results=True, average='binary'):
+    def predict_proba(self, X):
+        return self.model.predict_proba(X)
+
+    def evaluate(self, X, y, extra_scores=False, average="binary"):
 
         y_predict = self.model.predict(X)
 
         scores = {
-            'accuracy': accuracy_score(y, y_predict),
-            'f1': f1_score(y, y_predict, average=average),
-            'precision_score': precision_score(y, y_predict, zero_division=0, average=average),
-            'recall_score': recall_score(y, y_predict, zero_division=0, average=average)}
+            "size": len(y),
+            "accuracy": accuracy_score(y, y_predict),
+            "f1": f1_score(y, y_predict, average=average),
+            "precision_score": precision_score(
+                y, y_predict, zero_division=0, average=average
+            ),
+            "recall_score": recall_score(
+                y, y_predict, zero_division=0, average=average
+            ),
+        }
 
-        if print_results:
-            print(scores)
-            print(classification_report(y, y_predict))
-            print(pretty_confusion_matrix(y, y_predict))
+        if extra_scores:
+            scores["Classification report"] = classification_report(y, y_predict)
+            scores["Confusion matrix"] = pretty_confusion_matrix(y, y_predict)
 
-        return scores, classification_report(y, y_predict), pretty_confusion_matrix(y, y_predict)
+        return scores
 
-    def save_model(self, output_path, split_info, evaluation_results=None):
+    def train_test_info(self):
+        """
+        Output a dict of information about the trained model's use of the data
+        and the predictions and probabilities given, e.g
+        {
+            '123456/X/13/A': {
+                'Truth': 1,
+                'Prediction': 1,
+                'Prediction probability': 0.7,
+                'Test/train': 'Test'
+            }
+        }
+        """
+
+        y_predict = self.model.predict(self.X_vect)
+        y_predict_proba = self.model.predict_proba(self.X_vect)
+        # The probability of the predicted binary value
+        y_predict_proba = np.max(y_predict_proba, axis=1)
+
+        X_train_ids, X_test_ids, _, _ = self.split_data(np.array(self.X_ids), self.y)
+
+        training_info = {}
+        for grant_id, actual, pred, pred_prob in zip(
+            self.X_ids, self.y, y_predict, y_predict_proba
+        ):
+            if grant_id in X_train_ids:
+                split_type = "Train"
+            elif grant_id in X_test_ids:
+                split_type = "Test"
+            else:
+                split_type = "Not used"
+            training_info[grant_id] = {
+                "Truth": int(actual),
+                "Prediction": int(pred),
+                "Prediction probability": pred_prob,
+                "Test/train": split_type,
+            }
+
+        return training_info
+
+    def save_model(self, output_path, evaluation_results=None):
         if not os.path.exists(output_path):
             os.makedirs(output_path)
 
-        with open(os.path.join(output_path, 'model.pickle'), 'wb') as f:
+        with open(os.path.join(output_path, "model.pickle"), "wb") as f:
             pickle.dump(self.model, f)
-        with open(os.path.join(output_path, 'vectorizer.pickle'), 'wb') as f:
+        with open(os.path.join(output_path, "vectorizer.pickle"), "wb") as f:
             pickle.dump(self.vectorizer, f)
 
         if evaluation_results:
-            evaluation_results.update(split_info)
-            with open(os.path.join(output_path, 'training_information.txt'), 'w') as f:
-                f.write('ngram_range: ' + str(self.ngram_range))
-                f.write('\ntest_size: ' + str(self.test_size))
-                f.write('\nVectorizer type: ' + self.vectorizer_type)
-                f.write('\nModel type: ' + self.model_type)
-                f.write('\nBert type (if relevant): ' + str(self.bert_type))
+            evaluation_results["Vectorizer type"] = self.vectorizer_type
+            evaluation_results["Classifier type"] = self.classifier_type
+            evaluation_results["Split seed"] = self.split_seed
+            with open(os.path.join(output_path, "evaluation_results.txt"), "w") as f:
                 for key, value in evaluation_results.items():
-                    f.write('\n' + key + ': ' + str(value))
+                    f.write("\n" + key + ": " + str(value))
 
     def load_model(self, output_path):
-        with open(os.path.join(output_path, 'model.pickle'), 'rb') as f:
+        with open(os.path.join(output_path, "model.pickle"), "rb") as f:
             self.model = pickle.load(f)
-        with open(os.path.join(output_path, 'vectorizer.pickle'), 'rb') as f:
+        with open(os.path.join(output_path, "vectorizer.pickle"), "rb") as f:
             self.vectorizer = pickle.load(f)
 
 
-def create_argparser():
+def load_training_data(config, prediction_cols, train_data_id):
+
+    training_data = pd.read_csv(config["data"]["training_data_file"])
+
+    if "grants_text_data_file" in config["data"]:
+        # Merge training data with another dataset containing the
+        # text columns for predicting on
+        grants_data = pd.read_csv(config["data"]["grants_text_data_file"])
+        right_id = config["data"]["grants_text_data_file_id"]
+        training_data = pd.merge(
+            training_data,
+            grants_data.drop_duplicates(subset="Internal ID")[
+                prediction_cols + [right_id]
+            ],
+            how="left",
+            left_on=train_data_id,
+            right_on=right_id,
+        )
+
+    return training_data
+
+
+def train_several_models(config):
+
+    # Load data and parameters
+    vectorizer_types = ast.literal_eval(config["models"]["vectorizer_types"])
+    classifier_types = ast.literal_eval(config["models"]["classifier_types"])
+
+    relevant_sample_ratio = config.getfloat("params", "relevant_sample_ratio")
+    test_size = config.getfloat("params", "test_size")
+    split_seed = config["params"].getint("split_seed")
+
+    prediction_cols = ast.literal_eval(config["data"]["prediction_cols"])
+    label_name = config["data"]["label_name"]
+    train_data_id = config["data"]["training_data_file_id"]
+    training_data = load_training_data(config, prediction_cols, train_data_id)
+
+    config_version = "".join(config["DEFAULT"]["version"].split("."))[2:]
+
+    # Train and save several models
+    for vectorizer_type in vectorizer_types:
+        for classifier_type in classifier_types:
+            print(f"Training for {vectorizer_type} + {classifier_type} ...")
+
+            if not split_seed:
+                split_seed = np.random.randint(100)  # Pick randomly if not given
+            grant_tagger = GrantTagger(
+                test_size=test_size,
+                relevant_sample_ratio=relevant_sample_ratio,
+                split_seed=split_seed,
+                vectorizer_type=vectorizer_type,
+                classifier_type=classifier_type,
+                prediction_cols=prediction_cols,
+                label_name=label_name,
+            )
+            X_vect, y = grant_tagger.transform(training_data, train_data_id)
+
+            X_train, X_test, y_train, y_test = grant_tagger.split_data(X_vect, y)
+
+            grant_tagger.fit(X_train, y_train)
+
+            grant_info = grant_tagger.train_test_info()
+
+            train_scores = grant_tagger.evaluate(X_train, y_train, extra_scores=True)
+            test_scores = grant_tagger.evaluate(X_test, y_test, extra_scores=True)
+
+            evaluation_results = {
+                "Train model config": args.config_path,
+                "Train scores": train_scores,
+                "Test scores": test_scores,
+            }
+
+            outout_name = "_".join([vectorizer_type, classifier_type, config_version])
+            grant_tagger.save_model(
+                os.path.join("models", config_version, outout_name),
+                evaluation_results=evaluation_results,
+            )
+
+            with open(
+                os.path.join("models", config_version, "training_information.json"), "a"
+            ) as f:
+                f.write(json.dumps({outout_name: grant_info}))
+                f.write('\n')
+
+
+if __name__ == "__main__":
 
     parser = ArgumentParser()
+
     parser.add_argument(
-        '--training_data_file',
-        help='Path to the training data csv',
-        default='data/processed/training_data/200807/training_data.csv'
-    )
-    parser.add_argument(
-        '--vectorizer_type',
-        help="Which vectorizer to use, options are 'count', 'tfidf' or 'bert'",
-        default='count'
-    )
-    parser.add_argument(
-        '--relevant_sample_ratio',
-        help='There is more not-relevant data in the training data, so this is the ratio \
-        of relevant to not-relevant data to sample, e.g. 1 means equal numbers of\
-        both, 0.5 means use half the amount of not-relevant compared to relevant',
-        default=1,
-        type=float
-    )
-    parser.add_argument(
-        '--model_type',
-        help="Which model type to use, options are 'naive_bayes', 'SVM' and 'log_reg'",
-        default='naive_bayes'
-    )
-    parser.add_argument(
-        '--bert_type',
-        help="If you are using the bert vectoriser then which type do you want,\
-        options are 'bert' and 'scibert', this doesn't need to be defined if you\
-        aren't using bert",
-        default=None
+        "--config_path",
+        help="Path to config file",
+        default="configs/train_model/2021.03.16.ini",
     )
 
-    return parser
-
-if __name__ == '__main__':
-
-    parser = create_argparser()
     args = parser.parse_args()
 
-    datestamp = datetime.now().date().strftime('%y%m%d')
+    config = configparser.ConfigParser()
+    config.read(args.config_path)
 
-    data = pd.read_csv(args.training_data_file)
-
-    grant_tagger = GrantTagger(
-        ngram_range=(1, 2),
-        test_size=0.25,
-        vectorizer_type=args.vectorizer_type,
-        model_type=args.model_type,
-        bert_type=args.bert_type,
-        relevant_sample_ratio=args.relevant_sample_ratio
-    )
-
-    X_vect, y = grant_tagger.transform(data)
-    split_seed = 7
-    X_train, X_test, y_train, y_test = grant_tagger.split_data(
-        X_vect,
-        y,
-        split_seed=split_seed)
-    split_info = {
-        'Split random seed': split_seed,
-        'Training data directory': args.training_data_file,
-        'Relevant sample ratio': args.relevant_sample_ratio
-        }
-    grant_tagger.fit(X_train, y_train)
-
-    train_scores, _, _ = grant_tagger.evaluate(X_train, y_train, print_results=True)
-    test_scores, test_class_rep, test_conf_mat = grant_tagger.evaluate(X_test, y_test, print_results=True)
-    evaluation_results = {
-        'Train scores': train_scores,
-        'Test scores': test_scores,
-        'Train size': len(y_train),
-        'Test size': len(y_test),
-        'Test classification report': test_class_rep,
-        'Test confusion matrix': test_conf_mat
-        }
-    
-    outout_name = '_'.join(
-        [args.vectorizer_type, args.model_type]
-        )
-    if args.bert_type and args.vectorizer_type=='bert':
-        outout_name = '_'.join([outout_name, args.bert_type])
-
-    outout_name = '_'.join([outout_name, datestamp])
-
-    grant_tagger.save_model(
-        os.path.join('models', outout_name),
-        split_info=split_info,
-        evaluation_results=evaluation_results
-        )
+    train_several_models(config)
