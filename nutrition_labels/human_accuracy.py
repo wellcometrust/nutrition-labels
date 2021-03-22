@@ -1,6 +1,6 @@
 import pandas as pd
 
-from nutrition_labels.useful_functions import pretty_confusion_matrix
+from nutrition_labels.utils import pretty_confusion_matrix
 from nutrition_labels.grant_data_processing import merge_tags
 
 def clean_codes(data, col_name):

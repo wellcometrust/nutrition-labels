@@ -3,6 +3,25 @@ import pandas as pd
 from bs4 import BeautifulSoup
 from sklearn.metrics import confusion_matrix
 
+def clean_grants_data(
+    old_grant_data, text_column="Description", grant_id_column="Internal ID"
+):
+    """
+    Clean grant descriptions of html and remove any duplicates
+    """
+    dont_include_text = ["Not available", ""]
+    grant_data = old_grant_data.copy()
+    grant_data.dropna(subset=[text_column], inplace=True)
+    grant_data[text_column] = grant_data[text_column].apply(remove_useless_string)
+    grant_data = grant_data[~grant_data[text_column].isin(dont_include_text)]
+    grant_data.drop_duplicates(grant_id_column, inplace=True)
+    grant_data["Internal ID 6 digit"] = grant_data[grant_id_column].apply(
+        lambda x: re.sub("/.*", "", x)
+    )
+
+    # After dropping rows you need to reset the index
+    grant_data.reset_index(inplace=True)
+    return grant_data
 
 def remove_useless_string(string):
     '''

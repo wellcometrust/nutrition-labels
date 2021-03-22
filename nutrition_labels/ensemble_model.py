@@ -13,8 +13,7 @@ import ast
 from datetime import datetime
 
 from nutrition_labels.grant_tagger import GrantTagger
-from nutrition_labels.grant_data_processing import clean_grants_data
-from nutrition_labels.useful_functions import pretty_confusion_matrix
+from nutrition_labels.utils import pretty_confusion_matrix, clean_grants_data
 
 class EnsembleModel():
     def __init__(

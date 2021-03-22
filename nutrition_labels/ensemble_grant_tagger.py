@@ -19,7 +19,7 @@ from datetime import datetime
 import pandas as pd
 
 from nutrition_labels.grant_tagger import GrantTagger
-from nutrition_labels.useful_functions import remove_useless_string
+from nutrition_labels.utils import remove_useless_string
 
 class EnsembleGrantTagger():
     def __init__(

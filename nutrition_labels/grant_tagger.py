@@ -46,7 +46,7 @@ import os
 import ast
 import json
 
-from nutrition_labels.useful_functions import pretty_confusion_matrix
+from nutrition_labels.utils import pretty_confusion_matrix
 
 
 class GrantTagger:

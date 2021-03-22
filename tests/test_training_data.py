@@ -6,10 +6,10 @@ import json
 import pandas as pd
 
 from nutrition_labels.grant_data_processing import (
-    clean_grants_data,
     merge_grants_sources,
     deduplicate_similar_grants,
 )
+from nutrition_labels.utils import clean_grants_data
 from nutrition_labels.prodigy_training_data import load_prodigy_tags
 from nutrition_labels.create_training_data import process_filter_data_sources
 
