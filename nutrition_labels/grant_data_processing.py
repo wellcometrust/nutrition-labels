@@ -8,7 +8,7 @@ import json
 import pandas as pd
 import numpy as np
 
-from nutrition_labels.utils import remove_useless_string, only_text, clean_grants_data
+from nutrition_labels.utils import clean_string, only_text, clean_grants_data
 
 
 def merge_tags(data, person_cols_list):
