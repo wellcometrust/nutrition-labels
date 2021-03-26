@@ -131,12 +131,14 @@ class GrantTagger:
                 analyzer="word",
                 token_pattern=r"(?u)\b\w+\b",
                 ngram_range=(1, 2),
+                stop_words='english'
             )
         elif self.vectorizer_type == "tfidf":
             self.vectorizer = TfidfVectorizer(
                 analyzer="word",
                 token_pattern=r"(?u)\b\w+\b",
                 ngram_range=(1, 2),
+                stop_words='english'
             )
         elif "bert" in self.vectorizer_type:
             self.vectorizer = BertVectorizer(pretrained=self.vectorizer_type)
@@ -394,3 +396,4 @@ if __name__ == "__main__":
     config.read(args.config_path)
 
     train_several_models(config)
+

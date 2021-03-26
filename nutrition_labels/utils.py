@@ -3,17 +3,28 @@ import pandas as pd
 from bs4 import BeautifulSoup
 from sklearn.metrics import confusion_matrix
 
+# Common synopsis/description fields which mean 'No data given'
+not_available_aliases = {
+        'Not available': None,
+        'Summary not available': None,
+        'NA': None,
+        'N/A': None,
+        'no abstract available.': None,
+        'To be submitted later': None,
+        'A': None,
+        '': None,
+    }
+
+
 def clean_grants_data(
     old_grant_data, text_column="Description", grant_id_column="Internal ID"
 ):
     """
     Clean grant descriptions of html and remove any duplicates
     """
-    dont_include_text = ["Not available", ""]
     grant_data = old_grant_data.copy()
+    grant_data[text_column] = grant_data[text_column].apply(clean_string)
     grant_data.dropna(subset=[text_column], inplace=True)
-    grant_data[text_column] = grant_data[text_column].apply(remove_useless_string)
-    grant_data = grant_data[~grant_data[text_column].isin(dont_include_text)]
     grant_data.drop_duplicates(grant_id_column, inplace=True)
     grant_data["Internal ID 6 digit"] = grant_data[grant_id_column].apply(
         lambda x: re.sub("/.*", "", x)
@@ -23,17 +34,26 @@ def clean_grants_data(
     grant_data.reset_index(inplace=True)
     return grant_data
 
-def remove_useless_string(string):
+def clean_string(string):
     '''
-    cleans the grant descriptions of artifacts such as <br />
+    Cleans the grant descriptions of artifacts such as <br />
+    and converts all 'No data given' synonyms into None
     :param string: description string
     :return: clean string
     '''
 
-    soup = BeautifulSoup(string, features="lxml")
-    string_out = soup.get_text()
-    string_out = string_out.replace('\n', ' ')
-    string_out = string_out.replace('\xa0', ' ')
+    if string:
+        soup = BeautifulSoup(string, features="lxml")
+        string_out = soup.get_text()
+        string_out = string_out.replace('\n', ' ')
+        string_out = string_out.replace('\xa0', ' ')
+
+        if string_out in not_available_aliases:
+            string_out = not_available_aliases[string_out]
+    else:
+        # If None is inputted output None
+        string_out = string
+
     return(string_out)
 
 def only_text(string):
