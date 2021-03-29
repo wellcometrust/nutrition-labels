@@ -50,9 +50,9 @@ import numpy as np
 from nutrition_labels.grant_data_processing import (
     load_process_data_sources,
     merge_grants_sources,
-    clean_grants_data,
     deduplicate_similar_grants,
 )
+from nutrition_labels.utils import clean_grants_data
 from nutrition_labels.prodigy_training_data import load_prodigy_tags
 
 SOURCES = ["RF", "EPMC", "Grants", "Prodigy grants"]

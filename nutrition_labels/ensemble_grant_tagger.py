@@ -19,7 +19,7 @@ from datetime import datetime
 import pandas as pd
 
 from nutrition_labels.grant_tagger import GrantTagger
-from nutrition_labels.useful_functions import remove_useless_string
+from nutrition_labels.utils import clean_string
 
 class EnsembleGrantTagger():
     def __init__(
@@ -42,7 +42,7 @@ class EnsembleGrantTagger():
         grant_data = previous_grant_data.copy()
         grant_data.fillna('', inplace=True)
         grant_data[self.grant_text_cols] = grant_data[self.grant_text_cols].applymap(
-            remove_useless_string
+            clean_string
             )
 
         grant_data['Grant texts'] = grant_data[self.grant_text_cols].agg(

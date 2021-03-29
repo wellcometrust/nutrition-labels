@@ -8,7 +8,7 @@ import numpy as np
 
 from wellcomeml.ml import TextClustering
 
-from nutrition_labels.grant_data_processing import clean_grants_data
+from nutrition_labels.utils import clean_grants_data
 
 def get_cluster_keys(cluster):
     """

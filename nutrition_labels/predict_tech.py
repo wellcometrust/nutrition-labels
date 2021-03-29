@@ -35,7 +35,7 @@ import json
 import pandas as pd
 
 from nutrition_labels.grant_tagger import GrantTagger
-from nutrition_labels.grant_data_processing import clean_grants_data
+from nutrition_labels.utils import clean_grants_data
 
 def get_model_dirs(models_date):
 
