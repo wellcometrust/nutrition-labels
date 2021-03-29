@@ -42,7 +42,7 @@ def clean_string(string):
     :return: clean string
     '''
 
-    if string:
+    if isinstance(string, str):
         soup = BeautifulSoup(string, features="lxml")
         string_out = soup.get_text()
         string_out = string_out.replace('\n', ' ')
@@ -51,7 +51,7 @@ def clean_string(string):
         if string_out in not_available_aliases:
             string_out = not_available_aliases[string_out]
     else:
-        # If None is inputted output None
+        # If not a string (e.g. None) then output is unchanged
         string_out = string
 
     return(string_out)
