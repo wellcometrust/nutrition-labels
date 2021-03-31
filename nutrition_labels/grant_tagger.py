@@ -46,7 +46,7 @@ import os
 import ast
 import json
 
-from nutrition_labels.utils import pretty_confusion_matrix
+from nutrition_labels.utils import pretty_confusion_matrix, clean_string
 
 
 class GrantTagger:
@@ -121,7 +121,7 @@ class GrantTagger:
             # If the training data hasn't come through Prodigy tagging then this won't exist
             data["Grant texts"] = data[list(self.prediction_cols)].agg(
                 ". ".join, axis=1
-            )
+            ).apply(clean_string)
         self.X_ids = data[train_data_id].tolist()
         self.X = data["Grant texts"].tolist()
         self.y = data[self.label_name].tolist()
@@ -306,7 +306,7 @@ def load_training_data(config, prediction_cols, train_data_id):
         right_id = config["data"]["grants_text_data_file_id"]
         training_data = pd.merge(
             training_data,
-            grants_data.drop_duplicates(subset="Internal ID")[
+            grants_data.drop_duplicates(subset=right_id)[
                 prediction_cols + [right_id]
             ],
             how="left",
