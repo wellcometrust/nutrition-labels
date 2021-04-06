@@ -6,14 +6,7 @@ Firstly, the original training dataset has been expanded since the work done on 
 
 ## 2020 Training data
 
-The training data used in 2020 was the `200807/training_data.csv` version. This consisted of:
-
-| Tag code | Meaning | Number of grants |
-|---|---|--- |
-| 1 | Tech grants | 214 |
-| 0 | Not tech grants | 883 |
-
-The process of tagging this and model results are described in `docs/Finding_Tech_Grants.md`.
+The training data used in 2020 was the `200807/training_data.csv` version. This consisted of 214 tech grants and 883 not tech grants. The process of tagging this and model results are described in `docs/Finding_Tech_Grants.md`.
 
 ## Expanding the definition of tech
 
@@ -26,27 +19,17 @@ We then expanded the definition of 'tech' and retagged some of the original trai
 | Grants tech data points | 111 | 164 | +53 |
 | Grants not-tech data points | 1004 | 358| -646 |
 
-A comparison of the final training data sets (`200807/training_data.csv` and `210126/training_data.csv`):
-
-| Tag code | Meaning | Number of grants - 200807 | Number of grants - 210126 |
-|---|---|--- |--- |
-| 1 | Tech grants | 214 | 347 |
-| 0 | Not tech grants | 883 | 349 |
+This resulted in the `210126/training_data.csv` training data with 347 tech grants and 349 not tech grants.
 
 ## Tagging training data using active learning in Prodigy
 
-We then added to the training data using active learning. This process is described in `docs/Prodigy_training_data.md`. This created the outputted the `210221/training_data.csv` dataset which consists of:
-
-| Tag code | Meaning | Number of grants |
-|---|---|--- |
-| 1 | Tech grants | 495 |
-| 0 | Not tech grants | 485 |
+We then added to the training data using active learning. This process is described in `docs/Prodigy_training_data.md`. This created the outputted the `210221/training_data.csv` dataset which consists of 495 tech grants and 485 not tech grants.
 
 ## Final training data set
 
 After some experimentation we realised that the ResearchFish and EPMC data points negatively effect the performance of the model. However they are useful in evaluating how well the model extends to find the 'hidden tech'. These experiments are discussed in `Training_data_sources.md`. After some refactoring and changing how the text was cleaned slightly the final training data set used it the `210308/training_data.csv` version.
 
-A summary of the data changes is as follows:
+A summary and comparison of the data changes is as follows:
 
 | Tag code | Meaning | Number of grants - 200807 | Number of grants - 210126 | Number of grants - 210221 | Number of grants - 210308|
 |---|---|--- |--- | --- | --- |
