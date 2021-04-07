@@ -19,7 +19,7 @@ def test_load_grants_text():
         grants_data.to_csv(grants_data_dir)
 
         tech_grant_model = EnsembleGrantTagger(
-            model_dirs=['models/count_naive_bayes_210221'],
+            model_dirs=['models/210331/count_naive_bayes_210331'],
             num_agree=1,
             grant_text_cols=['Title'],
             grant_id_col='ID')
@@ -34,7 +34,7 @@ def test_predict():
         grants_data.to_csv(grants_data_dir)
 
         tech_grant_model = EnsembleGrantTagger(
-            model_dirs=['models/count_naive_bayes_210221'],
+            model_dirs=['models/210331/count_naive_bayes_210331'],
             num_agree=1,
             grant_text_cols=['Title'],
             grant_id_col='ID')

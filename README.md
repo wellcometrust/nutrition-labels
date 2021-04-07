@@ -68,11 +68,11 @@ You can train and save a model, or several models, to classify grants as being t
 
 Then by running 
 ```
-python nutrition_labels/grant_tagger.py --config_path configs/train_model/2021.03.16.ini
+python nutrition_labels/grant_tagger.py --config_path configs/train_model/2021.03.31.ini
 ```
 every combination from `vectorizer_types` and `classifier_types` will be run.
 
-This will create a folder in `models/` named after the config version, and each trained model will be stored in their own subfolders. A summary json file with the model predictions will be stored in e.g. `models/210316/training_information.json`, this will be important in evaluating the ensemble model.
+This will create a folder in `models/` named after the config version, and each trained model will be stored in their own subfolders. A summary json file with the model predictions will be stored in e.g. `models/210331/training_information.json`, this will be important in evaluating the ensemble model.
 
 ### Fairness
 
