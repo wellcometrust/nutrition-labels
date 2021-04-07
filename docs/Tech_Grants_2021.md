@@ -108,20 +108,20 @@ nutrition_labels/grant_tagger_evaluation.py --model_config configs/train_model/2
 ``` 
 This script also outputs the test metrics for each model in one csv which gives:
 
-| Date   | Vectorizer | Classifier  | f1    | precision_score | recall_score | EPMC accuracy | RF accuracy |
-|--------|------------|-------------|-------|-----------------|--------------|---------------|-------------|
-| 210331 | count      | naive_bayes | 0.837 | 0.74            | 0.962        | 0.791         | 0.557       |
-| 210331 | count      | SVM         | 0.813 | 0.871           | 0.762        | 0.588         | 0.4         |
-| 210331 | count      | log_reg     | 0.83  | 0.835           | 0.825        | 0.595         | 0.4         |
-| 210331 | tfidf      | naive_bayes | 0.819 | 0.713           | 0.962        | 0.824         | 0.657       |
-| 210331 | tfidf      | SVM         | 0.83  | 0.91            | 0.762        | 0.635         | 0.429       |
-| 210331 | tfidf      | log_reg     | 0.844 | 0.878           | 0.812        | 0.709         | 0.457       |
-| 210331 | bert       | naive_bayes | 0.802 | 0.77            | 0.838        | 0.818         | 0.571       |
-| 210331 | bert       | SVM         | 0.866 | 0.845           | 0.888        | 0.608         | 0.443       |
-| 210331 | bert       | log_reg     | 0.862 | 0.862           | 0.862        | 0.588         | 0.443       |
-| 210331 | scibert    | naive_bayes | 0.845 | 0.807           | 0.888        | 0.466         | 0.243       |
-| 210331 | scibert    | SVM         | 0.828 | 0.787           | 0.875        | 0.689         | 0.514       |
-| 210331 | scibert    | log_reg     | 0.848 | 0.824           | 0.875        | 0.615         | 0.443       |
+| Date   | Vectorizer | Classifier  | f1    | precision_score | recall_score | EPMC accuracy | RF accuracy | High scoring |
+|--------|------------|-------------|-------|-----------------|--------------|---------------|-------------|---|
+| 210331 | count      | naive_bayes | 0.837 | 0.74            | 0.962        | 0.791         | 0.557       | x |
+| 210331 | count      | SVM         | 0.813 | 0.871           | 0.762        | 0.588         | 0.4         | |
+| 210331 | count      | log_reg     | 0.83  | 0.835           | 0.825        | 0.595         | 0.4         | |
+| 210331 | tfidf      | naive_bayes | 0.819 | 0.713           | 0.962        | 0.824         | 0.657       | x |
+| 210331 | tfidf      | SVM         | 0.83  | 0.91            | 0.762        | 0.635         | 0.429       | |
+| 210331 | tfidf      | log_reg     | 0.844 | 0.878           | 0.812        | 0.709         | 0.457       | x |
+| 210331 | bert       | naive_bayes | 0.802 | 0.77            | 0.838        | 0.818         | 0.571       | x |
+| 210331 | bert       | SVM         | 0.866 | 0.845           | 0.888        | 0.608         | 0.443       | |
+| 210331 | bert       | log_reg     | 0.862 | 0.862           | 0.862        | 0.588         | 0.443       | |
+| 210331 | scibert    | naive_bayes | 0.845 | 0.807           | 0.888        | 0.466         | 0.243       | |
+| 210331 | scibert    | SVM         | 0.828 | 0.787           | 0.875        | 0.689         | 0.514       | x |
+| 210331 | scibert    | log_reg     | 0.848 | 0.824           | 0.875        | 0.615         | 0.443       | |
 
 ### Ensemble model
 
