@@ -39,7 +39,7 @@ if __name__ == '__main__':
                     relevant_sample_ratio=relevant_sample_ratio
                     )
 
-            X_vect, y = grant_tagger.transform(data)
+            X_vect, y = grant_tagger.fit_transform(data)
 
             evaluation_results_runs = []
             for split_seed in range(num_rand_seeds):

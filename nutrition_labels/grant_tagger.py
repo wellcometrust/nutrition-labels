@@ -77,8 +77,10 @@ class GrantTagger:
 
     Methods
     -------
-    transform(data, train_data_id)
+    fit_transform(data, train_data_id)
         Fit a vectorizer using the text data
+    transform(data)
+        Vectorize text data using the fitted vectorizer
     split_data(X_vect, y)
         Split the data into train and test sets
     fit(X, y)
@@ -115,13 +117,37 @@ class GrantTagger:
         self.prediction_cols = (*prediction_cols,)
         self.label_name = label_name
 
-    def transform(self, data, train_data_id="Internal ID"):
+    def process_grant_text(self, data):
+        """
+        Create a new column of a pandas dataframe which included
+        the merged and cleaned text from multiple columns.
+        """
+
+        data["Grant texts"] = data[list(self.prediction_cols)].agg(
+            ". ".join, axis=1
+        ).apply(clean_string)
+
+        return data
+
+    def transform(self, data):
+        """
+        Vectorize the joined text from columns of a pandas dataframe ('data'),
+        using a fitted vectorizer.
+        """
+        if "Grant texts" not in data:
+            data = self.process_grant_text(data)
+
+        X = data["Grant texts"].tolist()
+        X_vect = self.vectorizer.transform(X)
+
+        return X_vect
+
+    def fit_transform(self, data, train_data_id="Internal ID"):
 
         if "Grant texts" not in data:
             # If the training data hasn't come through Prodigy tagging then this won't exist
-            data["Grant texts"] = data[list(self.prediction_cols)].agg(
-                ". ".join, axis=1
-            ).apply(clean_string)
+            data = self.process_grant_text(data)
+
         self.X_ids = data[train_data_id].tolist()
         self.X = data["Grant texts"].tolist()
         self.y = data[self.label_name].tolist()

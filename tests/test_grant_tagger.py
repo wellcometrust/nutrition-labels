@@ -51,6 +51,18 @@ prediction_cols = ['text_field', 'text_field_2']
 label_name = 'Label'
 train_data_id = 'ID'
 
+def test_fit_transform():
+
+    grant_tagger = GrantTagger(
+        prediction_cols=prediction_cols,
+        label_name=label_name,
+        )
+
+    X_vect, y = grant_tagger.fit_transform(training_data, train_data_id)
+
+    assert X_vect.shape[0] == 6
+    assert grant_tagger.X_ids == [4, 1, 2, 0, 3, 5]
+
 def test_transform():
 
     grant_tagger = GrantTagger(
@@ -58,10 +70,10 @@ def test_transform():
         label_name=label_name,
         )
 
-    X_vect, y = grant_tagger.transform(training_data, train_data_id)
+    X_vect_fit_transform, _ = grant_tagger.fit_transform(training_data, train_data_id)
+    X_vect_transform = grant_tagger.transform(training_data)
 
-    assert X_vect.shape[0] == 6
-    assert grant_tagger.X_ids == [4, 1, 2, 0, 3, 5]
+    assert X_vect_fit_transform.shape == X_vect_transform.shape
 
 def test_split_data():
 
@@ -71,7 +83,7 @@ def test_split_data():
         label_name=label_name,
         )
 
-    X_vect, y = grant_tagger.transform(training_data, train_data_id)
+    X_vect, y = grant_tagger.fit_transform(training_data, train_data_id)
     X_train, X_test, y_train, y_test = grant_tagger.split_data(X_vect, y)
     assert len(y_train) == 4
     assert len(y_test) == 2
@@ -84,7 +96,7 @@ def test_split_relevant_sample_ratio():
         label_name=label_name,
         )
 
-    X_vect, y = grant_tagger.transform(training_data, train_data_id)
+    X_vect, y = grant_tagger.fit_transform(training_data, train_data_id)
 
     X_train, X_test, y_train, y_test = grant_tagger.split_data(X_vect, y)
     all_y = y_train + y_test
@@ -126,7 +138,7 @@ def test_train_test_info():
         label_name=label_name,
         )
 
-    X_vect, y = grant_tagger.transform(training_data, train_data_id)
+    X_vect, y = grant_tagger.fit_transform(training_data, train_data_id)
     X_train, X_test, y_train, y_test = grant_tagger.split_data(X_vect, y)
     grant_tagger.fit(X_train, y_train)
     grant_info = grant_tagger.train_test_info()
