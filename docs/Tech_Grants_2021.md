@@ -63,6 +63,7 @@ Experiments:
 3. 1 + 2 + Apply clean_string to grants text.
 4. 1 + Apply clean_string to grants text.
 5. 1 + Apply clean_string to grants text + Train using fortytwo data (rather than usual 360 giving data).
+6. 1 + Apply clean_string to grants text not including grant type + Train using fortytwo data (rather than usual 360 giving data).
 
 There is quite a lot of variation in the results from the 6 different models (TFIDF + SVM, TFIDF + log_reg, ...). The trends remain the same regardless of experiment.
 
@@ -72,16 +73,17 @@ The average metrics of all models reveal that the best experiment is `remove sto
 
 ![](figures/training_experiments_average.png)
 
-It appears that the exclusion of the grant type data made the models perform worse.
+It appears that the exclusion of the grant type data made the models perform worse. However, we felt that including grant type in the training may not extend well in a future where grant type names might change. Note that the difference in results between experiment 5 (including grant type with 42 data) and 6 (not including grant type with 42 data) isn't too drastic anyway.
 
-|Metric|Experiment 0|Experiment 4|Experiment 5|
-|---|---|---|---|
-|Test precision (average of all models) | 0.791|0.822|0.825|
-|Test recall (average of all models) | 0.829|0.833|0.848|
-|Test precision (42 data) (average of all models) | 0.797|0.822|-|
-|Test recall (42 data) (average of all models) | 0.867|0.844|-|
-|EPMC accuracy (average of all models) | 0.676|0.706|0.699|
-|RF accuracy (average of all models) | 0.514|0.524|0.510|
+|Metric (average of all models)| Experiment 0|Experiment 1  |Experiment 2   |Experiment 3   |Experiment 4   |Experiment 5   |Experiment 6|
+|---|---|---|---|---|---|---|---|
+|Train F1   |0.997  |0.999  |0.999  |1.000  |1.000  |0.999  |0.999|
+|Test precision |0.791  |0.795  |0.792  |0.815  |0.822  |0.825  |0.822|
+|Test recall    |0.829  |0.821  |0.810  |0.827  |0.833  |0.848  |0.840|
+|Test precision (42)|0.797  |0.816  |0.816  |0.815  |0.822  |-  |-|
+|42 Test recall (42)|0.867  |0.846  |0.844  |0.842  |0.844  |-  |-|
+|EPMC accuracy  |0.676  |0.696  |0.687  |0.697  |0.706  |0.699  |0.691|
+|RF accuracy    |0.514  |0.552  |0.540  |0.519  |0.524  |0.510  |0.510|
 
 Note: When using the 42 data in the training the evaluation using 42 data is the same as the test metrics. Thus the 42 data evaluation is only really interesting to see how well the 360 giving data translates to 42 data.
 
@@ -93,35 +95,37 @@ Thus `grant_tagger.py` was adapted to:
 - Improved string cleaning of the training data.
 - The random seed is set to 1. Earlier we tried to optimise the value picked for this, but then this would overfit to the test data - so this time it wasn't picked with any thought for optimisation.
 
-A new model training config was made for training models (`configs/train_model/2021.03.31.ini`) which also takes the 42 grant data as an input to get the grant texts from.
+A new model training config was made for training models (`configs/train_model/2021.04.01.ini`) which also takes the 42 grant data as an input to get the grant texts from and doesn't include grant type.
 
 ## Performance
 
 I ran:
 ```
-python nutrition_labels/grant_tagger.py --config_path configs/train_model/2021.03.31.ini
+python nutrition_labels/grant_tagger.py --config_path configs/train_model/2021.04.01.ini
 ```
 
 I evaluated how well each model extended to make predictions of tech grants on the RF and EPMC datasets by running:
 ```
-nutrition_labels/grant_tagger_evaluation.py --model_config configs/train_model/2021.03.31.ini --epmc_file_dir data/processed/training_data/210329epmc/training_data.csv --rf_file_dir data/processed/training_data/210329rf/training_data.csv
+python nutrition_labels/grant_tagger_evaluation.py --model_config configs/train_model/2021.04.01.ini --epmc_file_dir data/processed/training_data/210329epmc/training_data.csv --rf_file_dir data/processed/training_data/210329rf/training_data.csv
 ``` 
 This script also outputs the test metrics for each model in one csv which gives:
 
-| Date   | Vectorizer | Classifier  | f1    | precision_score | recall_score | EPMC accuracy | RF accuracy | High scoring |
+| Date   | Vectorizer | Classifier  | f1    | precision_score | recall_score | EPMC accuracy | RF accuracy |High scoring |
 |--------|------------|-------------|-------|-----------------|--------------|---------------|-------------|---|
-| 210331 | count      | naive_bayes | 0.837 | 0.74            | 0.962        | 0.791         | 0.557       | x |
-| 210331 | count      | SVM         | 0.813 | 0.871           | 0.762        | 0.588         | 0.4         | |
-| 210331 | count      | log_reg     | 0.83  | 0.835           | 0.825        | 0.595         | 0.4         | |
-| 210331 | tfidf      | naive_bayes | 0.819 | 0.713           | 0.962        | 0.824         | 0.657       | x |
-| 210331 | tfidf      | SVM         | 0.83  | 0.91            | 0.762        | 0.635         | 0.429       | |
-| 210331 | tfidf      | log_reg     | 0.844 | 0.878           | 0.812        | 0.709         | 0.457       | x |
-| 210331 | bert       | naive_bayes | 0.802 | 0.77            | 0.838        | 0.818         | 0.571       | x |
-| 210331 | bert       | SVM         | 0.866 | 0.845           | 0.888        | 0.608         | 0.443       | |
-| 210331 | bert       | log_reg     | 0.862 | 0.862           | 0.862        | 0.588         | 0.443       | |
-| 210331 | scibert    | naive_bayes | 0.845 | 0.807           | 0.888        | 0.466         | 0.243       | |
-| 210331 | scibert    | SVM         | 0.828 | 0.787           | 0.875        | 0.689         | 0.514       | x |
-| 210331 | scibert    | log_reg     | 0.848 | 0.824           | 0.875        | 0.615         | 0.443       | |
+| 210401 | count      | naive_bayes | 0.828 | 0.726           | 0.962        | 0.784         | 0.614       | x |
+| 210401 | count      | SVM         | 0.816 | 0.896           | 0.75         | 0.568         | 0.386       ||
+| 210401 | count      | log_reg     | 0.825 | 0.825           | 0.825        | 0.588         | 0.371       ||
+| 210401 | tfidf      | naive_bayes | 0.811 | 0.7             | 0.962        | 0.818         | 0.671       | x |
+| 210401 | tfidf      | SVM         | 0.828 | 0.923           | 0.75         | 0.649         | 0.414       ||
+| 210401 | tfidf      | log_reg     | 0.824 | 0.863           | 0.788        | 0.709         | 0.457       | x |
+| 210401 | bert       | naive_bayes | 0.836 | 0.812           | 0.862        | 0.872         | 0.671       | x |
+| 210401 | bert       | SVM         | 0.85  | 0.816           | 0.888        | 0.642         | 0.486       ||
+| 210401 | bert       | log_reg     | 0.864 | 0.854           | 0.875        | 0.595         | 0.457       ||
+| 210401 | scibert    | naive_bayes | 0.845 | 0.807           | 0.888        | 0.797         | 0.557       | x |
+| 210401 | scibert    | SVM         | 0.847 | 0.8             | 0.9          | 0.709         | 0.5         ||
+| 210401 | scibert    | log_reg     | 0.852 | 0.841           | 0.862        | 0.669         | 0.5         ||
+
+aws s3 sync models/210401/ s3://datalabs-public/nutrition_labels/models/210401/
 
 ### Ensemble model
 

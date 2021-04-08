@@ -108,12 +108,12 @@ def get_model_scores_df(config, args):
     model_date_dir = os.path.join('models', config_version)
 
     model_names = os.listdir(f'{model_date_dir}')
-    model_names.remove('training_information.json')
-    model_names.remove('.DS_Store')
-    try:
-        model_names.remove('test_data_formatted.csv')
-    except:
-        print('test_data_formatted.csv not created yet')
+
+    # Remove items in this directory which aren't model names
+    not_model_names = ['training_information.json', '.DS_Store', 'test_data_formatted.csv']
+    for not_model_name in not_model_names:
+        if not_model_name in model_names:
+            model_names.remove(not_model_name)
 
     # Get EPMC and RF evaluation data
 
