@@ -2,7 +2,7 @@ This document will describe the results of the tech grant model after some addit
 
 Firstly, the original training dataset has been expanded since the work done on this project in 2020.
 
-# Training data 
+# Training data
 
 ## 2020 Training data
 
@@ -107,10 +107,10 @@ python nutrition_labels/grant_tagger.py --config_path configs/train_model/2021.0
 I evaluated how well each model extended to make predictions of tech grants on the RF and EPMC datasets by running:
 ```
 python nutrition_labels/grant_tagger_evaluation.py --model_config configs/train_model/2021.04.01.ini --epmc_file_dir data/processed/training_data/210329epmc/training_data.csv --rf_file_dir data/processed/training_data/210329rf/training_data.csv
-``` 
+```
 This script also outputs the test metrics for each model in one csv which gives:
 
-| Date   | Vectorizer | Classifier  | f1    | precision_score | recall_score | EPMC accuracy | RF accuracy |High scoring |
+| Date   | Vectorizer | Classifier  | f1    | precision_score | recall_score | EPMC accuracy | RF accuracy | High scoring |
 |--------|------------|-------------|-------|-----------------|--------------|---------------|-------------|---|
 | 210401 | count      | naive_bayes | 0.828 | 0.726           | 0.962        | 0.784         | 0.614       | x |
 | 210401 | count      | SVM         | 0.816 | 0.896           | 0.75         | 0.568         | 0.386       ||
@@ -127,4 +127,39 @@ This script also outputs the test metrics for each model in one csv which gives:
 
 ### Ensemble model
 
+#### Parameter experiments
 
+In `notebooks/Ensemble parameter exploration.ipynb` I look at different ensembles of these 12 models. The different parameters experimented with in this notebook are as follows:
+
+1. The combination of models (`2**12 - 1 = 4095` options).
+2. The probability threshold - if a model classifies a grant as tech with probability over a threshold then keep it classified as tech (varied between 0.5 and 0.95).
+3. The number of models that need to agree on a grant being a tech grant in order to classify it as tech (between 1 and all the models in the combination).
+
+By varying each of these 3 options I calculated the results of a total of 491,520 ensemble models. The precision and recall scores with a parameter varied are as follows (I introduced a small amount of randomness in the x and y axis since there were a lot of overlapping scores):
+
+![](figures/210401_params_together.png)
+
+These can be plotted along with the original single models as follows (no randomness was included in this plot, and I've zoomed in):
+
+![](figures/210401_original_ensemble.png)
+
+In order to optimise having a large precision and recall, I selected the 96 ensemble models which had a precision score of 0.92 and a recall of 0.8625. From these I chose the one which had a minimum number of models with BERT or SciBERT vectorizers since these make the predictions take longer. Thus my favourite ensemble to use was:
+
+1. Composed of the 3 models 'tfidf_SVM_210401', 'scibert_SVM_210401', 'scibert_log_reg_210401'
+2. The prediction probability needs to be over 0.85 in each model for the model's classification to be tech.
+3. 1 out of 3 needs to agree on a tech grant classification in order for the final classification to be tech.
+
+This ensemble gives the following results on the test set:
+
+||precision|recall |f1-score   |support|
+|--|---|---|---|---|
+|Not tech|0.87|0.92|0.89|77|
+|Tech|0.92|0.86|0.89|80|
+|accuracy|||0.89|157|
+|macro avg|0.89|0.89|0.89|157|
+|weighted avg|0.89|0.89|0.89|157|
+
+||Predicted not tech| Predicted tech|
+|---|---|---|
+|Actually not tech|71 |6|
+|Actually tech|11|69|
