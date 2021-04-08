@@ -376,7 +376,7 @@ def train_several_models(config):
                 prediction_cols=prediction_cols,
                 label_name=label_name,
             )
-            X_vect, y = grant_tagger.transform(training_data, train_data_id)
+            X_vect, y = grant_tagger.fit_transform(training_data, train_data_id)
 
             X_train, X_test, y_train, y_test = grant_tagger.split_data(X_vect, y)
 
