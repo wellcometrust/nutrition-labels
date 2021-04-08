@@ -42,11 +42,7 @@ def evaluate_data(evaluation_data, grant_tagger):
     """
     Predict evaluation data using grant_tagger and return the accuracy score.
     """
-
-    X_eval = evaluation_data[
-        list(grant_tagger.prediction_cols)
-        ].agg(". ".join, axis=1).apply(clean_string).tolist()
-    X_vect_eval = grant_tagger.vectorizer.transform(X_eval) 
+    X_vect_eval = grant_tagger.transform(evaluation_data)
     y_eval = evaluation_data["Relevance code"].tolist()
     eval_scores = grant_tagger.evaluate(X_vect_eval, y_eval)
 
