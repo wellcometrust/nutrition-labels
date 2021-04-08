@@ -125,8 +125,6 @@ This script also outputs the test metrics for each model in one csv which gives:
 | 210401 | scibert    | SVM         | 0.847 | 0.8             | 0.9          | 0.709         | 0.5         ||
 | 210401 | scibert    | log_reg     | 0.852 | 0.841           | 0.862        | 0.669         | 0.5         ||
 
-aws s3 sync models/210401/ s3://datalabs-public/nutrition_labels/models/210401/
-
 ### Ensemble model
 
 
