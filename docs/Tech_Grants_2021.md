@@ -118,12 +118,12 @@ This script also outputs the test metrics for each model in one csv which gives:
 | 210401 | tfidf      | naive_bayes | 0.811 | 0.7             | 0.962        | 0.818         | 0.671       | x |
 | 210401 | tfidf      | SVM         | 0.828 | 0.923           | 0.75         | 0.649         | 0.414       ||
 | 210401 | tfidf      | log_reg     | 0.824 | 0.863           | 0.788        | 0.709         | 0.457       | x |
-| 210401 | bert       | naive_bayes | 0.836 | 0.812           | 0.862        | 0.872         | 0.671       | x |
-| 210401 | bert       | SVM         | 0.85  | 0.816           | 0.888        | 0.642         | 0.486       ||
-| 210401 | bert       | log_reg     | 0.864 | 0.854           | 0.875        | 0.595         | 0.457       ||
-| 210401 | scibert    | naive_bayes | 0.845 | 0.807           | 0.888        | 0.797         | 0.557       | x |
-| 210401 | scibert    | SVM         | 0.847 | 0.8             | 0.9          | 0.709         | 0.5         ||
-| 210401 | scibert    | log_reg     | 0.852 | 0.841           | 0.862        | 0.669         | 0.5         ||
+| 210401 | bert       | naive_bayes | 0.753 | 0.64            | 0.912        | 0.007         | 0           ||
+| 210401 | bert       | SVM         | 0.848 | 0.824           | 0.875        | 0.642         | 0.457       ||
+| 210401 | bert       | log_reg     | 0.894 | 0.889           | 0.9          | 0.628         | 0.4         | x |
+| 210401 | scibert    | naive_bayes | 0.811 | 0.73            | 0.912        | 0             | 0           ||
+| 210401 | scibert    | SVM         | 0.835 | 0.789           | 0.888        | 0.75          | 0.514       ||
+| 210401 | scibert    | log_reg     | 0.861 | 0.835           | 0.888        | 0.689         | 0.5         | x |
 
 ### Ensemble model
 
@@ -143,23 +143,23 @@ These can be plotted along with the original single models as follows (no random
 
 ![](figures/210401_original_ensemble.png)
 
-In order to optimise having a large precision and recall, I selected the 96 ensemble models which had a precision score of 0.92 and a recall of 0.8625. From these I chose the one which had a minimum number of models with BERT or SciBERT vectorizers since these make the predictions take longer. Thus my favourite ensemble to use was:
+In order to optimise having a large precision and recall, I selected the 4 ensemble models which had a precision score of 0.911392 and a recall of 0.9. From these I chose the one which had a minimum number of models since these make the predictions take longer. Thus my favourite ensemble to use was:
 
-1. Composed of the 3 models 'tfidf_SVM_210401', 'scibert_SVM_210401', 'scibert_log_reg_210401'
-2. The prediction probability needs to be over 0.85 in each model for the model's classification to be tech.
-3. 1 out of 3 needs to agree on a tech grant classification in order for the final classification to be tech.
+1. Composed of the 3 models 'tfidf_SVM_210401', 'bert_naive_bayes_210401', 'bert_log_reg_210401'
+2. The prediction probability needs to be over 0.55 in each model for the model's classification to be tech.
+3. 2 out of 3 needs to agree on a tech grant classification in order for the final classification to be tech.
 
 This ensemble gives the following results on the test set:
 
 ||precision|recall |f1-score   |support|
 |--|---|---|---|---|
-|Not tech|0.87|0.92|0.89|77|
-|Tech|0.92|0.86|0.89|80|
-|accuracy|||0.89|157|
-|macro avg|0.89|0.89|0.89|157|
-|weighted avg|0.89|0.89|0.89|157|
+|Not tech|0.89|0.91|0.90|77|
+|Tech|0.91|0.89|0.90|80|
+|accuracy|||0.90|157|
+|macro avg|0.90|0.90|0.90|157|
+|weighted avg|0.90|0.90|0.90|157|
 
 ||Predicted not tech| Predicted tech|
 |---|---|---|
-|Actually not tech|71 |6|
-|Actually tech|11|69|
+|Actually not tech|70 |7|
+|Actually tech|9|71|
