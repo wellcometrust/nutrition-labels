@@ -107,13 +107,10 @@ def get_model_scores_df(config, args):
     config_version = "".join(config["DEFAULT"]["version"].split("."))[2:]
     model_date_dir = os.path.join('models', config_version)
 
-    model_names = os.listdir(f'{model_date_dir}')
-
-    # Remove items in this directory which aren't model names
-    not_model_names = ['training_information.json', '.DS_Store', 'test_data_formatted.csv']
-    for not_model_name in not_model_names:
-        if not_model_name in model_names:
-            model_names.remove(not_model_name)
+    # Get the model folders from this directory
+    model_names = [item for item in os.listdir(model_date_dir) if os.path.isdir(
+        os.path.join(model_date_dir, item)
+        )]
 
     # Get EPMC and RF evaluation data
 
