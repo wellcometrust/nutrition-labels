@@ -5,7 +5,7 @@ pandas
 sklearn
 beautifulsoup4
 lxml
-wellcomeml[deep-learning]==2020.11.1
+-e git+git://github.com/wellcometrust/WellcomeML.git@dbb71d863bca32890e703d44c1ffbbb680de760a#egg=wellcomeml[deep-learning]
 docutils==0.15.2
 bokeh==2.1.0
 scholarly
