@@ -145,6 +145,9 @@ class GrantTagger:
         X = data["Grant texts"].tolist()
         X_vect = self.vectorizer.transform(X)
 
+        if self.scaler:
+            X_vect = self.scaler.transform(X_vect)
+            
         return X_vect
 
     def fit_transform(self, data, train_data_id="Internal ID"):
@@ -177,9 +180,12 @@ class GrantTagger:
             print("Vectorizer type not recognised")
         self.X_vect = self.vectorizer.fit_transform(self.X)
 
+        # For BERT/SciBERT + naive bayes the values need to be between 0 and 1, 
+        # so scale the values.
+        self.scaler = None
         if "bert" in self.vectorizer_type and self.classifier_type == "naive_bayes":
-            scaler = MinMaxScaler()
-            self.X_vect = scaler.fit_transform(self.X_vect)
+            self.scaler = MinMaxScaler()
+            self.X_vect = self.scaler.fit_transform(self.X_vect)
 
         return self.X_vect, self.y
 
@@ -318,6 +324,9 @@ class GrantTagger:
             pickle.dump(self.model, f)
         with open(os.path.join(output_path, "vectorizer.pickle"), "wb") as f:
             pickle.dump(self.vectorizer, f)
+        if self.scaler:
+            with open(os.path.join(output_path, "vectorizer_scaler.pickle"), "wb") as f:
+                pickle.dump(self.scaler, f)
 
         if evaluation_results:
             evaluation_results["Vectorizer type"] = self.vectorizer_type
@@ -332,6 +341,12 @@ class GrantTagger:
             self.model = pickle.load(f)
         with open(os.path.join(output_path, "vectorizer.pickle"), "rb") as f:
             self.vectorizer = pickle.load(f)
+        try:
+            with open(os.path.join(output_path, "vectorizer_scaler.pickle"), "rb") as f:
+                self.scaler = pickle.load(f)
+        except FileNotFoundError:
+            self.scaler = None
+
 
 
 def load_training_data(config, prediction_cols, train_data_id):
