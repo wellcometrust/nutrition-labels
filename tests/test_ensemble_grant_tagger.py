@@ -1,5 +1,4 @@
 import pytest
-import tempfile
 import os
 
 import pandas as pd
@@ -20,66 +19,64 @@ text_data = pd.DataFrame(
             ]
         )
 
-def test_load_grants_text():
+def test_load_grants_text(tmp_path):
 
-    with tempfile.TemporaryDirectory() as tmp_dir:
-        grants_data_path = os.path.join(tmp_dir, 'text_data.csv')
-        text_data.to_csv(grants_data_path)
-        ensemble_gt = EnsembleGrantTagger(
-            model_dirs = [],
-            grant_text_cols = ['text_1', 'text_2'],
-            grant_id_col = 'id',
-            )
-        grants_text = ensemble_gt.load_grants_text(grants_data_path)
+    grants_data_path = os.path.join(tmp_path, 'text_data.csv')
+    text_data.to_csv(grants_data_path)
+    ensemble_gt = EnsembleGrantTagger(
+        model_dirs = [],
+        grant_text_cols = ['text_1', 'text_2'],
+        grant_id_col = 'id',
+        )
+    grants_text = ensemble_gt.load_grants_text(grants_data_path)
 
-        assert len(grants_text) == 7
-        assert all(text is not None for text in grants_text)
+    assert len(grants_text) == 7
+    assert all(text is not None for text in grants_text)
 
-def test_predict():
+def test_predict(tmp_path):
 
-    with tempfile.TemporaryDirectory() as tmp_dir:
-        model_dirs = []
-        individual_pred = []
-        for i, vectorizer in enumerate(["count", "count", "tfidf"]):
-            grant_tagger = GrantTagger(
-                    vectorizer_type=vectorizer,
-                    classifier_type="naive_bayes",
-                    prediction_cols=['text_1', 'text_2'],
-                    label_name="label",
-                    pred_prob_threshold=None,
-                    )
-            X_vect, y = grant_tagger.fit_transform(text_data, "id")
-            grant_tagger.fit(X_vect[0:3], y[0:3]) # This means count and tdidf results are different
-            individual_pred.append(list(grant_tagger.predict(X_vect)))
-            model_dir = os.path.join(tmp_dir, str(i))
-            grant_tagger.save_model(model_dir)
-            model_dirs.append(model_dir)
-        grants_data_path = os.path.join(tmp_dir, 'text_data.csv')
-        text_data.to_csv(grants_data_path)
+    model_dirs = []
+    individual_pred = []
+    for i, vectorizer in enumerate(["count", "count", "tfidf"]):
+        grant_tagger = GrantTagger(
+                vectorizer_type=vectorizer,
+                classifier_type="naive_bayes",
+                prediction_cols=['text_1', 'text_2'],
+                label_name="label",
+                pred_prob_threshold=None,
+                )
+        X_vect, y = grant_tagger.fit_transform(text_data, "id")
+        grant_tagger.fit(X_vect[0:3], y[0:3]) # This means count and tdidf results are different
+        individual_pred.append(list(grant_tagger.predict(X_vect)))
+        model_dir = os.path.join(tmp_path, str(i))
+        grant_tagger.save_model(model_dir)
+        model_dirs.append(model_dir)
+    grants_data_path = os.path.join(tmp_path, 'text_data.csv')
+    text_data.to_csv(grants_data_path)
 
-        # Test that if 2 need to agree then the output will be the same
-        # as one of the count vectorizer individual outputs
-        ensemble_gt = EnsembleGrantTagger(
-            model_dirs = model_dirs,
-            grant_text_cols = ['text_1', 'text_2'],
-            grant_id_col = 'id',
-            num_agree = 2
-            )
-        grants_text = ensemble_gt.load_grants_text(grants_data_path)
-        final_predictions = ensemble_gt.predict(grants_text)
-        assert final_predictions == individual_pred[0]
-        
-        # Test that with impossibly high threshold everything is returned as 0
-        ensemble_gt = EnsembleGrantTagger(
-            model_dirs = model_dirs,
-            grant_text_cols = ['text_1', 'text_2'],
-            grant_id_col = 'id',
-            num_agree = 2,
-            pred_prob_threshold = 1.1
-            )
-        grants_text = ensemble_gt.load_grants_text(grants_data_path)
-        final_predictions = ensemble_gt.predict(grants_text)
-        assert len(final_predictions) == 7
-        assert all(pred==0 for pred in final_predictions)
+    # Test that if 2 need to agree then the output will be the same
+    # as one of the count vectorizer individual outputs
+    ensemble_gt = EnsembleGrantTagger(
+        model_dirs = model_dirs,
+        grant_text_cols = ['text_1', 'text_2'],
+        grant_id_col = 'id',
+        num_agree = 2
+        )
+    grants_text = ensemble_gt.load_grants_text(grants_data_path)
+    final_predictions = ensemble_gt.predict(grants_text)
+    assert final_predictions == individual_pred[0]
+    
+    # Test that with impossibly high threshold everything is returned as 0
+    ensemble_gt = EnsembleGrantTagger(
+        model_dirs = model_dirs,
+        grant_text_cols = ['text_1', 'text_2'],
+        grant_id_col = 'id',
+        num_agree = 2,
+        pred_prob_threshold = 1.1
+        )
+    grants_text = ensemble_gt.load_grants_text(grants_data_path)
+    final_predictions = ensemble_gt.predict(grants_text)
+    assert len(final_predictions) == 7
+    assert all(pred==0 for pred in final_predictions)
 
         

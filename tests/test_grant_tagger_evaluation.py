@@ -1,5 +1,4 @@
 import pytest
-import tempfile
 import os
 import json
 
@@ -26,18 +25,17 @@ model_scores = [
     },
     ]
 
-def test_get_model_test_scores():
+def test_get_model_test_scores(tmp_path):
 
-    with tempfile.TemporaryDirectory() as tmp_dir:
-        with open(os.path.join(tmp_dir, "training_information.json"), "a") as f:
-            for line in model_scores:
-                f.write(json.dumps(line))
-                f.write('\n')
-        all_models_info = get_model_test_scores(tmp_dir)
+    with open(os.path.join(tmp_path, "training_information.json"), "a") as f:
+        for line in model_scores:
+            f.write(json.dumps(line))
+            f.write('\n')
+    all_models_info = get_model_test_scores(tmp_path)
 
-        assert len(all_models_info) == 2
-        assert all_models_info['model_1']['f1'] == 0
-        assert all_models_info['model_2']['f1'] == 1
+    assert len(all_models_info) == 2
+    assert all_models_info['model_1']['f1'] == 0
+    assert all_models_info['model_2']['f1'] == 1
 
 
 def test_get_evaluation_data_scores():
