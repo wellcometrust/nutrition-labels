@@ -144,7 +144,7 @@ def test_deduplicate_similar_grants():
     assert len(grant_data) == 1
 
 
-def test_load_prodigy_tags():
+def test_load_prodigy_tags(tmp_path):
 
     prodigy_data = [
         {
@@ -179,13 +179,12 @@ def test_load_prodigy_tags():
         },
     ]
 
-    with tempfile.TemporaryDirectory() as tmp_dir:
-        prodigy_data_dir = os.path.join(tmp_dir, "prodigy_data.jsonl")
-        with open(prodigy_data_dir, "w") as json_file:
-            for entry in prodigy_data:
-                json.dump(entry, json_file)
-                json_file.write("\n")
-        training_data = load_prodigy_tags(prodigy_data_dir)
+    prodigy_data_dir = os.path.join(tmp_path, "prodigy_data.jsonl")
+    with open(prodigy_data_dir, "w") as json_file:
+        for entry in prodigy_data:
+            json.dump(entry, json_file)
+            json_file.write("\n")
+    training_data = load_prodigy_tags(prodigy_data_dir)
 
     correct_labels = {
         "987654/A/19/Z": 1,

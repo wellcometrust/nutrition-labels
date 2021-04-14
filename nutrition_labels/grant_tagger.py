@@ -74,6 +74,9 @@ class GrantTagger:
         they will be merged into one. 
     label_name : str (default "Relevance code")
         The column name of the classification truth label.
+    threshold : float (default None)
+        A prediction probability threshold that needs to be satisfied for a datapoint
+        to be predicted as tech.
 
     Methods
     -------
@@ -108,6 +111,7 @@ class GrantTagger:
         classifier_type="naive_bayes",
         prediction_cols=["Title", "Grant Programme:Title", "Description"],
         label_name="Relevance code",
+        threshold=None,
     ):
         self.test_size = test_size
         self.relevant_sample_ratio = relevant_sample_ratio
@@ -116,13 +120,14 @@ class GrantTagger:
         self.classifier_type = classifier_type
         self.prediction_cols = (*prediction_cols,)
         self.label_name = label_name
+        self.threshold = threshold
 
     def process_grant_text(self, data):
         """
         Create a new column of a pandas dataframe which included
         the merged and cleaned text from multiple columns.
         """
-
+        data.fillna('', inplace=True)
         data["Grant texts"] = data[list(self.prediction_cols)].agg(
             ". ".join, axis=1
         ).apply(clean_string)
@@ -140,6 +145,9 @@ class GrantTagger:
         X = data["Grant texts"].tolist()
         X_vect = self.vectorizer.transform(X)
 
+        if self.scaler:
+            X_vect = self.scaler.transform(X_vect)
+            
         return X_vect
 
     def fit_transform(self, data, train_data_id="Internal ID"):
@@ -172,9 +180,12 @@ class GrantTagger:
             print("Vectorizer type not recognised")
         self.X_vect = self.vectorizer.fit_transform(self.X)
 
+        # For BERT/SciBERT + naive bayes the values need to be between 0 and 1, 
+        # so scale the values.
+        self.scaler = None
         if "bert" in self.vectorizer_type and self.classifier_type == "naive_bayes":
-            scaler = MinMaxScaler()
-            self.X_vect = scaler.fit_transform(self.X_vect)
+            self.scaler = MinMaxScaler()
+            self.X_vect = self.scaler.fit_transform(self.X_vect)
 
         return self.X_vect, self.y
 
@@ -230,7 +241,15 @@ class GrantTagger:
         self.model = model.fit(X, y)
 
     def predict(self, X):
-        return self.model.predict(X)
+        y_predict = self.model.predict(X).astype(int)
+        if self.threshold:
+            # If the prediction probability is over a threshold then allow a 1
+            # prediction to stay as 1, otherwise switch to 0.
+            # A prediction of 0 will stay at 0 regardless of probability.
+            pred_probs = self.model.predict_proba(X)
+            y_predict = y_predict*(np.max(pred_probs, axis=1) >= self.threshold)
+
+        return y_predict
 
     def predict_proba(self, X):
         return self.model.predict_proba(X)
@@ -305,6 +324,9 @@ class GrantTagger:
             pickle.dump(self.model, f)
         with open(os.path.join(output_path, "vectorizer.pickle"), "wb") as f:
             pickle.dump(self.vectorizer, f)
+        if self.scaler:
+            with open(os.path.join(output_path, "vectorizer_scaler.pickle"), "wb") as f:
+                pickle.dump(self.scaler, f)
 
         if evaluation_results:
             evaluation_results["Vectorizer type"] = self.vectorizer_type
@@ -319,6 +341,12 @@ class GrantTagger:
             self.model = pickle.load(f)
         with open(os.path.join(output_path, "vectorizer.pickle"), "rb") as f:
             self.vectorizer = pickle.load(f)
+        try:
+            with open(os.path.join(output_path, "vectorizer_scaler.pickle"), "rb") as f:
+                self.scaler = pickle.load(f)
+        except FileNotFoundError:
+            self.scaler = None
+
 
 
 def load_training_data(config, prediction_cols, train_data_id):
