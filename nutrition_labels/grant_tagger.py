@@ -157,7 +157,11 @@ class GrantTagger:
         data.reset_index(inplace=True, drop=True)
 
         # Randomly shuffle the data
-        data = data.sample(frac=1, random_state=self.split_seed)
+        random_index = list(range(len(data)))
+        seed(self.split_seed)
+        shuffle(random_index)
+        data = data.iloc[random_index, :]
+        data.reset_index(inplace=True)
 
         relevant_sample_index = data[data[self.label_name] != 0].index.values.tolist()
         irrelevant_sample_index = data[data[self.label_name] == 0].index.values.tolist()
@@ -175,7 +179,6 @@ class GrantTagger:
             ]
             # Make sure they are in order otherwise it'll be all 1111s and then 0000s
             sample_index.sort()
-            data.reset_index(inplace=True)
 
             # Store data not in sample
             not_sample_index = data.index.difference(sample_index)
