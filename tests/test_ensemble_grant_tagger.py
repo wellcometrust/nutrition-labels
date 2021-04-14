@@ -43,7 +43,7 @@ def test_predict(tmp_path):
                 classifier_type="naive_bayes",
                 prediction_cols=['text_1', 'text_2'],
                 label_name="label",
-                pred_prob_threshold=None,
+                threshold=None,
                 )
         X_vect, y = grant_tagger.fit_transform(text_data, "id")
         grant_tagger.fit(X_vect[0:3], y[0:3]) # This means count and tdidf results are different
@@ -72,7 +72,7 @@ def test_predict(tmp_path):
         grant_text_cols = ['text_1', 'text_2'],
         grant_id_col = 'id',
         num_agree = 2,
-        pred_prob_threshold = 1.1
+        threshold = 1.1
         )
     grants_text = ensemble_gt.load_grants_text(grants_data_path)
     final_predictions = ensemble_gt.predict(grants_text)

@@ -30,12 +30,12 @@ class EnsembleGrantTagger():
         num_agree=3,
         grant_text_cols = ['Title', 'Grant Programme:Title', 'Description'],
         grant_id_col = 'Internal ID',
-        pred_prob_threshold = None):
+        threshold = None):
         self.model_dirs = model_dirs
         self.num_agree = num_agree
         self.grant_text_cols = grant_text_cols
         self.grant_id_col = grant_id_col
-        self.pred_prob_threshold = pred_prob_threshold
+        self.threshold = threshold
 
     def load_grants_text(self, grants_data_path):
         """
@@ -55,7 +55,7 @@ class EnsembleGrantTagger():
     def load_model(self, model_path):
 
         # Loading a trained model and vectorizer to predict on all the grants data:
-        grant_tagger_loaded = GrantTagger(pred_prob_threshold=self.pred_prob_threshold)
+        grant_tagger_loaded = GrantTagger(threshold=self.threshold)
         grant_tagger_loaded.load_model(model_path)
 
         return grant_tagger_loaded
@@ -127,7 +127,7 @@ if __name__ == '__main__':
         num_agree=config.getint("ensemble_model", "num_agree"),
         grant_text_cols=config["prediction_data"]["grant_text_cols"].split(','),
         grant_id_col=config["prediction_data"]["grant_id_col"],
-        pred_prob_threshold=pred_prob_thresh
+        threshold=pred_prob_thresh
         )
 
     grants_text = tech_grant_model.load_grants_text(grants_data_path)

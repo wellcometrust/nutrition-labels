@@ -74,7 +74,7 @@ class GrantTagger:
         they will be merged into one. 
     label_name : str (default "Relevance code")
         The column name of the classification truth label.
-    pred_prob_threshold : float (default None)
+    threshold : float (default None)
         A prediction probability threshold that needs to be satisfied for a datapoint
         to be predicted as tech.
 
@@ -111,7 +111,7 @@ class GrantTagger:
         classifier_type="naive_bayes",
         prediction_cols=["Title", "Grant Programme:Title", "Description"],
         label_name="Relevance code",
-        pred_prob_threshold=None,
+        threshold=None,
     ):
         self.test_size = test_size
         self.relevant_sample_ratio = relevant_sample_ratio
@@ -120,7 +120,7 @@ class GrantTagger:
         self.classifier_type = classifier_type
         self.prediction_cols = (*prediction_cols,)
         self.label_name = label_name
-        self.pred_prob_threshold = pred_prob_threshold
+        self.threshold = threshold
 
     def process_grant_text(self, data):
         """
@@ -242,12 +242,12 @@ class GrantTagger:
 
     def predict(self, X):
         y_predict = self.model.predict(X).astype(int)
-        if self.pred_prob_threshold:
+        if self.threshold:
             # If the prediction probability is over a threshold then allow a 1
             # prediction to stay as 1, otherwise switch to 0.
             # A prediction of 0 will stay at 0 regardless of probability.
             pred_probs = self.model.predict_proba(X)
-            y_predict = y_predict*(np.max(pred_probs, axis=1) >= self.pred_prob_threshold)
+            y_predict = y_predict*(np.max(pred_probs, axis=1) >= self.threshold)
 
         return y_predict
 
