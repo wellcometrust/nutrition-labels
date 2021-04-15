@@ -138,29 +138,43 @@ In `notebooks/Ensemble parameter exploration.ipynb` I look at different ensemble
 
 By varying each of these 3 options I calculated the results of a total of 491,520 ensemble models. The precision and recall scores with a parameter varied are as follows (I introduced a small amount of randomness in the x and y axis since there were a lot of overlapping scores):
 
-![](figures/210401_params_together.png)
+![](figures/210402_params_together.png)
 
 These can be plotted along with the original single models as follows (no randomness was included in this plot, and I've zoomed in):
 
-![](figures/210401_original_ensemble.png)
+![](figures/210402_original_ensemble.png)
 
-In order to optimise having a large precision and recall, I selected the 4 ensemble models which had a precision score of 0.911392 and a recall of 0.9. From these I chose the one which had a minimum number of models since these make the predictions take longer. Thus my favourite ensemble to use was:
+There were 15 ensemble models which gave a precision and recall score of 0.9. To select from these I wanted to pick ones that required less processing time - which boiled down to how many BERT based models there were in the ensemble. Thus the 4 models with <=2 BERT based models were:
 
-1. Composed of the 3 models 'tfidf_SVM_210401', 'bert_naive_bayes_210401', 'bert_log_reg_210401'
+|Models in ensemble | Number of models | Number that need to agree | Threshold | Precision | Recall | EPMC accuracy |	RF accuracy| Unused accuracy|
+| --- | --- |  --- | --- | --- |---|--- |---|---|
+|bert_log_reg|**1**|1|0.55|0.9|0.9|**0.61**	|**0.4**|0.87|
+|count_naive_bayes, bert_log_reg|2|2|0.55|0.9|0.9|0.55	|**0.4**|0.90|
+|count_naive_bayes, tfidf_naive_bayes, bert_SVM, bert_log_reg |4|2|0.67|0.9|0.9|0.47|	0.27|**0.94**|
+|count_naive_bayes, tfidf_naive_bayes, tfidf_log_reg, bert_SVM, bert_log_reg|5|2|0.67|0.9|0.9|0.47	|0.27|**0.94**|
+
+Note that the EPMC dataset was composed of 148 tech grants, the Research Fish composed of 70 tech grants and the unused data is 175 not tech grants.
+
+Thus, the ensemble model I felt best to use going forward was:
+1. Composed of 1 model 'bert_log_reg_210402'
 2. The prediction probability needs to be over 0.55 in each model for the model's classification to be tech.
-3. 2 out of 3 needs to agree on a tech grant classification in order for the final classification to be tech.
+3. 1 out of 1 needs to agree on a tech grant classification in order for the final classification to be tech.
 
 This ensemble gives the following results on the test set:
 
 ||precision|recall |f1-score   |support|
 |--|---|---|---|---|
-|Not tech|0.89|0.91|0.90|77|
-|Tech|0.91|0.89|0.90|80|
+|Not tech|0.90|0.90|0.90|77|
+|Tech|0.90|0.90|0.90|80|
 |accuracy|||0.90|157|
 |macro avg|0.90|0.90|0.90|157|
 |weighted avg|0.90|0.90|0.90|157|
 
 ||Predicted not tech| Predicted tech|
 |---|---|---|
-|Actually not tech|70 |7|
-|Actually tech|9|71|
+|Actually not tech|69 |8|
+|Actually tech|8|72|
+
+- 61% of grants identified as producing tech via EPMC data was also classified as producing tech from the grant description.
+- 40% of grants identified as producing tech via ResearchFish data was also classified as producing tech from the grant description.
+- 87% of grants identified as not producing tech, but not used in the training or test data, was classified correctly as so.
