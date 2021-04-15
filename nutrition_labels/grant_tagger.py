@@ -185,7 +185,7 @@ class GrantTagger:
             unused_data = data.iloc[not_sample_index, :]
             self.X_unused = unused_data['Grant texts'].tolist()
             self.y_unused = unused_data[self.label_name].tolist()
-            self.unused_ids = unused_data['Internal ID'].tolist()
+            self.unused_ids = unused_data[train_data_id].tolist()
             # Sample data
             data = data.iloc[sample_index, :]
         else:
@@ -201,8 +201,8 @@ class GrantTagger:
                 X, y, test_size=self.test_size, shuffle=False
             )
 
-        self.X_train_ids = X_train['Internal ID'].tolist()
-        self.X_test_ids = X_test['Internal ID'].tolist()
+        self.X_train_ids = X_train[train_data_id].tolist()
+        self.X_test_ids = X_test[train_data_id].tolist()
 
         X_train = X_train['Grant texts'].tolist()
         X_test = X_test['Grant texts'].tolist()
@@ -244,6 +244,9 @@ class GrantTagger:
         self.X_train_vect = self.vectorizer.fit_transform(X)
         self.model = model.fit(self.X_train_vect, y)
 
+    def apply_threshold(self, y_predict, pred_probs):
+        return y_predict*(np.max(pred_probs, axis=1) >= self.threshold)
+
     def predict(self, X):
         y_predict = self.model.predict(X).astype(int)
         if self.threshold:
@@ -251,7 +254,7 @@ class GrantTagger:
             # prediction to stay as 1, otherwise switch to 0.
             # A prediction of 0 will stay at 0 regardless of probability.
             pred_probs = self.model.predict_proba(X)
-            y_predict = y_predict*(np.max(pred_probs, axis=1) >= self.threshold)
+            y_predict = self.apply_threshold(y_predict, pred_probs)
 
         return y_predict
 
@@ -305,16 +308,17 @@ class GrantTagger:
 
         training_info = {}
         for split_type, (vectors, grant_ids, actuals) in all_info.items():
-            preds = self.predict(vectors)
-            pred_probs = self.predict_proba(vectors)
-            pred_probs = np.max(pred_probs, axis=1)
-            for grant_id, actual, pred, pred_prob in zip(grant_ids, actuals, preds, pred_probs):
-                training_info[grant_id] = {
-                    "Truth": int(actual),
-                    "Prediction": int(pred),
-                    "Prediction probability": pred_prob,
-                    "Test/train": split_type,
-                }
+            if len(grant_ids) != 0:
+                preds = self.predict(vectors)
+                pred_probs = self.predict_proba(vectors)
+                pred_probs = np.max(pred_probs, axis=1)
+                for grant_id, actual, pred, pred_prob in zip(grant_ids, actuals, preds, pred_probs):
+                    training_info[grant_id] = {
+                        "Truth": int(actual),
+                        "Prediction": int(pred),
+                        "Prediction probability": pred_prob,
+                        "Test/train": split_type,
+                    }
 
         return training_info
 
