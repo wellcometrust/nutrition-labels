@@ -101,29 +101,30 @@ A new model training config was made for training models (`configs/train_model/2
 
 I ran:
 ```
-python nutrition_labels/grant_tagger.py --config_path configs/train_model/2021.04.01.ini
+python nutrition_labels/grant_tagger.py --config_path configs/train_model/2021.04.02.ini
 ```
 
 I evaluated how well each model extended to make predictions of tech grants on the RF and EPMC datasets by running:
 ```
-python nutrition_labels/grant_tagger_evaluation.py --model_config configs/train_model/2021.04.01.ini --epmc_file_dir data/processed/training_data/210329epmc/training_data.csv --rf_file_dir data/processed/training_data/210329rf/training_data.csv
+python nutrition_labels/grant_tagger_evaluation.py --model_config configs/train_model/2021.04.02.ini --epmc_file_dir data/processed/training_data/210329epmc/training_data.csv --rf_file_dir data/processed/training_data/210329rf/training_data.csv
 ```
 This script also outputs the test metrics for each model in one csv which gives:
 
-| Date   | Vectorizer | Classifier  | f1    | precision_score | recall_score | EPMC accuracy | RF accuracy | High scoring |
-|--------|------------|-------------|-------|-----------------|--------------|---------------|-------------|---|
-| 210401 | count      | naive_bayes | 0.828 | 0.726           | 0.962        | 0.784         | 0.614       | x |
-| 210401 | count      | SVM         | 0.816 | 0.896           | 0.75         | 0.568         | 0.386       ||
-| 210401 | count      | log_reg     | 0.825 | 0.825           | 0.825        | 0.588         | 0.371       ||
-| 210401 | tfidf      | naive_bayes | 0.811 | 0.7             | 0.962        | 0.818         | 0.671       | x |
-| 210401 | tfidf      | SVM         | 0.828 | 0.923           | 0.75         | 0.649         | 0.414       ||
-| 210401 | tfidf      | log_reg     | 0.824 | 0.863           | 0.788        | 0.709         | 0.457       | x |
-| 210401 | bert       | naive_bayes | 0.753 | 0.64            | 0.912        | 0.007         | 0           ||
-| 210401 | bert       | SVM         | 0.848 | 0.824           | 0.875        | 0.642         | 0.457       ||
-| 210401 | bert       | log_reg     | 0.894 | 0.889           | 0.9          | 0.628         | 0.4         | x |
-| 210401 | scibert    | naive_bayes | 0.811 | 0.73            | 0.912        | 0             | 0           ||
-| 210401 | scibert    | SVM         | 0.835 | 0.789           | 0.888        | 0.75          | 0.514       ||
-| 210401 | scibert    | log_reg     | 0.861 | 0.835           | 0.888        | 0.689         | 0.5         | x |
+| Date   | Vectorizer | Classifier  | f1    | precision_score | recall_score | EPMC accuracy | RF accuracy |
+|--------|------------|-------------|-------|-----------------|--------------|---------------|-------------|
+| 210402 | count      | naive_bayes | 0.828 | 0.726           | 0.962        | 0.784         | 0.614       |
+| 210402 | count      | SVM         | 0.821 | 0.842           | 0.8          | 0.568         | 0.386       |
+| 210402 | count      | log_reg     | 0.825 | 0.825           | 0.825        | 0.588         | 0.371       |
+| 210402 | tfidf      | naive_bayes | 0.811 | 0.7             | 0.962        | 0.811         | 0.657       |
+| 210402 | tfidf      | SVM         | 0.829 | 0.81            | 0.85         | 0.662         | 0.429       |
+| 210402 | tfidf      | log_reg     | 0.824 | 0.778           | 0.875        | 0.736         | 0.457       |
+| 210402 | bert       | naive_bayes | 0.764 | 0.658           | 0.912        | 0.838         | 0.614       |
+| 210402 | bert       | SVM         | 0.848 | 0.824           | 0.875        | 0.642         | 0.457       |
+| 210402 | bert       | log_reg     | 0.894 | 0.889           | 0.9          | 0.628         | 0.4         |
+| 210402 | scibert    | naive_bayes | 0.809 | 0.735           | 0.9          | 0.791         | 0.643       |
+| 210402 | scibert    | SVM         | 0.835 | 0.789           | 0.888        | 0.75          | 0.514       |
+| 210402 | scibert    | log_reg     | 0.861 | 0.835           | 0.888        | 0.689         | 0.5         |
+
 
 ### Ensemble model
 
