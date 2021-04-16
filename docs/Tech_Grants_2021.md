@@ -178,3 +178,9 @@ This ensemble gives the following results on the test set:
 - 61% of grants identified as producing tech via EPMC data was also classified as producing tech from the grant description.
 - 40% of grants identified as producing tech via ResearchFish data was also classified as producing tech from the grant description.
 - 87% of grants identified as not producing tech, but not used in the training or test data, was classified correctly as so.
+
+Running:
+```
+python -i nutrition_labels/ensemble_grant_tagger.py --config_path configs/ensemble/2021.04.02.ini
+```
+gave 424 tech grants predicted in 991 grants.
