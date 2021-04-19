@@ -88,10 +88,10 @@ We perform cluster analysis to look at themes within the tech grants. This analy
 
 ## Using the tech grants tagger
 
-Create a config file with the name of the grants data csv file you want to predict on, the names of the columns of text, and which models to use and how many need to agree (see `configs/ensemble/2020.02.21.ini` for structure). Then input this config as an argument to `ensemble_grant_tagger.py`, for example:
+Create a config file with the name of the grants data csv file you want to predict on, the names of the columns of text, and which model(s) to use (if multiple then you can also define how many models need to agree) (see `configs/predict/2021.04.02.ini` for structure). Then input this config as an argument to `predict.py`, for example:
 
 ```
-python nutrition_labels/ensemble_grant_tagger.py --config_path configs/ensemble/2020.02.21.ini
+python -i nutrition_labels/predict.py --config_path configs/predict/2021.04.02.ini
 ```
 
 This will output a csv file of grant ID - tech or not predictions.

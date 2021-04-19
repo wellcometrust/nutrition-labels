@@ -160,6 +160,12 @@ Thus, the ensemble model I felt best to use going forward was:
 2. The prediction probability needs to be over 0.55 in each model for the model's classification to be tech.
 3. 1 out of 1 needs to agree on a tech grant classification in order for the final classification to be tech.
 
+Running:
+```
+python nutrition_labels/evaluate.py --config_path configs/evaluation/2021.04.02.ini
+```
+will evaluate the model on the test, not seen data (if there was any), and the EPMC and RF evaluation data. This will work for configs with one model in, or multiple. The output file `data/processed/ensemble/210402/evaluation_results.txt` is stored.
+
 This ensemble gives the following results on the test set:
 
 ||precision|recall |f1-score   |support|
@@ -181,6 +187,6 @@ This ensemble gives the following results on the test set:
 
 Running:
 ```
-python -i nutrition_labels/ensemble_grant_tagger.py --config_path configs/ensemble/2021.04.02.ini
+python nutrition_labels/predict.py --config_path configs/predict/2021.04.02.ini
 ```
-gave 424 tech grants predicted in 991 grants.
+will predict tech grants for the dataset given in the `grants_data_path` config variable. This gave 424 tech grants predicted in 991 grants.
