@@ -93,10 +93,12 @@ def process_grants_data(
     """
     
     grant_tagger = GrantTagger(relevant_sample_ratio=1, vectorizer_type='bert')
-    _, x_test, _, _ = grant_tagger.split_data(
+    _, test_data, _ = grant_tagger.split_data(
         training_data['Internal ID'],
         training_data['Relevance code'],
         split_seed=split_seed)
+
+    (x_test, _, _) = test_data
 
     test_grant_data = grant_data.loc[grant_data['Internal ID'].isin(x_test)]
     # Add the manually tagged relevance code label from the training data

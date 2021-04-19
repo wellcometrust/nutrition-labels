@@ -79,10 +79,13 @@ def process_grants_data(grant_data, training_data, split_seed):
     # for using training_data['Internal ID'] in place of the usual X_vect,
     # otherwise the indices selection for the sampling done in 'split_data' are incorrect for X
     grant_tagger = GrantTagger(relevant_sample_ratio=1, vectorizer_type='bert')
-    x_train, x_test, y_train, y_test = grant_tagger.split_data(
+    train_data, test_data, _ = grant_tagger.split_data(
         training_data['Internal ID'],
         training_data['Relevance code'],
         split_seed=split_seed)
+
+    (x_train, _, _) = train_data
+    (x_test, _, _) = test_data
 
     # Add the manually tagged relevance code label from the training data
     grant_data = pd.merge(

@@ -76,9 +76,12 @@ def test_split_data():
         label_name=label_name,
         )
 
-    _, _, y_train, y_test = grant_tagger.split_data(training_data, train_data_id)
+    train_data, test_data, _ = grant_tagger.split_data(training_data, train_data_id)
 
-    assert grant_tagger.X_train_ids == [2, 0, 5, 4]
+    (_, y_train, train_ids) = train_data
+    (_, y_test, _) = test_data
+
+    assert train_ids == [2, 0, 5, 4]
     assert len(y_train) == 4
     assert len(y_test) == 2
 
@@ -90,7 +93,10 @@ def test_split_relevant_sample_ratio():
         label_name=label_name,
         )
 
-    _, _, y_train, y_test = grant_tagger.split_data(training_data, train_data_id)
+    train_data, test_data, _ = grant_tagger.split_data(training_data, train_data_id)
+
+    (_, y_train, _) = train_data
+    (_, y_test, _) = test_data
 
     all_y = y_train + y_test
     assert len(all_y) == 5
@@ -104,7 +110,11 @@ def test_split_relevant_sample_ratio():
 
     training_data_cp = training_data.copy()
     training_data_cp['Label'] = [0, 0, 0, 0, 1, 1]
-    _, _, y_train, y_test = grant_tagger.split_data(training_data_cp, train_data_id)
+    train_data, test_data, _ = grant_tagger.split_data(training_data_cp, train_data_id)
+
+    (_, y_train, _) = train_data
+    (_, y_test, _) = test_data
+
     assert len(y_train + y_test) == 3
 
     grant_tagger = GrantTagger(
@@ -112,7 +122,11 @@ def test_split_relevant_sample_ratio():
         prediction_cols=prediction_cols,
         label_name=label_name,
         )
-    _, _, y_train, y_test = grant_tagger.split_data(training_data_cp, train_data_id)
+    train_data, test_data, _ = grant_tagger.split_data(training_data_cp, train_data_id)
+
+    (_, y_train, _) = train_data
+    (_, y_test, _) = test_data
+
     assert len(y_train + y_test) == 4
 
     grant_tagger = GrantTagger(
@@ -120,7 +134,11 @@ def test_split_relevant_sample_ratio():
         prediction_cols=prediction_cols,
         label_name=label_name,
         )
-    _, _, y_train, y_test = grant_tagger.split_data(training_data_cp, train_data_id)
+    train_data, test_data, _ = grant_tagger.split_data(training_data_cp, train_data_id)
+
+    (_, y_train, _) = train_data
+    (_, y_test, _) = test_data
+
     assert len(y_train + y_test) == 6
 
 def test_train_test_info():
@@ -130,9 +148,12 @@ def test_train_test_info():
         prediction_cols=prediction_cols,
         label_name=label_name,
         )
-    X_train, X_test, y_train, y_test = grant_tagger.split_data(training_data, train_data_id)
+    train_data, test_data, unseen_data = grant_tagger.split_data(training_data, train_data_id)
+
+    (X_train, y_train, train_ids) = train_data
+
     grant_tagger.fit(X_train, y_train)
-    grant_info = grant_tagger.train_test_info(X_test, y_train, y_test)
+    grant_info = grant_tagger.train_test_info(train_ids, y_train, test_data, unseen_data)
 
     training_data_truth_dict = dict(zip(training_data.ID, training_data.Label))
     output_truth_dict = {k:v['Truth'] for k, v in grant_info.items()}

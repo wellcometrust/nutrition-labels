@@ -86,14 +86,14 @@ class GrantTagger:
     split_data(data, train_data_id)
         Split the data into train and test sets
     fit(X, y)
-        Fit a vectorizer using the text data, and train the model
+        Fit the model - fit a vectorizer using the text data, and train the classifier
     predict(X)
         Make predictions using the trained model
     predict_proba(X)
         Output prediction probabilities using the trained model
     evaluate(X, y, extra_scores, average)
         Evaluate various metrics using the model.
-    train_test_info(X_test, y_train, y_test)
+    train_test_info(train_ids, y_train, test_data, unseen_data)
         Create an output dictionary with information about
         which data points were used in the test or training, and
         the model predictions for each.
@@ -183,15 +183,15 @@ class GrantTagger:
             # Store data not in sample
             not_sample_index = data.index.difference(sample_index)
             unused_data = data.iloc[not_sample_index, :]
-            self.X_unused = unused_data['Grant texts'].tolist()
-            self.y_unused = unused_data[self.label_name].tolist()
-            self.unused_ids = unused_data[train_data_id].tolist()
+            X_unused = unused_data['Grant texts'].tolist()
+            y_unused = unused_data[self.label_name].tolist()
+            unused_ids = unused_data[train_data_id].tolist()
             # Sample data
             data = data.iloc[sample_index, :]
         else:
-            self.X_unused = []
-            self.y_unused = []
-            self.unused_ids = []
+            X_unused = []
+            y_unused = []
+            unused_ids = []
 
         X = data[["Grant texts", train_data_id]]
         y = data[self.label_name].tolist()
@@ -201,13 +201,17 @@ class GrantTagger:
                 X, y, test_size=self.test_size, shuffle=False
             )
 
-        self.X_train_ids = X_train[train_data_id].tolist()
-        self.X_test_ids = X_test[train_data_id].tolist()
+        train_ids = X_train[train_data_id].tolist()
+        test_ids = X_test[train_data_id].tolist()
 
         X_train = X_train['Grant texts'].tolist()
         X_test = X_test['Grant texts'].tolist()
 
-        return X_train, X_test, y_train, y_test
+        train_data = (X_train, y_train, train_ids)
+        test_data = (X_test, y_test, test_ids)
+        unseen_data = (X_unused, y_unused, unused_ids)
+
+        return train_data, test_data, unseen_data
 
     def fit(self, X, y):
 
@@ -283,7 +287,7 @@ class GrantTagger:
 
         return scores
 
-    def train_test_info(self, X_test, y_train, y_test):
+    def train_test_info(self, train_ids, y_train, test_data, unseen_data):
         """
         Output a dict of information about the trained model's use of the data
         and the predictions and probabilities given, e.g
@@ -296,14 +300,17 @@ class GrantTagger:
             }
         }
         """
+        
+        (X_test, y_test, test_ids) = test_data
+        (X_unused, y_unused, unused_ids) = unseen_data
 
         X_test_vect = self.vectorizer.transform(X_test)
-        X_unused_vect = self.vectorizer.transform(self.X_unused)
+        X_unused_vect = self.vectorizer.transform(X_unused)
 
         all_info = {
-            'Train': (self.X_train_vect, self.X_train_ids, y_train),
-            'Test': (X_test_vect, self.X_test_ids, y_test),
-            'Not used': (X_unused_vect, self.unused_ids, self.y_unused)
+            'Train': (self.X_train_vect, train_ids, y_train),
+            'Test': (X_test_vect, test_ids, y_test),
+            'Not used': (X_unused_vect, unused_ids, y_unused)
         }
 
         training_info = {}
@@ -402,11 +409,13 @@ def train_several_models(config):
                 label_name=label_name,
             )
 
-            X_train, X_test, y_train, y_test = grant_tagger.split_data(training_data, train_data_id)
+            train_data, test_data, unseen_data = grant_tagger.split_data(training_data, train_data_id)
+            (X_train, y_train, train_ids) = train_data
+            (X_test, y_test, _) = test_data
 
             grant_tagger.fit(X_train, y_train)
 
-            grant_info = grant_tagger.train_test_info(X_test, y_train, y_test)
+            grant_info = grant_tagger.train_test_info(train_ids, y_train, test_data, unseen_data)
 
             X_test_vect = grant_tagger.vectorizer.transform(X_test)
 
