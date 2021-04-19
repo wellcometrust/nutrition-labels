@@ -33,7 +33,7 @@ def predict_grants(config):
     grants_data_path = config["prediction_data"]["grants_data_path"] 
     config_version = "".join(config["DEFAULT"]["version"].split("."))[2:]
     input_file_name = os.path.basename(grants_data_path).split('.')[0]
-    output_path = f'data/processed/ensemble/{config_version}/{input_file_name}_tagged.csv'
+    output_path = f'data/processed/predictions/{config_version}/{input_file_name}_tagged.csv'
 
     try:
         pred_prob_thresh = config.getfloat("model_parameters", "pred_prob_thresh")
