@@ -44,11 +44,14 @@ if __name__ == '__main__':
             evaluation_results_runs = []
             for split_seed in range(num_rand_seeds):
                 print(split_seed)
-                X_train, X_test, y_train, y_test = grant_tagger.split_data(
+                train_data, test_data, _ = grant_tagger.split_data(
                     X_vect,
                     y,
                     split_seed=split_seed)
                 
+                (X_train, y_train, _) = train_data
+                (X_test, y_test, _) = test_data
+
                 grant_tagger.fit(X_train, y_train)
 
                 train_scores, _, _ = grant_tagger.evaluate(X_train, y_train, print_results=False)

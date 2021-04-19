@@ -1,6 +1,7 @@
 import pytest
 
 import pandas as pd
+import numpy as np
 
 from nutrition_labels.grant_tagger import GrantTagger
 
@@ -58,22 +59,14 @@ def test_fit_transform():
         label_name=label_name,
         )
 
-    X_vect, y = grant_tagger.fit_transform(training_data, train_data_id)
+    X_train = training_data['text_field'].tolist()
+    y_train = training_data['Label'].tolist()
+
+    grant_tagger.fit(X_train, y_train)
+    X_vect = grant_tagger.transform(pd.DataFrame({'Grant texts': X_train}))
 
     assert X_vect.shape[0] == 6
-    assert grant_tagger.X_ids == [4, 1, 2, 0, 3, 5]
-
-def test_transform():
-
-    grant_tagger = GrantTagger(
-        prediction_cols=prediction_cols,
-        label_name=label_name,
-        )
-
-    X_vect_fit_transform, _ = grant_tagger.fit_transform(training_data, train_data_id)
-    X_vect_transform = grant_tagger.transform(training_data)
-
-    assert X_vect_fit_transform.shape == X_vect_transform.shape
+    assert X_vect.shape == grant_tagger.X_train_vect.shape
 
 def test_split_data():
 
@@ -83,8 +76,12 @@ def test_split_data():
         label_name=label_name,
         )
 
-    X_vect, y = grant_tagger.fit_transform(training_data, train_data_id)
-    X_train, X_test, y_train, y_test = grant_tagger.split_data(X_vect, y)
+    train_data, test_data, _ = grant_tagger.split_data(training_data, train_data_id)
+
+    (_, y_train, train_ids) = train_data
+    (_, y_test, _) = test_data
+
+    assert train_ids == [2, 0, 5, 4]
     assert len(y_train) == 4
     assert len(y_test) == 2
 
@@ -96,9 +93,11 @@ def test_split_relevant_sample_ratio():
         label_name=label_name,
         )
 
-    X_vect, y = grant_tagger.fit_transform(training_data, train_data_id)
+    train_data, test_data, _ = grant_tagger.split_data(training_data, train_data_id)
 
-    X_train, X_test, y_train, y_test = grant_tagger.split_data(X_vect, y)
+    (_, y_train, _) = train_data
+    (_, y_test, _) = test_data
+
     all_y = y_train + y_test
     assert len(all_y) == 5
     assert len([y for y in all_y if y==0]) == 1
@@ -109,9 +108,13 @@ def test_split_relevant_sample_ratio():
         label_name=label_name,
         )
 
-    y = [0, 0, 0, 0, 1, 1]
-    
-    X_train, X_test, y_train, y_test = grant_tagger.split_data(X_vect, y)
+    training_data_cp = training_data.copy()
+    training_data_cp['Label'] = [0, 0, 0, 0, 1, 1]
+    train_data, test_data, _ = grant_tagger.split_data(training_data_cp, train_data_id)
+
+    (_, y_train, _) = train_data
+    (_, y_test, _) = test_data
+
     assert len(y_train + y_test) == 3
 
     grant_tagger = GrantTagger(
@@ -119,7 +122,11 @@ def test_split_relevant_sample_ratio():
         prediction_cols=prediction_cols,
         label_name=label_name,
         )
-    X_train, X_test, y_train, y_test = grant_tagger.split_data(X_vect, y)
+    train_data, test_data, _ = grant_tagger.split_data(training_data_cp, train_data_id)
+
+    (_, y_train, _) = train_data
+    (_, y_test, _) = test_data
+
     assert len(y_train + y_test) == 4
 
     grant_tagger = GrantTagger(
@@ -127,7 +134,11 @@ def test_split_relevant_sample_ratio():
         prediction_cols=prediction_cols,
         label_name=label_name,
         )
-    X_train, X_test, y_train, y_test = grant_tagger.split_data(X_vect, y)
+    train_data, test_data, _ = grant_tagger.split_data(training_data_cp, train_data_id)
+
+    (_, y_train, _) = train_data
+    (_, y_test, _) = test_data
+
     assert len(y_train + y_test) == 6
 
 def test_train_test_info():
@@ -137,13 +148,33 @@ def test_train_test_info():
         prediction_cols=prediction_cols,
         label_name=label_name,
         )
+    train_data, test_data, unseen_data = grant_tagger.split_data(training_data, train_data_id)
 
-    X_vect, y = grant_tagger.fit_transform(training_data, train_data_id)
-    X_train, X_test, y_train, y_test = grant_tagger.split_data(X_vect, y)
+    (X_train, y_train, train_ids) = train_data
+
     grant_tagger.fit(X_train, y_train)
-    grant_info = grant_tagger.train_test_info()
+    grant_info = grant_tagger.train_test_info(train_ids, y_train, test_data, unseen_data)
 
     training_data_truth_dict = dict(zip(training_data.ID, training_data.Label))
     output_truth_dict = {k:v['Truth'] for k, v in grant_info.items()}
 
     assert output_truth_dict == training_data_truth_dict
+
+def test_apply_threshold():
+    y_predict = [0, 0, 0, 1, 1, 1]
+    pred_probs = np.array(
+        [
+            [0.8, 0.2],
+            [0.7, 0.3],
+            [0.6, 0.4],
+            [0.2, 0.8],
+            [0.3, 0.7],
+            [0.4, 0.6],
+        ]
+        )
+    grant_tagger = GrantTagger(
+        threshold=0.7
+        )
+    y_predict_thresh = grant_tagger.apply_threshold(y_predict, pred_probs)
+
+    assert all([y1==y2 for y1, y2 in zip([0, 0, 0, 1, 1, 0], y_predict_thresh)]) 

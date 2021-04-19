@@ -101,29 +101,30 @@ A new model training config was made for training models (`configs/train_model/2
 
 I ran:
 ```
-python nutrition_labels/grant_tagger.py --config_path configs/train_model/2021.04.01.ini
+python nutrition_labels/grant_tagger.py --config_path configs/train_model/2021.04.02.ini
 ```
 
 I evaluated how well each model extended to make predictions of tech grants on the RF and EPMC datasets by running:
 ```
-python nutrition_labels/grant_tagger_evaluation.py --model_config configs/train_model/2021.04.01.ini --epmc_file_dir data/processed/training_data/210329epmc/training_data.csv --rf_file_dir data/processed/training_data/210329rf/training_data.csv
+python nutrition_labels/grant_tagger_evaluation.py --model_config configs/train_model/2021.04.02.ini --epmc_file_dir data/processed/training_data/210329epmc/training_data.csv --rf_file_dir data/processed/training_data/210329rf/training_data.csv
 ```
 This script also outputs the test metrics for each model in one csv which gives:
 
-| Date   | Vectorizer | Classifier  | f1    | precision_score | recall_score | EPMC accuracy | RF accuracy | High scoring |
-|--------|------------|-------------|-------|-----------------|--------------|---------------|-------------|---|
-| 210401 | count      | naive_bayes | 0.828 | 0.726           | 0.962        | 0.784         | 0.614       | x |
-| 210401 | count      | SVM         | 0.816 | 0.896           | 0.75         | 0.568         | 0.386       ||
-| 210401 | count      | log_reg     | 0.825 | 0.825           | 0.825        | 0.588         | 0.371       ||
-| 210401 | tfidf      | naive_bayes | 0.811 | 0.7             | 0.962        | 0.818         | 0.671       | x |
-| 210401 | tfidf      | SVM         | 0.828 | 0.923           | 0.75         | 0.649         | 0.414       ||
-| 210401 | tfidf      | log_reg     | 0.824 | 0.863           | 0.788        | 0.709         | 0.457       | x |
-| 210401 | bert       | naive_bayes | 0.753 | 0.64            | 0.912        | 0.007         | 0           ||
-| 210401 | bert       | SVM         | 0.848 | 0.824           | 0.875        | 0.642         | 0.457       ||
-| 210401 | bert       | log_reg     | 0.894 | 0.889           | 0.9          | 0.628         | 0.4         | x |
-| 210401 | scibert    | naive_bayes | 0.811 | 0.73            | 0.912        | 0             | 0           ||
-| 210401 | scibert    | SVM         | 0.835 | 0.789           | 0.888        | 0.75          | 0.514       ||
-| 210401 | scibert    | log_reg     | 0.861 | 0.835           | 0.888        | 0.689         | 0.5         | x |
+| Date   | Vectorizer | Classifier  | f1    | precision_score | recall_score | EPMC accuracy | RF accuracy |
+|--------|------------|-------------|-------|-----------------|--------------|---------------|-------------|
+| 210402 | count      | naive_bayes | 0.828 | 0.726           | 0.962        | 0.784         | 0.614       |
+| 210402 | count      | SVM         | 0.821 | 0.842           | 0.8          | 0.568         | 0.386       |
+| 210402 | count      | log_reg     | 0.825 | 0.825           | 0.825        | 0.588         | 0.371       |
+| 210402 | tfidf      | naive_bayes | 0.811 | 0.7             | 0.962        | 0.811         | 0.657       |
+| 210402 | tfidf      | SVM         | 0.829 | 0.81            | 0.85         | 0.662         | 0.429       |
+| 210402 | tfidf      | log_reg     | 0.824 | 0.778           | 0.875        | 0.736         | 0.457       |
+| 210402 | bert       | naive_bayes | 0.764 | 0.658           | 0.912        | 0.838         | 0.614       |
+| 210402 | bert       | SVM         | 0.848 | 0.824           | 0.875        | 0.642         | 0.457       |
+| 210402 | bert       | log_reg     | 0.894 | 0.889           | 0.9          | 0.628         | 0.4         |
+| 210402 | scibert    | naive_bayes | 0.809 | 0.735           | 0.9          | 0.791         | 0.643       |
+| 210402 | scibert    | SVM         | 0.835 | 0.789           | 0.888        | 0.75          | 0.514       |
+| 210402 | scibert    | log_reg     | 0.861 | 0.835           | 0.888        | 0.689         | 0.5         |
+
 
 ### Ensemble model
 
@@ -137,29 +138,49 @@ In `notebooks/Ensemble parameter exploration.ipynb` I look at different ensemble
 
 By varying each of these 3 options I calculated the results of a total of 491,520 ensemble models. The precision and recall scores with a parameter varied are as follows (I introduced a small amount of randomness in the x and y axis since there were a lot of overlapping scores):
 
-![](figures/210401_params_together.png)
+![](figures/210402_params_together.png)
 
 These can be plotted along with the original single models as follows (no randomness was included in this plot, and I've zoomed in):
 
-![](figures/210401_original_ensemble.png)
+![](figures/210402_original_ensemble.png)
 
-In order to optimise having a large precision and recall, I selected the 4 ensemble models which had a precision score of 0.911392 and a recall of 0.9. From these I chose the one which had a minimum number of models since these make the predictions take longer. Thus my favourite ensemble to use was:
+There were 15 ensemble models which gave a precision and recall score of 0.9. To select from these I wanted to pick ones that required less processing time - which boiled down to how many BERT based models there were in the ensemble. Thus the 4 models with <=2 BERT based models were:
 
-1. Composed of the 3 models 'tfidf_SVM_210401', 'bert_naive_bayes_210401', 'bert_log_reg_210401'
+|Models in ensemble | Number of models | Number that need to agree | Threshold | Precision | Recall | EPMC accuracy |	RF accuracy| Unused accuracy|
+| --- | --- |  --- | --- | --- |---|--- |---|---|
+|bert_log_reg|**1**|1|0.55|0.9|0.9|**0.61**	|**0.4**|0.87|
+|count_naive_bayes, bert_log_reg|2|2|0.55|0.9|0.9|0.55	|**0.4**|0.90|
+|count_naive_bayes, tfidf_naive_bayes, bert_SVM, bert_log_reg |4|2|0.67|0.9|0.9|0.47|	0.27|**0.94**|
+|count_naive_bayes, tfidf_naive_bayes, tfidf_log_reg, bert_SVM, bert_log_reg|5|2|0.67|0.9|0.9|0.47	|0.27|**0.94**|
+
+Note that the EPMC dataset was composed of 148 tech grants, the Research Fish composed of 70 tech grants and the unused data is 175 not tech grants.
+
+Thus, the ensemble model I felt best to use going forward was:
+1. Composed of 1 model 'bert_log_reg_210402'
 2. The prediction probability needs to be over 0.55 in each model for the model's classification to be tech.
-3. 2 out of 3 needs to agree on a tech grant classification in order for the final classification to be tech.
+3. 1 out of 1 needs to agree on a tech grant classification in order for the final classification to be tech.
 
 This ensemble gives the following results on the test set:
 
 ||precision|recall |f1-score   |support|
 |--|---|---|---|---|
-|Not tech|0.89|0.91|0.90|77|
-|Tech|0.91|0.89|0.90|80|
+|Not tech|0.90|0.90|0.90|77|
+|Tech|0.90|0.90|0.90|80|
 |accuracy|||0.90|157|
 |macro avg|0.90|0.90|0.90|157|
 |weighted avg|0.90|0.90|0.90|157|
 
 ||Predicted not tech| Predicted tech|
 |---|---|---|
-|Actually not tech|70 |7|
-|Actually tech|9|71|
+|Actually not tech|69 |8|
+|Actually tech|8|72|
+
+- 61% of grants identified as producing tech via EPMC data was also classified as producing tech from the grant description.
+- 40% of grants identified as producing tech via ResearchFish data was also classified as producing tech from the grant description.
+- 87% of grants identified as not producing tech, but not used in the training or test data, was classified correctly as so.
+
+Running:
+```
+python -i nutrition_labels/ensemble_grant_tagger.py --config_path configs/ensemble/2021.04.02.ini
+```
+gave 424 tech grants predicted in 991 grants.

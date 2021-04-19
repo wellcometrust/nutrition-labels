@@ -41,16 +41,18 @@ def test_predict(tmp_path):
         grant_tagger = GrantTagger(
                 vectorizer_type=vectorizer,
                 classifier_type="naive_bayes",
-                prediction_cols=['text_1', 'text_2'],
-                label_name="label",
-                threshold=None,
                 )
-        X_vect, y = grant_tagger.fit_transform(text_data, "id")
-        grant_tagger.fit(X_vect[0:3], y[0:3]) # This means count and tdidf results are different
+        text_data.fillna('', inplace=True)
+        X_train = text_data['text_1'].tolist()
+        y_train = text_data['label'].tolist()
+        grant_tagger.fit(X_train[1:5], y_train[1:5]) # This means count and tdidf results are different
+        X_vect = grant_tagger.transform(pd.DataFrame({'Grant texts': X_train}))
+        # Save results and model
         individual_pred.append(list(grant_tagger.predict(X_vect)))
         model_dir = os.path.join(tmp_path, str(i))
         grant_tagger.save_model(model_dir)
         model_dirs.append(model_dir)
+
     grants_data_path = os.path.join(tmp_path, 'text_data.csv')
     text_data.to_csv(grants_data_path)
 

@@ -30,10 +30,11 @@ from sklearn.metrics import (
     precision_score,
     recall_score,
 )
-from wellcomeml.ml.bert_vectorizer import BertVectorizer
+from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import MinMaxScaler
 from sklearn.linear_model import LogisticRegression
 from sklearn.svm import SVC
+from wellcomeml.ml.bert_vectorizer import BertVectorizer
 import pandas as pd
 import numpy as np
 
@@ -80,21 +81,19 @@ class GrantTagger:
 
     Methods
     -------
-    fit_transform(data, train_data_id)
-        Fit a vectorizer using the text data
     transform(data)
         Vectorize text data using the fitted vectorizer
-    split_data(X_vect, y)
+    split_data(data, train_data_id)
         Split the data into train and test sets
     fit(X, y)
-        Train the model
+        Fit the model - fit a vectorizer using the text data, and train the classifier
     predict(X)
         Make predictions using the trained model
     predict_proba(X)
         Output prediction probabilities using the trained model
     evaluate(X, y, extra_scores, average)
         Evaluate various metrics using the model.
-    train_test_info()
+    train_test_info(train_ids, y_train, test_data, unseen_data)
         Create an output dictionary with information about
         which data points were used in the test or training, and
         the model predictions for each.
@@ -144,21 +143,77 @@ class GrantTagger:
 
         X = data["Grant texts"].tolist()
         X_vect = self.vectorizer.transform(X)
-
-        if self.scaler:
-            X_vect = self.scaler.transform(X_vect)
             
         return X_vect
 
-    def fit_transform(self, data, train_data_id="Internal ID"):
+    def split_data(self, data, train_data_id="Internal ID"):
 
         if "Grant texts" not in data:
             # If the training data hasn't come through Prodigy tagging then this won't exist
             data = self.process_grant_text(data)
 
-        self.X_ids = data[train_data_id].tolist()
-        self.X = data["Grant texts"].tolist()
-        self.y = data[self.label_name].tolist()
+        data = data.astype({self.label_name: int})
+        # The index is important, so make sure its reset to begin with
+        data.reset_index(inplace=True, drop=True)
+
+        # Randomly shuffle the data
+        random_index = list(range(len(data)))
+        seed(self.split_seed)
+        shuffle(random_index)
+        data = data.iloc[random_index, :]
+        data.reset_index(inplace=True)
+
+        relevant_sample_index = data[data[self.label_name] != 0].index.values.tolist()
+        irrelevant_sample_index = data[data[self.label_name] == 0].index.values.tolist()
+
+        sample_size = int(
+                round(len(relevant_sample_index) * self.relevant_sample_ratio)
+            )
+        if sample_size < len(irrelevant_sample_index):
+            # Take sample_size equally spaced irrelevant points
+            idx = np.round(
+                np.linspace(0, len(irrelevant_sample_index) - 1, sample_size)
+            ).astype(int)
+            sample_index = relevant_sample_index + [
+                irrelevant_sample_index[i] for i in idx
+            ]
+            # Make sure they are in order otherwise it'll be all 1111s and then 0000s
+            sample_index.sort()
+
+            # Store data not in sample
+            not_sample_index = data.index.difference(sample_index)
+            unused_data = data.iloc[not_sample_index, :]
+            X_unused = unused_data['Grant texts'].tolist()
+            y_unused = unused_data[self.label_name].tolist()
+            unused_ids = unused_data[train_data_id].tolist()
+            # Sample data
+            data = data.iloc[sample_index, :]
+        else:
+            X_unused = []
+            y_unused = []
+            unused_ids = []
+
+        X = data[["Grant texts", train_data_id]]
+        y = data[self.label_name].tolist()
+
+        # Randomly shuffled at the beginning so turn this off
+        X_train, X_test, y_train, y_test = train_test_split(
+                X, y, test_size=self.test_size, shuffle=False
+            )
+
+        train_ids = X_train[train_data_id].tolist()
+        test_ids = X_test[train_data_id].tolist()
+
+        X_train = X_train['Grant texts'].tolist()
+        X_test = X_test['Grant texts'].tolist()
+
+        train_data = (X_train, y_train, train_ids)
+        test_data = (X_test, y_test, test_ids)
+        unseen_data = (X_unused, y_unused, unused_ids)
+
+        return train_data, test_data, unseen_data
+
+    def fit(self, X, y):
 
         if self.vectorizer_type == "count":
             self.vectorizer = CountVectorizer(
@@ -176,60 +231,11 @@ class GrantTagger:
             )
         elif "bert" in self.vectorizer_type:
             self.vectorizer = BertVectorizer(pretrained=self.vectorizer_type)
+            if self.classifier_type == "naive_bayes":
+                self.vectorizer = Pipeline([('vec', self.vectorizer), ('scaler', MinMaxScaler())])
         else:
             print("Vectorizer type not recognised")
-        self.X_vect = self.vectorizer.fit_transform(self.X)
 
-        # For BERT/SciBERT + naive bayes the values need to be between 0 and 1, 
-        # so scale the values.
-        self.scaler = None
-        if "bert" in self.vectorizer_type and self.classifier_type == "naive_bayes":
-            self.scaler = MinMaxScaler()
-            self.X_vect = self.scaler.fit_transform(self.X_vect)
-
-        return self.X_vect, self.y
-
-    def split_data(self, X_vect, y):
-
-        # Randomly shuffle the data
-        random_index = list(range(len(y)))
-        seed(self.split_seed)
-        shuffle(random_index)
-        if self.vectorizer_type == "bert":
-            X_vect = [X_vect[i] for i in random_index]
-        else:
-            X_vect = X_vect[random_index]
-        y = [y[i] for i in random_index]
-
-        relevant_sample_index = [ind for ind, x in enumerate(y) if x != 0]
-        irrelevant_sample_index = [ind for ind, x in enumerate(y) if x == 0]
-        sample_size = int(
-            round(len(relevant_sample_index) * self.relevant_sample_ratio)
-        )
-        if sample_size < len(irrelevant_sample_index):
-            # Take sample_size equally spaced irrelevant points
-            idx = np.round(
-                np.linspace(0, len(irrelevant_sample_index) - 1, sample_size)
-            ).astype(int)
-            sample_index = relevant_sample_index + [
-                irrelevant_sample_index[i] for i in idx
-            ]
-            # Make sure they are in order otherwise it'll be all 1111s and then 0000s
-            sample_index.sort()
-            y = [y[i] for i in sample_index]
-            if self.vectorizer_type == "bert":
-                X_vect = [X_vect[i] for i in sample_index]
-            else:
-                X_vect = X_vect[sample_index]
-
-        # Randomly shuffled at the beginning so turn this off
-        X_train, X_test, y_train, y_test = train_test_split(
-            X_vect, y, test_size=self.test_size, shuffle=False
-        )
-
-        return X_train, X_test, y_train, y_test
-
-    def fit(self, X, y):
         if self.classifier_type == "naive_bayes":
             model = MultinomialNB()
         elif self.classifier_type == "SVM":
@@ -238,7 +244,12 @@ class GrantTagger:
             model = LogisticRegression(max_iter=1000)
         else:
             print("Model type not recognised")
-        self.model = model.fit(X, y)
+
+        self.X_train_vect = self.vectorizer.fit_transform(X)
+        self.model = model.fit(self.X_train_vect, y)
+
+    def apply_threshold(self, y_predict, pred_probs):
+        return y_predict*(np.max(pred_probs, axis=1) >= self.threshold)
 
     def predict(self, X):
         y_predict = self.model.predict(X).astype(int)
@@ -247,7 +258,7 @@ class GrantTagger:
             # prediction to stay as 1, otherwise switch to 0.
             # A prediction of 0 will stay at 0 regardless of probability.
             pred_probs = self.model.predict_proba(X)
-            y_predict = y_predict*(np.max(pred_probs, axis=1) >= self.threshold)
+            y_predict = self.apply_threshold(y_predict, pred_probs)
 
         return y_predict
 
@@ -256,7 +267,7 @@ class GrantTagger:
 
     def evaluate(self, X, y, extra_scores=False, average="binary"):
 
-        y_predict = self.model.predict(X)
+        y_predict = self.predict(X)
 
         scores = {
             "size": len(y),
@@ -276,7 +287,7 @@ class GrantTagger:
 
         return scores
 
-    def train_test_info(self):
+    def train_test_info(self, train_ids, y_train, test_data, unseen_data):
         """
         Output a dict of information about the trained model's use of the data
         and the predictions and probabilities given, e.g
@@ -289,30 +300,32 @@ class GrantTagger:
             }
         }
         """
+        
+        (X_test, y_test, test_ids) = test_data
+        (X_unused, y_unused, unused_ids) = unseen_data
 
-        y_predict = self.model.predict(self.X_vect)
-        y_predict_proba = self.model.predict_proba(self.X_vect)
-        # The probability of the predicted binary value
-        y_predict_proba = np.max(y_predict_proba, axis=1)
+        X_test_vect = self.vectorizer.transform(X_test)
+        X_unused_vect = self.vectorizer.transform(X_unused)
 
-        X_train_ids, X_test_ids, _, _ = self.split_data(np.array(self.X_ids), self.y)
+        all_info = {
+            'Train': (self.X_train_vect, train_ids, y_train),
+            'Test': (X_test_vect, test_ids, y_test),
+            'Not used': (X_unused_vect, unused_ids, y_unused)
+        }
 
         training_info = {}
-        for grant_id, actual, pred, pred_prob in zip(
-            self.X_ids, self.y, y_predict, y_predict_proba
-        ):
-            if grant_id in X_train_ids:
-                split_type = "Train"
-            elif grant_id in X_test_ids:
-                split_type = "Test"
-            else:
-                split_type = "Not used"
-            training_info[grant_id] = {
-                "Truth": int(actual),
-                "Prediction": int(pred),
-                "Prediction probability": pred_prob,
-                "Test/train": split_type,
-            }
+        for split_type, (vectors, grant_ids, actuals) in all_info.items():
+            if len(grant_ids) != 0:
+                preds = self.predict(vectors)
+                pred_probs = self.predict_proba(vectors)
+                pred_probs = np.max(pred_probs, axis=1)
+                for grant_id, actual, pred, pred_prob in zip(grant_ids, actuals, preds, pred_probs):
+                    training_info[grant_id] = {
+                        "Truth": int(actual),
+                        "Prediction": int(pred),
+                        "Prediction probability": pred_prob,
+                        "Test/train": split_type,
+                    }
 
         return training_info
 
@@ -324,9 +337,6 @@ class GrantTagger:
             pickle.dump(self.model, f)
         with open(os.path.join(output_path, "vectorizer.pickle"), "wb") as f:
             pickle.dump(self.vectorizer, f)
-        if self.scaler:
-            with open(os.path.join(output_path, "vectorizer_scaler.pickle"), "wb") as f:
-                pickle.dump(self.scaler, f)
 
         if evaluation_results:
             evaluation_results["Vectorizer type"] = self.vectorizer_type
@@ -341,12 +351,6 @@ class GrantTagger:
             self.model = pickle.load(f)
         with open(os.path.join(output_path, "vectorizer.pickle"), "rb") as f:
             self.vectorizer = pickle.load(f)
-        try:
-            with open(os.path.join(output_path, "vectorizer_scaler.pickle"), "rb") as f:
-                self.scaler = pickle.load(f)
-        except FileNotFoundError:
-            self.scaler = None
-
 
 
 def load_training_data(config, prediction_cols, train_data_id):
@@ -404,16 +408,23 @@ def train_several_models(config):
                 prediction_cols=prediction_cols,
                 label_name=label_name,
             )
-            X_vect, y = grant_tagger.fit_transform(training_data, train_data_id)
 
-            X_train, X_test, y_train, y_test = grant_tagger.split_data(X_vect, y)
+            train_data, test_data, unseen_data = grant_tagger.split_data(training_data, train_data_id)
+            (X_train, y_train, train_ids) = train_data
+            (X_test, y_test, _) = test_data
 
             grant_tagger.fit(X_train, y_train)
 
-            grant_info = grant_tagger.train_test_info()
+            grant_info = grant_tagger.train_test_info(train_ids, y_train, test_data, unseen_data)
 
-            train_scores = grant_tagger.evaluate(X_train, y_train, extra_scores=True)
-            test_scores = grant_tagger.evaluate(X_test, y_test, extra_scores=True)
+            X_test_vect = grant_tagger.vectorizer.transform(X_test)
+
+            train_scores = grant_tagger.evaluate(
+                grant_tagger.X_train_vect,
+                y_train,
+                extra_scores=True
+                )
+            test_scores = grant_tagger.evaluate(X_test_vect, y_test, extra_scores=True)
 
             evaluation_results = {
                 "Train model config": args.config_path,
@@ -450,4 +461,3 @@ if __name__ == "__main__":
     config.read(args.config_path)
 
     train_several_models(config)
-
