@@ -189,4 +189,5 @@ Running:
 ```
 python nutrition_labels/predict.py --config_path configs/predict/2021.04.02.ini
 ```
-will predict tech grants for the dataset given in the `grants_data_path` config variable. This gave 424 tech grants predicted in 991 grants.
+will predict tech grants for the dataset given in the `grants_data_path` config variable. This gave 2893 tech grants predicted in 16914 grants (17%) - these tagged grants are stored in `data/processed/predictions/210402/wellcome-grants-awarded-2005-2019_tagged.csv`.
+
