@@ -263,7 +263,10 @@ def evaluate_models(config):
 
     # Evaluate and output
     
-    output_path = f'data/processed/ensemble/{config_version}/evaluation_results.txt'
+    output_path = f'data/processed/evaluation/{config_version}/evaluation_results.txt'
+
+    if not os.path.exists(os.path.dirname(output_path)):
+        os.makedirs(os.path.dirname(output_path))
     
     if len(model_dirs) == 1:
         dataset_scores = eval_grant_tagger.evaluate_single_model(model_dirs[0], datasets_included)
