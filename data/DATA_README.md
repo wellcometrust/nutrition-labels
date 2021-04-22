@@ -2,6 +2,18 @@
 
 Notes about the data are given in more detail in the various docs, but here is a high level description of files and folders in the data folder.
 
+You can download this data 2 ways:
+1. If you have a Wellcome AWS account:
+`make sync_data_from_s3`
+or 
+`sync_latest_files_from_s3` for just the essential files.
+
+2. If you don't, you can download it (you will need to ask permission to access the drive though) from:
+```
+https://wellcomecloud.sharepoint.com/:f:/r/sites/DataLabs/Machine%20Learning/Nutrition%20Labels/data?csf=1&web=1&e=XHFn6n
+```
+this won't include data from the `raw/fortytwo/` and `processed/fortytwo/` folders since these contain private information and contain data for internal purposes.
+
 - raw
     - EPMC/
     - ResearchFish/
@@ -21,7 +33,7 @@ Notes about the data are given in more detail in the various docs, but here is a
 
 ## `raw/`
 
-The raw folder contains downloaded data and manually tagged versions of this data.
+The raw folder contains downloaded data and manually tagged versions of this data for use in the training data.
 
 360Giving grants data as downloaded July 2020:
 - `wellcome-grants-awarded-2005-2019.csv`
@@ -74,14 +86,14 @@ After the expanded definition of 'tech' in 2021 the manually tagged datasets fro
 It contains all the grants data (using the query: `SELECT Reference, Title, Synopsis FROM FortyTwo_Denormalised.[WTGT].[ApplicationsAndGrantDetails]`) pulled from fortytwo as of 20/04/2021:
 - `all_grants_fortytwo_info_210420.csv`
 
-Science tags from Kirstin:
+Science tags for the comparison with the 'Data Modelling & Surveillance Grants' tag:
 - `2020.10.09_DataModelling&SurveillanceGrants.csv`
 
 ## `prodigy/`
 
 This folder contains several files from over the course of tagging grants data using Prodigy.
 
-Datasets needed as input for the tagging pipeline (specially Prodigy friendly formatted):
+Datasets needed as input for the Prodigy tagging pipeline (specially Prodigy friendly formatted):
 - `existing_training_data.jsonl`: The existing training data used for the 210129 Ensemble model
 - `existing_test_data.jsonl`: The existing test data used for the 210129 Ensemble model
 - `grants_data.jsonl`: All the grants data from from data/raw/wellcome-grants-awarded-2005-2019.csv
