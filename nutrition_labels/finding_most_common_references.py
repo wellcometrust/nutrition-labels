@@ -6,11 +6,11 @@ if __name__ == '__main__':
     # Read in data
 
     reference_data = []
-    for row in open('data/processed/tech_grants_references_dict_2020-09-16.json', "r"):
+    for row in open('data/processed/top_health_datasets/tech_grants_references_dict_2020-09-16.json', "r"):
        reference_data.append(json.loads(row))
 
 
-    with open('data/processed/tech_grants_reference_ids_counter_2020-09-16.json') as json_file:
+    with open('data/processed/top_health_datasets/tech_grants_reference_ids_counter_2020-09-16.json') as json_file:
         count = json.load(json_file)
 
 
@@ -34,6 +34,6 @@ if __name__ == '__main__':
 
     count_df['data set'] = count_df['title'].apply(lambda x: 1 if any(i in x for i in data_set_terms ) else 0)
     data_sets = count_df[count_df['data set'] == 1]
-    data_sets.to_csv('data/processed/health_data_sets_list.csv', index= False)
+    data_sets.to_csv('data/processed/top_health_datasets/health_data_sets_list.csv', index= False)
 
 

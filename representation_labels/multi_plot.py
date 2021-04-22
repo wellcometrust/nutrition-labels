@@ -22,9 +22,9 @@ import representation_labels.useful_functions as uf
 from plot_functions import plot_gender, plot_ethnicity, plot_age, plot_ses
 
 
-with open('data/raw/cohort_demographics_test_data.json', 'r') as fb:
+with open('representation_labels/data/cohort_demographics_test_data.json', 'r') as fb:
     cohorts_dict = json.load(fb)
-with open('data/raw/Reference_population.json', 'r') as fb:
+with open('representation_labels/data/Reference_population.json', 'r') as fb:
     reference_dict = json.load(fb)
 
 ref_dict, graph_dict = uf.clean_data(cohorts_dict, reference_dict)

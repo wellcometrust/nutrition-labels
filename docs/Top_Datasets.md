@@ -9,9 +9,9 @@ Running
 ```
 python nutrition_labels/finding_tech_grant_refs.py
 ```
-will find all the PMIDs of publications which acknowledge any grant numbers in the tech grant we identified from the ensemble model (given in 'data/processed/ensemble_results.csv'). We found that 1138 of the 1790 tech grants (64%) were acknowledged in publications.
+will find all the PMIDs of publications which acknowledge any grant numbers in the tech grant we identified from the ensemble model (given in 'data/processed/ensemble/200907/ensemble_results.csv'). We found that 1138 of the 1790 tech grants (64%) were acknowledged in publications.
 
-Then it uses the EPMC client to get all the references from each of these publications. This creates two useful outputs - `data/processed/tech_grants_references_dict_2020-09-16.json` information about each of the references found, and `data/processed/tech_grants_reference_ids_counter_2020-09-16.json` a counter of how many times each reference was found.
+Then it uses the EPMC client to get all the references from each of these publications. This creates two useful outputs - `data/processed/top_health_datasets/tech_grants_references_dict_2020-09-16.json` information about each of the references found, and `data/processed/top_health_datasets/tech_grants_reference_ids_counter_2020-09-16.json` a counter of how many times each reference was found.
 
 ## Most common health datasets
 
@@ -21,9 +21,9 @@ This data is then used to find the most common health data sets by first running
 python nutrition_labels/finding_most_common_references.py
 ```
 
-This uses data extracted from EPMC (`data/processed/tech_grants_references_dict_2020-09-16.json` and `data/processed/tech_grants_reference_ids_counter_2020-09-16.json`) which has all the references from all the papers produced from tech grants.
+This uses data extracted from EPMC (`data/processed/top_health_datasets/tech_grants_references_dict_2020-09-16.json` and `data/processed/top_health_datasets/tech_grants_reference_ids_counter_2020-09-16.json`) which has all the references from all the papers produced from tech grants.
 The list of most referenced papers is then filtered to find ones only relating to tools using terms: 'cohort','profile','resource','biobank','Cohort','Profile','Biobank','Resource'. This is outputted in `data/processed/health_data_sets_list.csv`.
-This is then manually filtered to find only UK health data sets which can be found in `data/processed/health_data_sets_list_manual_edit.csv`.
+This is then manually filtered to find only UK health data sets which can be found in `data/processed/top_health_datasets/health_data_sets_list_manual_edit.csv`.
 
 To find the 5 most cited health data sets in total and last five years run: 
 

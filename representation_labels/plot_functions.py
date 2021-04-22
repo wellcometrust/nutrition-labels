@@ -1208,10 +1208,10 @@ def export_plots_as_html(plot_dict,reletivise):
 if __name__ == '__main__':
     import representation_labels.useful_functions as uf
 
-    with open('data/raw/cohort_demographics_test_data.json', 'r') as fb:
+    with open('representation_labels/data/cohort_demographics_test_data.json', 'r') as fb:
         cohorts_dic = json.load(fb)
 
-    with open('data/raw/Reference_population.json', 'r') as fb:
+    with open('representation_labels/data/Reference_population.json', 'r') as fb:
         reference_dict = json.load(fb)
 
     ref_dict, graph_dict = uf.clean_data(cohorts_dic, reference_dict)

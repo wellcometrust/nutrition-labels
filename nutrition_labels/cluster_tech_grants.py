@@ -100,7 +100,7 @@ if __name__ == '__main__':
 
     output_file = f'models/clustering/grants_clusters_{datestamp}.pkl'
     tech_output_file = f'models/clustering/tech_grants_clusters_{datestamp}.pkl'
-    grant_data_output_file = f'data/processed/cluster_grant_data_{datestamp}.csv'
+    grant_data_output_file = f'data/processed/clustering/cluster_grant_data_{datestamp}.csv'
 
     if args.config_path == 'configs/clustering/2020.09.16.ini':
         # For reproducibility of the older results

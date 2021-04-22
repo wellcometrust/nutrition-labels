@@ -36,7 +36,7 @@ In this the description for each grant is cleaned and grants with short descript
 This produces 3 files:
 1. `models/clustering/grants_clusters_{datestamp}.pkl`
 2. `models/clustering/tech_grants_clusters_{datestamp}.pkl`
-3. `data/processed/cluster_grant_data_{datestamp}.csv`
+3. `data/processed/clustering/cluster_grant_data_{datestamp}.csv`
 
 The first 2 being the clusters for all the grants and just the tech grants respectively, and the third being the cleaned and deduplicated grants data with the clusters information.
 

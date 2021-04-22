@@ -219,7 +219,7 @@ if __name__ == '__main__':
         print(f"Found {len(relevant_grants)} relevant grants")
         scores = evaluate_ensemble(grant_data, pred_col=f'Ensemble predictions - {cutoff} models')
         # Save
-        output_path = 'data/processed/ensemble/'
+        output_path = f'data/processed/ensemble/{datestamp}/'
         if not os.path.exists(output_path):
             os.makedirs(output_path)
         with open(os.path.join(output_path, f'{datestamp}_training_information_{cutoff}models.txt'), 'w') as f:

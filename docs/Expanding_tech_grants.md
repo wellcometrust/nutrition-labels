@@ -52,8 +52,8 @@ An analysis showed that the model performs best when the synopsis text given is 
 # 1. Retagging data points previously classified as not-tech
 
 Previously the tagged training data came from the 4 files:
-- 'data/raw/EPMC_relevant_tool_pubs_3082020.csv'
-- 'data/raw/EPMC_relevant_pubs_query2_3082020.csv'
+- 'data/raw/EPMC/EPMC_relevant_tool_pubs_3082020.csv'
+- 'data/raw/EPMC/EPMC_relevant_pubs_query2_3082020.csv'
 - 'data/raw/ResearchFish/research_fish_manual_edit.csv'
 - 'data/raw/wellcome-grants-awarded-2005-2019_manual_edit_Lizadditions.csv'
 
@@ -464,7 +464,7 @@ Thus the model performs best for UK, Science division grants, and if the descrip
 By running
 
 ```
-python -i nutrition_labels/tech_grant_tagger.py --models_path 'models/ensemble_210129_models/' --input_path 'data/processed/tech_grantIDs_210126_training_data_fortytwo_info.csv' --output_path 'data/processed/tech_grantIDs_210126_training_data_fortytwo_info_predictions.csv' --num_agree 3 --grant_text_cols "Synopsis,Title" grant_id_col "Reference"
+python -i nutrition_labels/tech_grant_tagger.py --models_path 'models/ensemble_210129_models/' --input_path 'data/processed/fortytwo/tech_grantIDs_210126_training_data_fortytwo_info.csv' --output_path 'data/processed/predictions/210204/tech_grantIDs_210126_training_data_fortytwo_info_predictions.csv' --num_agree 3 --grant_text_cols "Synopsis,Title" grant_id_col "Reference"
 ```
 I predicted tech grants using the synopsis+title text from the fortytwo warehouse, rather than the usual Title+Grant Programme:Title+Description combination text combination from the 360 giving data used in this project. This gives us an indication of how the model will preform when productionised - when the data will come straight from fortytwo. The results show the model works well with this data - overall the F1 is better.
 
