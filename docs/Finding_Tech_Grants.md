@@ -42,7 +42,7 @@ It should be noted that when searching for these words there was no space put be
 - 1 = Relevant
 - 5 = Not Relevant
 
-This tagged data is in `data/raw/wellcome-grants-awarded-2005-2019_manual_edit.csv`.
+This tagged data is in `data/raw/wellcome-grants-awarded-2005-2019_manual_edit_Lizadditions.csv`.
 
 ### 2. ResearchFish questionnaire data
 
@@ -80,7 +80,7 @@ This yielded 3129 publications outputted in `EPMC_relevant_tool_pubs.csv`. 619 o
 - 5 = Not relevant
 - 6 = Edge case
 
-This tagged data is in `data/raw/EPMC_relevant_tool_pubs_manual_edit.csv`.
+This tagged data is in `data/raw/EPMC/EPMC_relevant_tool_pubs_3082020.csv`.
 
 #### Query 2
 

@@ -89,13 +89,13 @@ def incorporate_beckys_grants_tags(liz_add_grants, becky_grants):
 
 if __name__ == '__main__':
 
-    epmc_tags_query_one = pd.read_csv('data/raw/EPMC_relevant_tool_pubs_3082020.csv', encoding = "latin")
-    epmc_tags_query_two = pd.read_csv('data/raw/EPMC_relevant_pubs_query2_3082020.csv')
+    epmc_tags_query_one = pd.read_csv('data/raw/EPMC/EPMC_relevant_tool_pubs_3082020.csv', encoding = "latin")
+    epmc_tags_query_two = pd.read_csv('data/raw/EPMC/EPMC_relevant_pubs_query2_3082020.csv')
     epmc_tags = pd.concat([epmc_tags_query_one, epmc_tags_query_two], ignore_index=True)
 
     nonie_relabel_grants = pd.read_csv('data/raw/wellcome-grants-awarded-2005-2019_manual_edit_relabeling.csv')
     liz_add_grants = pd.read_csv('data/raw/wellcome-grants-awarded-2005-2019_manual_edit_Lizadditions.csv')
-    becky_grants = pd.read_csv('data/processed/grants_sample_becky.csv')
+    becky_grants = pd.read_csv('data/raw/grants_sample_becky.csv')
 
     print("\n------Evaluation for Liz and Nonie's EPMC tags------")
     epmc_tags['Nonie code'] = clean_codes(epmc_tags, 'Nonie code')

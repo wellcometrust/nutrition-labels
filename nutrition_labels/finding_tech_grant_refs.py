@@ -28,7 +28,7 @@ if __name__ == '__main__':
     
     today = date.today()
 
-    grants = pd.read_csv('data/processed/ensemble_results.csv')
+    grants = pd.read_csv('data/processed/ensemble/200907/ensemble_results.csv')
     grants = grants['Internal ID'].tolist()
     grants_6_digit = set([g[0:6] for g in grants])
 

@@ -271,10 +271,10 @@ def ethnicity_tips(eth_dict):
 
 if __name__ == '__main__':
 
-    with open('data/raw/cohort_demographics_test_data.json', 'r') as fb:
+    with open('representation_labels/data/cohort_demographics_test_data.json', 'r') as fb:
         cohorts_dic = json.load(fb)
 
-    with open('data/raw/Reference_population.json', 'r') as fb:
+    with open('representation_labels/data/Reference_population.json', 'r') as fb:
         reference_dict = json.load(fb)
 
     ref_dict, graph_dict = clean_data(cohorts_dic, reference_dict)

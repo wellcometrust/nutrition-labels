@@ -2,7 +2,7 @@ import pandas as pd
 from datalabs.epmc.client import EPMCClient
 
 
-cohorts = pd.read_csv('data/processed/health_data_sets_list_manual_edit.csv')
+cohorts = pd.read_csv('data/processed/top_health_datasets/health_data_sets_list_manual_edit.csv')
 
 def get_num_citations(pub_id):
     client = EPMCClient()
@@ -19,4 +19,4 @@ if __name__ == '__main__':
     cohorts['total number of citations'] = [i[0] for i in cite_values]
     cohorts['recent number of citations'] = [i[1] for i in cite_values]
     cohorts = cohorts.sort_values(by = 'recent number of citations', ascending= False)
-    cohorts.to_csv('data/processed/health_data_reference_count.csv',index=False)
+    cohorts.to_csv('data/processed/top_health_datasets/health_data_reference_count.csv',index=False)
