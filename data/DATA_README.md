@@ -6,7 +6,7 @@ You can download this data 2 ways:
 1. If you have a Wellcome AWS account:
 `make sync_data_from_s3`
 or 
-`sync_latest_files_from_s3` for just the essential files.
+`make sync_latest_files_from_s3` for just the essential files.
 
 2. If you don't, you can download it (you will need to ask permission to access the drive though) from:
 ```
