@@ -160,6 +160,8 @@ Thus, the ensemble model I felt best to use going forward was:
 2. The prediction probability needs to be over 0.55 in each model for the model's classification to be tech.
 3. 1 out of 1 needs to agree on a tech grant classification in order for the final classification to be tech.
 
+#### Evaluation
+
 Running:
 ```
 python nutrition_labels/evaluate.py --config_path configs/evaluation/2021.04.02.ini
@@ -189,5 +191,189 @@ Running:
 ```
 python nutrition_labels/predict.py --config_path configs/predict/2021.04.02.ini
 ```
-will predict tech grants for the dataset given in the `grants_data_path` config variable. This gave 2893 tech grants predicted in 16914 grants (17%) - these tagged grants are stored in `data/processed/predictions/210402/wellcome-grants-awarded-2005-2019_tagged.csv`.
+will predict tech grants for the dataset given in the `grants_data_path` config variable.
 
+#### Evaluation on model trained with 360Giving data
+
+```
+python nutrition_labels/evaluate.py --config_path configs/evaluation/2021.04.04.ini
+```
+When training on 360Giving data, the evaluation results on the test dataset are exactly the same as above. The results for evaluation on RF/not used were also the same, but the EPMC evaluation dropped to 58%.
+
+### Results
+
+Results discussed here will be for both the `configs/predict/2021.04.06.ini` model predictions - which is trained and predicted on the 360Giving open dataset, and the `configs/predict/2021.04.03.ini` model predictions - which is trained and predicted on all the grant data from FortyTwo, as downloaded on 20th April 2021.
+
+The results for these two models/predictions are very similar - so we will comment on both, but give additional information (e.g. plots) for the 360Giving version since this is reproducible externally too.
+
+#### Number of tech grants predicted
+
+The `configs/predict/2021.04.06.ini` config file contains the path to the 360Giving dataset of 16,914 grants. The model predicted that 21% (3572) of these are tech grants - these tagged grants are stored in `data/processed/predictions/210406/wellcome-grants-awarded-2005-2019_tagged.csv`. This took about 3 hours to predict on my machine.
+
+The `configs/predict/2021.04.03.ini` config file contains the path to all the grant data from fortytwo, as downloaded on 20th April 2021, this contains 126,341 grants. The model predicted that 12% (15199) of these are tech grants - these tagged grants are stored in `data/processed/predictions/210403/all_grants_fortytwo_info_210420_tagged.csv`. This took about 12 hours to predict on my machine.
+
+#### Fairness
+
+The predictions on the test data set were the same for both the 360 and the 42 datasets, so the fairness results will be the same for both.
+
+Using both the 360 giving data and the 42 grants data in `notebooks/Fairness - 210420.ipynb` the predictions from the model in `data/processed/predictions/210406/wellcome-grants-awarded-2005-2019_tagged.csv` and `data/processed/predictions/210403/all_grants_fortytwo_info_210420_tagged.csv` give the follow group fairness results when grouped by universities (golden triangle or not), organisation region (London, other UK, or international), financial year, length of grant title+description given (which is the data which is predicted on):
+
+| Data type | Type | Train ratio | Sample size | accuracy | f1 | precision_score | recall_score |
+|-|-|-|-|-|-|-|-|
+| Recipient organisation | Golden triangle | 0.371 | 69 | 0.913 | 0.925 | 0.925 | 0.925 |
+| Recipient organisation | Not golden triangle | 0.629 | 88 | 0.886 | 0.875 | 0.875 | 0.875 |
+
+| Data type | Type | Train ratio | Sample size | accuracy | f1 | precision_score | recall_score |
+|-|-|-|-|-|-|-|-|
+| Region grouped | Greater London | 0.311 | 59 | 0.932 | 0.937 | 0.968 | 0.909 |
+| Region grouped | International | 0.09 | 12 | 0.917 | 0.909 | 0.833 | 1 |
+| Region grouped | UK, not greater London | 0.599 | 86 | 0.872 | 0.871 | 0.86 | 0.881 |
+
+| Data type | Type | Train ratio | Sample size | accuracy | f1 | precision_score | recall_score |
+|-|-|-|-|-|-|-|-|
+| Recipient Org:Country grouped | Not UK | 0.113 | 15 | 0.933 | 0.923 | 0.857 | 1 |
+| Recipient Org:Country grouped | UK | 0.887 | 142 | 0.894 | 0.898 | 0.904 | 0.892 |
+
+| Data type | Type | Train ratio | Sample size | accuracy | f1 | precision_score | recall_score |
+|-|-|-|-|-|-|-|-|
+| Financial Year grouped | <2010 | 0.068 | 8 | 1 | 1 | 1 | 1 |
+| Financial Year grouped | 2010-2015 | 0.275 | 48 | 0.833 | 0.8 | 0.941 | 0.696 |
+| Financial Year grouped | 2015-2017 | 0.324 | 45 | 0.933 | 0.936 | 0.88 | 1 |
+| Financial Year grouped | >=2017 | 0.333 | 56 | 0.911 | 0.928 | 0.889 | 0.97 |
+
+| Data type | Type | Train ratio | Sample size | accuracy | f1 | precision_score | recall_score |
+|-|-|-|-|-|-|-|-|
+| Title plus Description length binned | (0, 1000] | 0.064 | 12 | 0.917 | 0.857 | 0.75 | 1 |
+| Title plus Description length binned | (1000, 1500] | 0.409 | 67 | 0.866 | 0.862 | 0.875 | 0.848 |
+| Title plus Description length binned | (1500, 2000] | 0.435 | 67 | 0.925 | 0.933 | 0.921 | 0.946 |
+| Title plus Description length binned | (2000, 3000] | 0.07 | 9 | 0.889 | 0.909 | 1 | 0.833 |
+| Title plus Description length binned | (3000, 3798] | 0 | 2 | 1 | 1 | 1 | 1 |
+
+We see the model performs considerably better for golden triangle universities over non-golden triangle, and London over not-London universities. As perhaps would be expected the model performs better when there is more text given to predict on.
+
+### Comparison with science tags
+
+Wellcome also has a model for tagging grants (we'll call this "the Science tags") with, so we wanted to compare our tech grant tags with theirs. We normalised both sets of data so that the same range of years were used (2005-2019). The Science tags include many different topics, and we selected the 'techy' topic tags: Data Science, Computational & Mathematical Modelling and/or Surveillance (we’ll call these the computational science tag grants).​ The Science tags come with a probability, and we were advised to only include the tags where the probability is over 0.4. This comparison was done in the notebook `Science tags - Tech grant comparison - 210420.ipynb`.
+
+This analysis was performed on both the 360 giving data and the 42 data, however the results were very similar in terms of proportions - I'll just give the results of the 360 giving data here.
+
+In general there wasn't a huge overlap between the two sets of tags, as seen in the venn plot:
+
+![](figures/210420_tag_comparisons_venn.png)
+
+A deeper dive showed that the proportions of grant types in both sets of tags would have been broadly similar had it not been skewed by a large number of PhD studentships in the tech grants but not in the computational science tags. Furthermore, looking at the proportion of grants in both sets of tags by grant year showed that there are more recent grants in the computational science tags.
+
+![](figures/210420_tag_comparisons_granttype.png)
+
+![](figures/210420_tag_comparisons_years.png)
+
+### Broad analysis of tech grants
+
+The results in this section are using the 360 Giving dataset - the tech grant predictions from `data/processed/predictions/210406/wellcome-grants-awarded-2005-2019_tagged.csv` (model trained on 360 Giving dataset). These were found in `notebooks/Tech Grants Summary Analysis.ipynb`.
+
+- There were 3562 tech grants predicted in 16,854 grants (duplicates deleted) - 21.13%
+- The amount awarded for tech grants was £2,191,601,015 out of £8,226,246,517 total funding for these grants  - 26.64%
+- The largest number of tech grants occurred in 2016 - this was 422 grants which was 26% of the grants for that year, and 32% (£286,568,020) of the total spending for that year.
+- The largest proportion of tech grants in all the grants occurred in 2019 - this was 222 grants which was 31% of the grants for that year, and 38% (£236,201,887) of the total spending for that year.
+- PhD Studentship (Basic) Awards are the most common grant type with tech grants in - there are 458 of these in the tech grants. In all of this type of grant 25% are tech grants (458 out of 1856).
+- Open Access Awards are the second most common grant type with tech grants in - there are 424 of these in the tech grants. In all of this type of grant 99% are tech grants (424 out of 428).
+- Value in People Awards have the highest proportion of tech grants in - 150 of 150 (100%) of these are tech grants.
+- Biomedical Resources Grants have the 4th highest proportion of tech grants in - 127 of 159 (80%) of these are tech grants.
+- Strategic Support: Science grants have the 5th highest proportion of tech grants in - 56 of 74 (76%) of these are tech grants.
+- Technology Development Grants have the 6th highest proportion of tech grants in - 42 of 57 (74%) of these are tech grants.
+
+
+![](figures/210402_tech_predictions_overtime.png)
+
+![](figures/210402_tech_predictions_num_granttypes.png)
+
+### Broad analysis of tech grants - FortyTwo data
+
+The results in this section are using the fortytwo dataset - the tech grant predictions from `data/processed/predictions/210402/all_grants_fortytwo_info_210420_tagged.csv` (model trained on 42 Giving dataset). These were found in `notebooks/Tech Grants Summary Analysis - Internal data.ipynb`.
+These results are all very similar to the 360Giving summary above.
+
+- There were 2994 tech grants predicted in 16854 grants - 17.76%
+- The amount awarded for tech grants was £1969715337 out of £8226246517 total funding for these grants  - 23.94%
+- The largest number of tech grants occurred in 2016 - this was 361 grants which was 22% of the grants for that year, and 28% (£258,085,938) of the total spending for that year.
+- The largest proportion of tech grants in all the grants occurred in 2019 - this was 207 grants which was 29% of the grants for that year, and 36% (£227,268,620) of the total spending for that year.
+
+- Open Access Awards are the most common grant type with tech grants in - there are 422 of these in the tech grants. In all of this type of grant 99% are tech grants (422 out of 428).
+- PhD Studentship (Basic) Awards are the 2nd most common grant type with tech grants in - there are 317 of these in the tech grants. In all of this type of grant 17% are tech grants (317 out of 1856).
+- Value in People Awards have the highest proportion of tech grants in - 150 of 150 (100%) of these are tech grants.
+- Biomedical Resources Grants have the 3rd highest proportion of tech grants in - 126 of 159 (79%) of these are tech grants.
+- Technology Development Grants have the 4th highest proportion of tech grants in - 43 of 57 (75%) of these are tech grants.
+- Strategic Support: Science grants have the 5th highest proportion of tech grants in - 53 of 74 (72%) of these are tech grants.
+
+
+### Cluster Analysis
+
+The results in this section are using the 360 Giving dataset. Clusters were found by running:
+```
+python nutrition_labels/cluster_tech_grants.py --config_path 'configs/clustering/2021.04.01.ini'
+```
+In `notebooks/Tech Grant Clusters Visualisation - 26 April 2021.ipynb` these clusters are analysed.
+
+Firstly the data was reduced into 2D using TF-IDF vectorization and the UMAP dimensionality reduction algorithm. This 2D representation of the data is useful in visualisations. The dbscan clustering algorithm is then applied to this data. 173 clusters were found in all the grants.
+
+In the following plot the clusters are coloured, and the clusters with >80 grants in have also been labelled with their top 2 keywords:
+
+![](figures/210429_all_grants_80.png)
+
+We can also colour the points by the proportion of tech grants in each cluster:
+
+![](figures/210429_prop_tech.png)
+
+Or similarly, colour the point by whether it is a tech grant or not:
+
+![](figures/210429_tech_or_not.png)
+
+The 10 clusters with the highest proportion of tech grants were:
+
+|Cluster number|Proportion of Tech Grants|Number of Grants|Keywords|
+|---|----|---|---|
+|7	|0.50|55|	image,microscope,confocal,tissue,resolution,microscopy,equipment,light,cell,laser|
+|148|	0.50|14	|abortion,woman,health,access,law,legal,liverpool,travel,service,eugenic|
+|58	|0.50|12|	cell,germ,epigenetic,blimp1,reprogramme,specification,pgc,lineage,competence,embryo|
+|30|	0.50|107|	brain,epilepsy,model,seizure,neuroimaging,patient,image,stimulation,connectivity,human|
+|84	|0.50|	49|	urban,health,city,environmental,planetary,sustainability,population,research,policy,datum|
+|39	|0.56|22|	dementia,people,cognitive,diagnosis,care,risk,impairment,research,patient,clinical|
+|6	|0.60|10|	language,stroke,recovery,aphasia,patient,task,aphasic,neuronal,damage,speech|
+|5	|0.63|206	|genetic,variant,genome,sequence,datum,locus,association,disease,genotype,study|
+|166	|0.63|	8	|pet,bionews,debate,genetic,public,issue,educational,cell,stem,family|
+|34	|0.91|22	|hospital,project,patient,health,record,child,century,service,archive,medical|
+
+
+The 10 clusters with the lowest proportion of tech grants were:
+
+|Cluster number|Proportion of Tech Grants|Number of Grants|Keywords|
+|---|----|---|---|
+|128|	0.00|32	|trypanosome,vsg,tsetse,brucei,stumpy,fly,expression,gene,parasite,cell|
+|126|	0.00|	48|	secretion,effector,host,salmonella,cell,bacterial,protein,pathogen,t3ss,virulence|
+|120	|0.00|	38	|hif,hypoxia,oxygen,hypoxic,vhl,response,hydroxylase,cell,pathway,inducible|
+|112	|0.00|	45|	pain,dorsal,chronic,spinal,horn,neuropathic,peripheral,neuron,nociceptive,sensory|
+|171	|0.00|	1500|	research,disease,cell,health,study,project,patient,model,datum,drug|
+|45	|0.012	|91	|channel,ca2,calcium,sperm,gate,ion,signal,af,protein,cell|
+|104	|0.019|	43	|sleep,wake,brain,night,circadian,disorder,neuron,activity,research,autism|
+|79	|0.022|	34	|facility,device,equipment,fund,support,new,research,request,core,clinical|
+|23|	0.028|	131	|protein,er,fold,cell,membrane,sort,molecular,transport,vesicle,hsp|
+|78	|0.029	|93|	chromosome,microtubule,segregation,meiosis,mitotic,spindle,cell,cohesin,centrosome,oocyte|
+
+
+We also applied the dimensionality reduction and clustering on just the tech grants. 30 clusters were found when just clustering on the tech grants only.
+
+![](figures/210429_tech_grants.png)
+
+The tech clusters with the largest number of grants in were:
+
+|Cluster number|Number of Grants|Keywords|
+|---|----|---|
+|5	|294	|brain,model,neural,neuron,visual,network,process,task,learn,decision|
+|0	|230	|gene,genome,sequence,variant,datum,analysis,disease,study,phenotype,method|
+|2	|193	|health,research,datum,policy,intervention,care,population,change,public,mortality|
+|8	|164	|virus,transmission,malaria,infection,host,datum,disease,influenza,model,pathogen|
+|	4	|132|	protein,structural,structure,ms,mass,cryo,membrane,complex,proteomics,high|
+|12	|117|	datum,patient,hospital,risk,health,disease,study,cohort,cvd,care|
+|7	|60	|cell,image,tissue,stem,fate,flow,progenitor,model,single,high|
+|13	|41	|coronary,cardiac,heart,patient,pressure,flow,artery,myocardial,drug,blood|
+|9	|39	|datum,database,resource,community,open,research,platform,access,tool,intermine|
+|10	|25	|asd,delirium,disorder,cognitive,dementia,ds,adhd,autism,people,spectrum|
