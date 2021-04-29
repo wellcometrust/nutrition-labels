@@ -9,7 +9,7 @@ endif
 
 
 PRODIGY_BUCKET := datalabs-packages/Prodigy
-PROJECT_BUCKET := datalabs-public/nutrition_labels
+PROJECT_BUCKET := datalabs-data/nutrition-labels
 
 VIRTUALENV := build/virtualenv
 PRODIGY_VIRTUALENV := build/prodigy_virtualenv
