@@ -81,7 +81,14 @@ The pipeline to create training data, train models, and make predictions and eva
 chmod +x tech_grants_pipeline.sh
 ./tech_grants_pipeline.sh
 ```
-be warned that this takes >5 hours since it includes making predictions on data.
+or
+```
+chmod +x tech_grants_pipeline_open.sh
+./tech_grants_pipeline_open.sh
+```
+The former uses internally available FortyTwo data to train and make predictions on, the second command is for external users - it trains and predicts on the publically available 360Giving grants dataset.
+
+Be warned that this takes >5 hours since it includes making predictions on data.
 
 An overview of this pipeline and the latest files, as of 21/04/2021 used for each of them is as follows.
 
@@ -99,8 +106,11 @@ Output: 313 tech grants and 488 not tech grants (Internal ID <-> Relevance code)
 ##### 2. Train model(s) <a name="pipeline2"></a>
 Description: Train a BERT + logistic regression classifier model.
 
-Input: `configs/train_model/2021.04.03.ini`
-Command:
+Input: Internally we want to train and predict on fortytwo data, but for external communication we need to use the public 360 giving dataset. So we have different configs to train on each of these:
+- `configs/train_model/2021.04.03.ini` - to train using the fortytwo grants data downloaded on 20th April 2021.
+- `configs/train_model/2021.04.04.ini` - to train using the 360 giving grants dataset.
+
+Command example:
 ```
 python nutrition_labels/grant_tagger.py --config_path configs/train_model/2021.04.03.ini
 ```
