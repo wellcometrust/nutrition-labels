@@ -331,32 +331,31 @@ The 10 clusters with the highest proportion of tech grants were:
 
 |Cluster number|Proportion of Tech Grants|Number of Grants|Keywords|
 |---|----|---|---|
-|7	|0.50|55|	image,microscope,confocal,tissue,resolution,microscopy,equipment,light,cell,laser|
-|148|	0.50|14	|abortion,woman,health,access,law,legal,liverpool,travel,service,eugenic|
-|58	|0.50|12|	cell,germ,epigenetic,blimp1,reprogramme,specification,pgc,lineage,competence,embryo|
-|30|	0.50|107|	brain,epilepsy,model,seizure,neuroimaging,patient,image,stimulation,connectivity,human|
-|84	|0.50|	49|	urban,health,city,environmental,planetary,sustainability,population,research,policy,datum|
-|39	|0.56|22|	dementia,people,cognitive,diagnosis,care,risk,impairment,research,patient,clinical|
-|6	|0.60|10|	language,stroke,recovery,aphasia,patient,task,aphasic,neuronal,damage,speech|
-|5	|0.63|206	|genetic,variant,genome,sequence,datum,locus,association,disease,genotype,study|
-|166	|0.63|	8	|pet,bionews,debate,genetic,public,issue,educational,cell,stem,family|
-|34	|0.91|22	|hospital,project,patient,health,record,child,century,service,archive,medical|
-
+|7	|0.50|10|	language,stroke,recovery,aphasia,patient,task,aphasic,neuronal,damage,speech|
+|	148	|0.50|	8|	stroke,hai,patient,treatment,dar,ssa,dysphagia,case,wgas,salaam|
+|58	|0.50|	12|	asd,autism,disorder,spectrum,child,young,social,model,developmental,mouse|
+|30	|0.50|16|	cvd,risk,cardiovascular,country,factor,disease,pune,healthcare,lac,adult|
+|84	|0.50|20|	flow,cell,cytometry,sorter,cytometer,research,biology,facility,parameter,chromosome|
+|39	|0.56|	39|	cryo,em,electron,resolution,macromolecular,structure,facility,microscopy,structural,microscope|
+|6	|0.60|206|	genetic,variant,genome,sequence,datum,locus,association,disease,genotype,study|
+|5|	0.63|24|	game,player,world,virtual,3d,immerse,vr,star,pet,story|
+|166|	0.63|	8|	zikv,zika,congenital,microcephaly,infection,chikv,vietnam,brazil,syndrome,campina|
+|34	|0.91|110|	datum,resource,database,twin,access,analysis,open,cohort,software,research|
 
 The 10 clusters with the lowest proportion of tech grants were:
 
 |Cluster number|Proportion of Tech Grants|Number of Grants|Keywords|
 |---|----|---|---|
-|128|	0.00|32	|trypanosome,vsg,tsetse,brucei,stumpy,fly,expression,gene,parasite,cell|
-|126|	0.00|	48|	secretion,effector,host,salmonella,cell,bacterial,protein,pathogen,t3ss,virulence|
-|120	|0.00|	38	|hif,hypoxia,oxygen,hypoxic,vhl,response,hydroxylase,cell,pathway,inducible|
-|112	|0.00|	45|	pain,dorsal,chronic,spinal,horn,neuropathic,peripheral,neuron,nociceptive,sensory|
-|171	|0.00|	1500|	research,disease,cell,health,study,project,patient,model,datum,drug|
-|45	|0.012	|91	|channel,ca2,calcium,sperm,gate,ion,signal,af,protein,cell|
-|104	|0.019|	43	|sleep,wake,brain,night,circadian,disorder,neuron,activity,research,autism|
-|79	|0.022|	34	|facility,device,equipment,fund,support,new,research,request,core,clinical|
-|23|	0.028|	131	|protein,er,fold,cell,membrane,sort,molecular,transport,vesicle,hsp|
-|78	|0.029	|93|	chromosome,microtubule,segregation,meiosis,mitotic,spindle,cell,cohesin,centrosome,oocyte|
+|129|	0.000	|32|	trypanosome,vsg,tsetse,brucei,stumpy,fly,expression,gene,parasite,cell|
+|121	|0.000|	38|	hif,hypoxia,oxygen,hypoxic,vhl,response,hydroxylase,cell,pathway,inducible|
+|113|	0.000	|45|	pain,dorsal,chronic,spinal,horn,neuropathic,peripheral,neuron,nociceptive,sensory|
+|109	|0.000|	31|	replication,dna,origin,fork,replisome,helicase,cell,genome,duplication,eukaryotic|
+|45	|0.012|	81	|dna,repair,damage,protein,ddr,repeat,cell,break,dsb,hr|
+|21	|0.017|	757|	medical,medicine,history,conference,research,health,practice,modern,century,work|
+|104|	0.019	|54	|nk,cell,hcmv,hla,kir,htlv,infection,hcv,latency,trophoblast|
+|93	|0.020	|49|	war,forensic,military,medical,british,veteran,world,medicine,project,history|
+|127	|0.021|	48|	secretion,effector,host,salmonella,cell,bacterial,protein,pathogen,t3ss,virulence|
+|79	|0.022|	93|	chromosome,microtubule,segregation,meiosis,mitotic,spindle,cell,cohesin,centrosome,oocyte|
 
 
 We also applied the dimensionality reduction and clustering on just the tech grants. 30 clusters were found when just clustering on the tech grants only.
@@ -367,13 +366,13 @@ The tech clusters with the largest number of grants in were:
 
 |Cluster number|Number of Grants|Keywords|
 |---|----|---|
-|5	|294	|brain,model,neural,neuron,visual,network,process,task,learn,decision|
-|0	|230	|gene,genome,sequence,variant,datum,analysis,disease,study,phenotype,method|
-|2	|193	|health,research,datum,policy,intervention,care,population,change,public,mortality|
-|8	|164	|virus,transmission,malaria,infection,host,datum,disease,influenza,model,pathogen|
-|	4	|132|	protein,structural,structure,ms,mass,cryo,membrane,complex,proteomics,high|
+|5	|294|	brain,model,neural,neuron,visual,network,process,task,learn,decision|
+|0|	230|	gene,genome,sequence,variant,datum,analysis,disease,study,phenotype,method|
+|2	|193|	health,research,datum,policy,intervention,care,population,change,public,mortality|
+|8|	164|	virus,transmission,malaria,infection,host,datum,disease,influenza,model,pathogen|
+4	|132|	protein,structural,structure,ms,mass,cryo,membrane,complex,proteomics,high|
 |12	|117|	datum,patient,hospital,risk,health,disease,study,cohort,cvd,care|
-|7	|60	|cell,image,tissue,stem,fate,flow,progenitor,model,single,high|
-|13	|41	|coronary,cardiac,heart,patient,pressure,flow,artery,myocardial,drug,blood|
-|9	|39	|datum,database,resource,community,open,research,platform,access,tool,intermine|
-|10	|25	|asd,delirium,disorder,cognitive,dementia,ds,adhd,autism,people,spectrum|
+|7|	60	|cell,image,tissue,stem,fate,flow,progenitor,model,single,high|
+|13	|41|	coronary,cardiac,heart,patient,pressure,flow,artery,myocardial,drug,blood|
+|9	|39|	datum,database,resource,community,open,research,platform,access,tool,intermine|
+|10	|25|	asd,delirium,disorder,cognitive,dementia,ds,adhd,autism,people,spectrum|
