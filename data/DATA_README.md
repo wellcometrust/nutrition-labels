@@ -61,14 +61,7 @@ Due to Excel corruption the PMID-grants from both of these files are saved in
 
 ##### `ResearchFish/`
 
-Downloads from ResearchFish data on fortytwo:
-- `MedicalProductsAndInterventions.csv`
-- `OtherOutputsAndKnowledge.csv`
-- `ResearchDatabaseModels.csv`
-- `ResearchToolsAndMethods.csv`
-- `SoftwareAndTechnicalProducts.csv`
-
-Manually tagged and collated together:
+ResearchFish fields tagged with whether tech was found or not, descriptions are removed since this data isn't open (if you need this information, the full dataset is in `ResearchFish_originals/`):
 - `research_fish_manual_edit.csv`
 
 ##### `expanded_tags/`
@@ -76,7 +69,7 @@ Manually tagged and collated together:
 After the expanded definition of 'tech' in 2021 the manually tagged datasets from EPMC (query 1 and 2), RF and grants data, were retagged and saved here:
 - `EPMC_relevant_tool_pubs_3082020.csv`
 - `EPMC_relevant_pubs_query2_3082020.csv`
-- `research_fish_manual_edit.csv`
+- `research_fish_manual_edit.csv` (descriptions are removed since this data isn't open - if you need this information, the full dataset is in `ResearchFish_originals/`)
 - `wellcome-grants-awarded-2005-2019_manual_edit_Lizadditions.csv`
 
 ##### `fortytwo/`
@@ -88,6 +81,21 @@ It contains all the grants data (using the query: `SELECT Reference, Title, Syno
 
 Science tags for the comparison with the 'Data Modelling & Surveillance Grants' tag:
 - `2020.10.09_DataModelling&SurveillanceGrants.csv`
+
+The original data used for tagging whether the ResearchFish outputs are tech or not (includes descriptions) are in the subfolder `ResearchFish_originals/`. This contains:
+
+Downloads from ResearchFish data on fortytwo:
+- `ResearchFish_originals/MedicalProductsAndInterventions.csv`
+- `ResearchFish_originals/OtherOutputsAndKnowledge.csv`
+- `ResearchFish_originals/ResearchDatabaseModels.csv`
+- `ResearchFish_originals/ResearchToolsAndMethods.csv`
+- `ResearchFish_originals/SoftwareAndTechnicalProducts.csv`
+
+Manually tagged and collated together - all description fields left in:
+- `ResearchFish_originals/research_fish_manual_edit.csv`
+
+Manually tagged and collated together with new 'tech' definition from 2021 - all description fields left in:
+- `ResearchFish_originals/expanded_tags/research_fish_manual_edit.csv`
 
 ## `prodigy/`
 
