@@ -212,6 +212,8 @@ The `configs/predict/2021.04.06.ini` config file contains the path to the 360Giv
 
 The `configs/predict/2021.04.03.ini` config file contains the path to all the grant data from fortytwo, as downloaded on 20th April 2021, this contains 126,341 grants. The model predicted that 12% (15199) of these are tech grants - these tagged grants are stored in `data/processed/predictions/210403/all_grants_fortytwo_info_210420_tagged.csv`. This took about 12 hours to predict on my machine.
 
+16,853 grants were in both the 360Giving and 42 datasets - the predictions for these were the same 94% of the time.
+
 #### Fairness
 
 The predictions on the test data set were the same for both the 360 and the 42 datasets, so the fairness results will be the same for both.
@@ -293,7 +295,7 @@ The results in this section are using the fortytwo dataset - the tech grant pred
 These results are all very similar to the 360Giving summary above.
 
 - There were 2994 tech grants predicted in 16854 grants - 17.76%
-- The amount awarded for tech grants was £1969715337 out of £8226246517 total funding for these grants  - 23.94%
+- The amount awarded for tech grants was £1,969,715,337 out of £8,226,246,517 total funding for these grants  - 23.94%
 - The largest number of tech grants occurred in 2016 - this was 361 grants which was 22% of the grants for that year, and 28% (£258,085,938) of the total spending for that year.
 - The largest proportion of tech grants in all the grants occurred in 2019 - this was 207 grants which was 29% of the grants for that year, and 36% (£227,268,620) of the total spending for that year.
 
