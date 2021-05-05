@@ -10,4 +10,3 @@ data/raw/expanded_tags/wellcome-grants-awarded-2005-2019_manual_edit_Lizaddition
 data/prodigy/merged_tech_grants/merged_tech_grants.jsonl
 data/raw/wellcome-grants-awarded-2005-2019_test_sample.csv
 data/raw/wellcome-grants-awarded-2005-2019.csv
-models/210331/
