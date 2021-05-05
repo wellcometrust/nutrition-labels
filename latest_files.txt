@@ -10,3 +10,10 @@ data/raw/expanded_tags/wellcome-grants-awarded-2005-2019_manual_edit_Lizaddition
 data/prodigy/merged_tech_grants/merged_tech_grants.jsonl
 data/raw/wellcome-grants-awarded-2005-2019_test_sample.csv
 data/raw/wellcome-grants-awarded-2005-2019.csv
+data/processed/clustering/cluster_info_210429.txt
+data/processed/clustering/tech_cluster_info_210429.txt
+data/processed/evaluation/210402/evaluation_results.txt
+data/processed/evaluation/210404/evaluation_results.txt
+data/processed/fairness/fairness_results_210402.csv
+data/processed/predictions/210406/wellcome-grants-awarded-2005-2019_tagged.csv
+data/processed/predictions/210403/all_grants_fortytwo_info_210420_tagged.csv
