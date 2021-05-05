@@ -59,8 +59,8 @@ Unit tests can be run by running `make test`. After any changes made to this cod
 
 To check the pipeline of training models and predicting grants is working can be done with:
 ```
-chmod +x tech_grants_pipeline_test.sh
-./tech_grants_pipeline_test.sh
+chmod +x pipelines/tech_grants_pipeline.sh
+pipelines/tech_grants_pipeline.sh configs/pipeline/2021.05.01.test.ini
 ```
 this should take about 1 min.
 
@@ -76,21 +76,33 @@ The code for this project is in the `nutrition_labels` and `notebooks` folder. M
 
 ### Pipeline overview <a name="pipelineoverview"></a>
 
+#### ResearchFish and EPMC evaluation data
+
+Create RF and EPMC evaluation data by running:
+
+`python nutrition_labels/create_training_data.py --config_path configs/training_data/2021.03.29.epmc.ini`
+and 
+`python nutrition_labels/create_training_data.py --config_path configs/training_data/2021.03.29.rf.ini`
+
+Previously these commands were part of the pipeline bash command, but they require different config parameters to `create_training_data.py` - which isn't possible now since we are using one config for the entire pipeline (so there are different config parameters).
+
+#### Pipeline bash command
+
 The pipeline to create training data, train models, and make predictions and evaluate models can be run with the commands:
 ```
-chmod +x tech_grants_pipeline.sh
-./tech_grants_pipeline.sh
+chmod +x pipelines/tech_grants_pipeline.sh
+pipelines/tech_grants_pipeline.sh configs/pipeline/2021.05.01.private.ini
 ```
 or
 ```
-chmod +x tech_grants_pipeline_open.sh
-./tech_grants_pipeline_open.sh
+chmod +x pipelines/tech_grants_pipeline.sh
+pipelines/tech_grants_pipeline.sh configs/pipeline/2021.05.01.open.ini
 ```
 The former uses internally available FortyTwo data to train and make predictions on, the second command is for external users - it trains and predicts on the publically available 360Giving grants dataset.
 
 Be warned that this takes >5 hours since it includes making predictions on data.
 
-An overview of this pipeline and the latest files, as of 21/04/2021 used for each of them is as follows.
+An overview of these pipeline steps (if you were to run them one by one) and the latest files, as of 21/04/2021 used for each of them is as follows.
 
 ##### 1. Create the training data <a name="pipeline1"></a>
 Description: Create training data with expanded tech definition and tagged grants data. ResearchFish and EPMC data are not included in the data.
