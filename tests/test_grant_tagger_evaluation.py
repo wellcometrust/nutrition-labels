@@ -5,6 +5,7 @@ import json
 import pandas as pd
 
 from nutrition_labels.grant_tagger_evaluation import get_model_test_scores, get_evaluation_data_scores
+from nutrition_labels.grant_tagger import GrantTagger
 
 model_scores = [
     {
@@ -38,24 +39,30 @@ def test_get_model_test_scores(tmp_path):
     assert all_models_info['model_2']['f1'] == 1
 
 
-def test_get_evaluation_data_scores():
+def test_get_evaluation_data_scores(tmp_path):
 
-    model_date_dir = 'models/210331/'
-    model_names = ['count_naive_bayes_210331', 'tfidf_naive_bayes_210331']
-
-    prediction_cols = ['Title']
-
-    epmc_evaluation_data = pd.DataFrame([
+    training_data = pd.DataFrame([
         {'Internal ID': "id_A", 'Relevance code': 1, 'Title': 'Software technology'},
         {'Internal ID': "id_B", 'Relevance code': 0, 'Title': 'A funding application'}])
-    rf_evaluation_data = epmc_evaluation_data
+
+    X_train = training_data['Title'].tolist()
+    y_train = training_data['Relevance code'].tolist()
+
+    model_names = ['count', 'tfidf']
+    for vectorizer in model_names:
+        grant_tagger = GrantTagger(
+            vectorizer_type=vectorizer,
+            classifier_type='naive_bayes'
+            )
+        grant_tagger.fit(X_train, y_train)
+        grant_tagger.save_model(os.path.join(tmp_path, vectorizer))
 
     epmc_results, _ = get_evaluation_data_scores(
-        model_date_dir,
+        tmp_path,
         model_names,
-        prediction_cols,
-        epmc_evaluation_data,
-        rf_evaluation_data
+        prediction_cols=['Title'],
+        epmc_evaluation_data=training_data,
+        rf_evaluation_data=training_data
         )
     assert set(epmc_results.keys()) == set(model_names)
     assert epmc_results[model_names[0]] <= 1
