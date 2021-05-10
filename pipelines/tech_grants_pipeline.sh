@@ -1,5 +1,4 @@
 #!/bin/bash
-export PYTHONPATH='.'
 
 set -e
 
