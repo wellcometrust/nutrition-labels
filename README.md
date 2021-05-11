@@ -37,11 +37,25 @@ source build/virtualenv/bin/activate
 
 ### Download the data
 
-Download the data for this project from
+You will need to download the AWS command line tool if you don't already have it:
 ```
-https://wellcomecloud.sharepoint.com/:f:/r/sites/DataLabs/Machine%20Learning/Nutrition%20Labels/data?csf=1&web=1&e=XHFn6n
+pip install awscli
 ```
-you will need to have been granted access to access this folder.
+then either download the open version of the data and models folder from our publically available S3 bucket:
+```
+make sync_open_data_from_s3
+make sync_open_models_from_s3
+```
+(this only contains the essential and most recent files), or (if a Wellcome employee) download the private version of all the data and models:
+```
+make sync_data_from_s3
+make sync_models_from_s3
+```
+or for a smaller set (no legacy data/models) of private data: 
+```
+make sync_latest_files_from_s3
+```
+
 This data contains the file `data/raw/wellcome-grants-awarded-2005-2019.csv` which is the openly available 360Giving grants data of 16,914 grants from 2005 to 2019. This file is the basis of a lot of this project.
 
 Make sure to upload any processed data to this folder too.

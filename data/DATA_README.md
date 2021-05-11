@@ -2,17 +2,35 @@
 
 Notes about the data are given in more detail in the various docs, but here is a high level description of files and folders in the data folder.
 
-You can download this data 2 ways:
-1. If you have a Wellcome AWS account:
+You can download the private version or the open version of the data.
+
+### 1. Private version
+
+If you have a Wellcome AWS account:
 `make sync_data_from_s3`
 or 
 `make sync_latest_files_from_s3` for just the essential files.
 
-2. If you don't, you can download it (you will need to ask permission to access the drive though) from:
+### 2. Open version
+
+You can download the open version of the data folder from our publically available S3 bucket:
 ```
-https://wellcomecloud.sharepoint.com/:f:/r/sites/DataLabs/Machine%20Learning/Nutrition%20Labels/data?csf=1&web=1&e=XHFn6n
+make sync_open_data_from_s3
+```
+this only contains the essential and most recent files. You will need to download the AWS command line tool if you don't already have it:
+```
+pip install awscli
+```
+
+You can also download the data file by file with the prefix:
+```
+https://datalabs-public.s3.eu-west-2.amazonaws.com/nutrition-labels/data/
 ```
 this won't include data from the `raw/fortytwo/` and `processed/fortytwo/` folders since these contain private information and contain data for internal purposes.
+
+e.g. `https://datalabs-public.s3.eu-west-2.amazonaws.com/nutrition-labels/data/raw/wellcome-grants-awarded-2005-2019.csv`.
+
+### Data folder structure
 
 - raw
     - EPMC/
@@ -44,7 +62,7 @@ A sample of 10 of the 360Giving grants data (useful for quick testing):
 Manually tagged versions:
 - `wellcome-grants-awarded-2005-2019_manual_edit_relabeling.csv` (only used in testing human accuracy)
 - `grants_sample_becky.csv` (only used in testing human accuracy)
-- `wellcome-grants-awarded-2005-2019_manual_edit_Lizadditions.csv` (final version of tagged data)
+- `wellcome-grants-awarded-2005-2019_manual_edit_Lizadditions.csv` (final version of tagged data - 'Revised code' is the most recent tag of tech)
 
 ##### `EPMC/`
 
@@ -52,7 +70,7 @@ Downloads from the EPMC API:
 - `EPMC_relevant_tool_pubs.csv`
 - `EPMC_relevant_pubs_query2.csv`
 
-Manually tagged versions:
+Manually tagged versions ('Revised code' is the most recent tag of tech):
 - `EPMC_relevant_tool_pubs_3082020.csv`
 - `EPMC_relevant_pubs_query2_3082020.csv`
 
@@ -61,7 +79,7 @@ Due to Excel corruption the PMID-grants from both of these files are saved in
 
 ##### `ResearchFish/`
 
-ResearchFish fields tagged with whether tech was found or not, descriptions are removed since this data isn't open (if you need this information, the full dataset is in `ResearchFish_originals/`):
+ResearchFish fields tagged with whether tech was found ('code' is the most recent tag of tech), descriptions are removed since this data isn't open (if you need this information, the full dataset is in `ResearchFish_originals/`):
 - `research_fish_manual_edit.csv`
 
 ##### `expanded_tags/`
