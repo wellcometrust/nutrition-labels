@@ -13,22 +13,15 @@ or
 
 ### 2. Open version
 
-You can download the open version of the data folder from our publically available S3 bucket:
+You can download the open version of the data folder from our publically available S3 bucket (if you have AWS credentials):
 ```
 make sync_open_data_from_s3
 ```
-this only contains the essential and most recent files. You will need to download the AWS command line tool if you don't already have it:
+otherwise you can download the essential open files by going to this url:
 ```
-pip install awscli
+https://datalabs-public.s3.eu-west-2.amazonaws.com/nutrition-labels/open_data_models.zip
 ```
-
-You can also download the data file by file with the prefix:
-```
-https://datalabs-public.s3.eu-west-2.amazonaws.com/nutrition-labels/data/
-```
-this won't include data from the `raw/fortytwo/` and `processed/fortytwo/` folders since these contain private information and contain data for internal purposes.
-
-e.g. `https://datalabs-public.s3.eu-west-2.amazonaws.com/nutrition-labels/data/raw/wellcome-grants-awarded-2005-2019.csv`.
+from this a zipped file will be downloaded. You will need to unzip this file and move the contents of this folder into the main directory (i.e. the 'data' folder this zipped file should replace the main 'data' folder). This won't include data from the `raw/fortytwo/` and `processed/fortytwo/` folders since these contain private information and contain data for internal purposes.
 
 ### Data folder structure
 
