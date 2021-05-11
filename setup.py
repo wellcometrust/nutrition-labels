@@ -7,11 +7,11 @@ with open("README.md", "r") as f:
 
 setuptools.setup(
     name="Nutrition Labels",
-    version="",
+    version="0.0.1",
     author="Liz Gallagher",
     author_email="e.gallagher@wellcome.ac.uk",
     description="Train a model to predict whether a grant contains tech or not",
-    long_description="",
+    long_description=long_description,
     long_description_content_type="text/markdown",
     url="",
     license="",
