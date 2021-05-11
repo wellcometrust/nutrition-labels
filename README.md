@@ -56,7 +56,7 @@ If you don't have AWS credentials then you will need to download the essential o
 ```
 https://datalabs-public.s3.eu-west-2.amazonaws.com/nutrition-labels/open_data_models.zip
 ```
-from this a zipped file will be downloaded. You will need to unzip this file and move the contents of this folder into the main directory (i.e. the 'data' folder this zipped file should replace the main 'data' folder).
+from this a zipped file will be downloaded. You will need to unzip this file and move the contents of this folder into the main directory (i.e. the 'data/processed' folder this zipped file should replace the main 'data/processed' folder).
 
 
 This data contains the file `data/raw/wellcome-grants-awarded-2005-2019.csv` which is the openly available 360Giving grants data of 16,914 grants from 2005 to 2019. This file is the basis of a lot of this project.

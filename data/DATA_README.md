@@ -21,7 +21,7 @@ otherwise you can download the essential open files by going to this url:
 ```
 https://datalabs-public.s3.eu-west-2.amazonaws.com/nutrition-labels/open_data_models.zip
 ```
-from this a zipped file will be downloaded. You will need to unzip this file and move the contents of this folder into the main directory (i.e. the 'data' folder this zipped file should replace the main 'data' folder). This won't include data from the `raw/fortytwo/` and `processed/fortytwo/` folders since these contain private information and contain data for internal purposes.
+from this a zipped file will be downloaded. You will need to unzip this file and move the contents of this folder into the main directory (i.e. the 'data/processed' folder this zipped file should replace the main 'data/processed' folder). This won't include data from the `raw/fortytwo/` and `processed/fortytwo/` folders since these contain private information and contain data for internal purposes.
 
 ### Data folder structure
 
