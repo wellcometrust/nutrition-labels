@@ -37,11 +37,28 @@ source build/virtualenv/bin/activate
 
 ### Download the data
 
-Download the data for this project from
+If you have the AWS command line tool and added your configure credentials then you can either download the open version of the data and models folder from our publically available S3 bucket:
 ```
-https://wellcomecloud.sharepoint.com/:f:/r/sites/DataLabs/Machine%20Learning/Nutrition%20Labels/data?csf=1&web=1&e=XHFn6n
+make sync_open_data_from_s3
+make sync_open_models_from_s3
 ```
-you will need to have been granted access to access this folder.
+(this only contains the essential and most recent files), or (if a Wellcome employee) download the private version of all the data and models:
+```
+make sync_data_from_s3
+make sync_models_from_s3
+```
+or for a smaller set (no legacy data/models) of private data: 
+```
+make sync_latest_files_from_s3
+```
+
+If you don't have AWS credentials then you will need to download the essential open files by going to this url:
+```
+https://datalabs-public.s3.eu-west-2.amazonaws.com/nutrition-labels/open_data_models.zip
+```
+from this a zipped file will be downloaded. You will need to unzip this file and move the contents of this folder into the main directory (i.e. the 'data/processed' folder this zipped file should replace the main 'data/processed' folder).
+
+
 This data contains the file `data/raw/wellcome-grants-awarded-2005-2019.csv` which is the openly available 360Giving grants data of 16,914 grants from 2005 to 2019. This file is the basis of a lot of this project.
 
 Make sure to upload any processed data to this folder too.

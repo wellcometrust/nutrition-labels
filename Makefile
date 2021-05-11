@@ -10,6 +10,7 @@ endif
 
 PRODIGY_BUCKET := datalabs-packages/Prodigy
 PROJECT_BUCKET := datalabs-data/nutrition-labels
+OPEN_PROJECT_BUCKET := datalabs-public/nutrition-labels
 
 VIRTUALENV := build/virtualenv
 PRODIGY_VIRTUALENV := build/prodigy_virtualenv
@@ -57,6 +58,10 @@ sync_data_to_s3:
 sync_data_from_s3:
 	aws s3 sync s3://$(PROJECT_BUCKET)/data/ data/
 
+.PHONY:sync_open_data_from_s3
+sync_open_data_from_s3:
+	aws s3 sync s3://$(OPEN_PROJECT_BUCKET)/data/ data/
+
 .PHONY:sync_models_to_s3
 sync_models_to_s3:
 	aws s3 sync models/ s3://$(PROJECT_BUCKET)/models/
@@ -64,6 +69,10 @@ sync_models_to_s3:
 .PHONY:sync_models_from_s3
 sync_models_from_s3:
 	aws s3 sync s3://$(PROJECT_BUCKET)/models/ models/
+
+.PHONY:sync_open_models_from_s3
+sync_open_models_from_s3:
+	aws s3 sync s3://$(OPEN_PROJECT_BUCKET)/models/ models/
 
 .PHONY:sync_latest_files_to_s3
 sync_latest_files_to_s3:
