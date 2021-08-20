@@ -43,9 +43,8 @@ except ImportError:
 import pandas as pd
 import numpy as np
 
-from random import sample, seed, shuffle
+from random import seed, shuffle
 from argparse import ArgumentParser
-from datetime import datetime
 import pickle
 import configparser
 import os
