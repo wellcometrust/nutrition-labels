@@ -19,6 +19,7 @@ the training data will be different for each model and so to evaluate
 an ensemble model properly you will need a hold-out test set which hasn't
 been used in the training of any of the models.
 """
+import logging
 
 from sklearn.feature_extraction.text import CountVectorizer, TfidfVectorizer
 from sklearn.naive_bayes import MultinomialNB
@@ -34,7 +35,11 @@ from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import MinMaxScaler
 from sklearn.linear_model import LogisticRegression
 from sklearn.svm import SVC
-from wellcomeml.ml.bert_vectorizer import BertVectorizer
+try:
+    from wellcomeml.ml.bert_vectorizer import BertVectorizer
+except ImportError:
+    logging.warning("WellcomeML deep-learning models not installed. You will only able to use"
+                    "sklearn models.")
 import pandas as pd
 import numpy as np
 
