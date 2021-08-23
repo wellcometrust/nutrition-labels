@@ -10,7 +10,7 @@ endif
 AWS_ACCOUNT_ID := 160358319781
 IMAGE := org.wellcome/ml-services
 TAG := nutrition-labels
-VERSION := 2021.7.0
+VERSION := 2021.07.0
 LATEST_MODEL_PATH := ./models/200807/count_naive_bayes_200807
 ECR_IMAGE := $(AWS_ACCOUNT_ID).dkr.ecr.eu-west-1.amazonaws.com/$(IMAGE)
 
@@ -121,4 +121,4 @@ docker-push: docker-build
 
 .PHONY: run-debug
 run-debug: docker-build
-	docker run -it -v $(PWD)/models:/mnt/vol/models --publish 8080:8080 $(AWS_ACCOUNT_ID).dkr.ecr.eu-west-1.amazonaws.com/org.wellcome/ml-services:$(TAG)
+	docker run -it -v $(PWD)/models:/mnt/vol/models --publish 8080:8080 --env MODEL_VERSION=$(VERSION) $(AWS_ACCOUNT_ID).dkr.ecr.eu-west-1.amazonaws.com/org.wellcome/ml-services:$(TAG)

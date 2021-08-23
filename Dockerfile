@@ -16,7 +16,6 @@ RUN pip install -e . --no-deps
 COPY api api/
 COPY configs configs/
 
-ENV MODEL_VERSION=2021.07.0
 ENV MODELS_PATH=/mnt/vol/models
 
 
