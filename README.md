@@ -266,4 +266,10 @@ The folder `representation_labels/` contains the code needed to produce the data
 
 You need docker installed and to download the model-cli from https://github.com/wellcometrust/hal9000/releases/tag/cli-0.1.0.
 
-To deploy a model, change the code, run `make run-debug`.
+To create a deployement:
+
+1. Change the code
+2. Modify the `Makefile` parameters $(VERSION) and $(LATEST_MODEL_FILE)
+3. Run `make run-debug`.
+
+
