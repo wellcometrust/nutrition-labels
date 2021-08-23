@@ -75,9 +75,7 @@ class MLEndpoint(RequestHandler):
         if isinstance(request_body, dict):
             request_body = [request_body]
 
-        data = []
-        for point in request_body:
-            data.append(DataPoint(**point).dict())
+        data = [DataPoint(**point).dict() for point in request_body]
 
         # Generate the prediction
         result = []
@@ -103,7 +101,7 @@ class MLEndpoint(RequestHandler):
     async def get(self):
         self.write({
             "model_name": api_docs["info"]["title"],
-            "version": api_docs["info"]["version"]
+            "version": model_version
         })
 
 
@@ -112,7 +110,8 @@ if __name__ == "__main__":
     app = APIService(
         handler_class=MLEndpoint,
         doc_json=api_docs,
-        ml_name=api_docs["info"]["title"]
+        ml_name=api_docs["info"]["title"],
+        ml_version=model_version
     )
 
     app.run_forever()
