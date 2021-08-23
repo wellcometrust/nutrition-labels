@@ -14,6 +14,8 @@ dist
 *.csv
 *.png
 
+model-cli
+
 # Folders
 **/models/*
 **/model_repeats/*

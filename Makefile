@@ -11,6 +11,7 @@ AWS_ACCOUNT_ID := 160358319781
 IMAGE := org.wellcome/ml-services
 TAG := nutrition-labels
 VERSION := 2021.7.0
+LATEST_MODEL_PATH := ./models/200807/count_naive_bayes_200807
 ECR_IMAGE := $(AWS_ACCOUNT_ID).dkr.ecr.eu-west-1.amazonaws.com/$(IMAGE)
 
 PRODIGY_BUCKET := datalabs-packages/Prodigy
@@ -113,6 +114,7 @@ aws-docker-login:
 
 .PHONY: docker-push
 docker-push: docker-build
+	model-cli push $(TAG):$(VERSION) $(LATEST_MODEL_PATH)
 	aws ecr get-login-password --region eu-west-1 | docker login --username AWS --password-stdin $(AWS_ACCOUNT_ID).dkr.ecr.eu-west-1.amazonaws.com \
         && docker push $(ECR_IMAGE):$(TAG)-$(VERSION) \
         && docker push $(ECR_IMAGE):$(TAG)

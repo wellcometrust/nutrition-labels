@@ -259,3 +259,11 @@ The folder `representation_labels/` contains the code needed to produce the data
 ├── requirements.txt - a list of all the python packages needed for this project  
 
 ```
+
+## Deploying
+
+### Pre-requisites
+
+You need docker installed and to download the model-cli from https://github.com/wellcometrust/hal9000/releases/tag/cli-0.1.0.
+
+To deploy a model, change the code, run `make run-debug`.
