@@ -264,7 +264,11 @@ The folder `representation_labels/` contains the code needed to produce the data
 
 ### Pre-requisites
 
-You need docker installed and to download the model-cli from https://github.com/wellcometrust/hal9000/releases/tag/cli-0.1.0.
+You need docker installed and to download the model-cli from https://github.com/wellcometrust/hal9000/releases/tag/cli-0.1.0. To add model-cli to your path you can:
+
+```bash
+chmod +x ~/Downloads/model-cli && mv model-cli /usr/local/bin
+```
 
 To create a deployement:
 
