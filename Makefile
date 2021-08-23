@@ -117,3 +117,6 @@ docker-push: docker-build
         && docker push $(ECR_IMAGE):$(TAG)-$(VERSION) \
         && docker push $(ECR_IMAGE):$(TAG)
 
+.PHONY: run-debug
+run-debug: docker-build
+	docker run -it -v $(PWD)/models:/mnt/vol/models --publish 8080:8080 $(AWS_ACCOUNT_ID).dkr.ecr.eu-west-1.amazonaws.com/org.wellcome/ml-services:$(TAG)
