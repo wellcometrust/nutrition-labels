@@ -1,0 +1,39 @@
+openapi: 3.0.0
+info:
+  title: Nutrition Labels API
+  model_name: Nutrition Labels
+  contact: {}
+  version: '1.0.0'
+servers:
+  - url: https://{defaultHost}
+    variables:
+      defaultHost:
+        default: www.example.com
+paths:
+  /:
+    post:
+      summary: Returns predictions for a new datapoint or a list of datapoints
+      operationId: wellcome.ml.predict
+      requestBody:
+        description: 'Predict endpoint'
+        content:
+          application/json:
+            schema:
+              anyOf:
+                - $ref: '#/components/schemas/DataPoint'
+                - type: array
+                  items:
+                    $ref: '#/components/schemas/DataPoint'
+        required: true
+      responses:
+        '200':
+          description: Successful Response
+          headers: {}
+          content:
+            application/json:
+              schema:
+                anyOf:
+                  - $ref: '#/components/schemas/Prediction'
+                  - type: array
+                    items:
+                      $ref: '#/components/schemas/Prediction'

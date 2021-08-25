@@ -19,6 +19,7 @@ the training data will be different for each model and so to evaluate
 an ensemble model properly you will need a hold-out test set which hasn't
 been used in the training of any of the models.
 """
+import logging
 
 from sklearn.feature_extraction.text import CountVectorizer, TfidfVectorizer
 from sklearn.naive_bayes import MultinomialNB
@@ -34,13 +35,16 @@ from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import MinMaxScaler
 from sklearn.linear_model import LogisticRegression
 from sklearn.svm import SVC
-from wellcomeml.ml.bert_vectorizer import BertVectorizer
+try:
+    from wellcomeml.ml.bert_vectorizer import BertVectorizer
+except ImportError:
+    logging.warning("WellcomeML deep-learning models not installed. You will only able to use"
+                    " sklearn models.")
 import pandas as pd
 import numpy as np
 
-from random import sample, seed, shuffle
+from random import seed, shuffle
 from argparse import ArgumentParser
-from datetime import datetime
 import pickle
 import configparser
 import os
@@ -126,23 +130,38 @@ class GrantTagger:
         Create a new column of a pandas dataframe which included
         the merged and cleaned text from multiple columns.
         """
-        data.fillna('', inplace=True)
-        data["Grant texts"] = data[list(self.prediction_cols)].agg(
-            ". ".join, axis=1
-        ).apply(clean_string)
+        if isinstance(data, list):
+            for row in data:
+                agg_text = ""
+                for _, text in row.items():
+                    if text:
+                        agg_text += clean_string(text) + ". "
 
-        return data
+                yield agg_text
+        else:
+            data.fillna('', inplace=True)
+            data["Grant texts"] = data[list(self.prediction_cols)].agg(
+                ". ".join, axis=1
+            ).apply(clean_string)
+
+            return data
 
     def transform(self, data):
         """
         Vectorize the joined text from columns of a pandas dataframe ('data'),
         using a fitted vectorizer.
-        """
-        if "Grant texts" not in data:
-            data = self.process_grant_text(data)
 
-        X = data["Grant texts"].tolist()
-        X_vect = self.vectorizer.transform(X)
+        data might be a pandas dataframe with the required column, a dictionary or a list of dicts
+        """
+        if isinstance(data, dict):
+            data = [data]
+
+        data = self.process_grant_text(data)
+
+        if isinstance(data, pd.DataFrame):
+            data = data["Grant texts"].tolist()
+
+        X_vect = self.vectorizer.transform(data)
             
         return X_vect
 

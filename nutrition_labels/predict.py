@@ -34,6 +34,7 @@ import pandas as pd
 from nutrition_labels.grant_tagger import GrantTagger
 from nutrition_labels.ensemble_grant_tagger import EnsembleGrantTagger
 
+
 def output_tagged_grants(output_path, y_pred, grant_ids):
 
     if not os.path.exists(os.path.dirname(output_path)):
@@ -45,6 +46,7 @@ def output_tagged_grants(output_path, y_pred, grant_ids):
         'Grant ID': grant_ids
         }
         ).to_csv(output_path, index=False)
+
 
 def predict_grants(config, grants_data_path=None):
 
@@ -93,6 +95,7 @@ def predict_grants(config, grants_data_path=None):
     output_tagged_grants(output_path, y_pred, grant_ids)
 
     return grant_ids, y_pred
+
 
 if __name__ == '__main__':
     parser = ArgumentParser()

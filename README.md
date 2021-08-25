@@ -259,3 +259,24 @@ The folder `representation_labels/` contains the code needed to produce the data
 ├── requirements.txt - a list of all the python packages needed for this project  
 
 ```
+
+## Deploying
+
+### 1. Pre-requisites
+
+You need docker installed and to download the model-cli from https://github.com/wellcometrust/hal9000/releases/tag/cli-0.1.0. To add model-cli to your path you can:
+
+```bash
+chmod +x ~/Downloads/model-cli && mv model-cli /usr/local/bin
+```
+
+You also need `awscli` to be set-up (`pip install awscli` if not), and the following env-variable: `AWS_ACCOUNT_ID`. If you don't know the value of this variable, contact Antonio Campello or Jeff Uren.
+
+### 
+To create a deployement:
+
+1. Change the code
+2. Modify the `Makefile` parameters $(VERSION) and $(LATEST_MODEL_FILE)
+3. Run `make run-debug`.
+
+By running `make docker-push` it will push a new version. The files will be under `s3://wt-model-hub/nutrition-labels/${VERSION}`

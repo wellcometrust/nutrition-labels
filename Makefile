@@ -7,6 +7,11 @@ ifeq ($(UNAME_S),Darwin)
 	OSFLAG := macosx_10_13
 endif
 
+IMAGE := org.wellcome/ml-services
+TAG := nutrition-labels
+VERSION := 2021.07.0
+LATEST_MODEL_PATH := ./models/200807/count_naive_bayes_200807
+ECR_IMAGE := $(AWS_ACCOUNT_ID).dkr.ecr.eu-west-1.amazonaws.com/$(IMAGE)
 
 PRODIGY_BUCKET := datalabs-packages/Prodigy
 PROJECT_BUCKET := datalabs-data/nutrition-labels
@@ -95,3 +100,25 @@ sync_latest_files_from_s3:
 .PHONY: test
 test:
 	$(VIRTUALENV)/bin/pytest --tb=line ./tests
+
+.PHONY: docker-build
+docker-build:
+	docker build --build-arg AWS_ACCOUNT_ID=$(AWS_ACCOUNT_ID) \
+                     -t $(ECR_IMAGE):$(TAG)-$(VERSION) \
+                     -t $(ECR_IMAGE):$(TAG) \
+                     -f Dockerfile .
+
+.PHONY: aws-docker-login
+aws-docker-login:
+	aws ecr get-login-password --region eu-west-1 | docker login --username AWS --password-stdin $(AWS_ACCOUNT_ID).dkr.ecr.eu-west-1.amazonaws.com
+
+.PHONY: docker-push
+docker-push: docker-build
+	model-cli push $(TAG):$(VERSION) $(LATEST_MODEL_PATH)
+	aws ecr get-login-password --region eu-west-1 | docker login --username AWS --password-stdin $(AWS_ACCOUNT_ID).dkr.ecr.eu-west-1.amazonaws.com \
+        && docker push $(ECR_IMAGE):$(TAG)-$(VERSION) \
+        && docker push $(ECR_IMAGE):$(TAG)
+
+.PHONY: run-debug
+run-debug: docker-build
+	docker run  -v $(PWD)/$(LATEST_MODEL_PATH):/mnt/vol/models --publish 8080:8080 --env MODEL_VERSION=$(VERSION) $(AWS_ACCOUNT_ID).dkr.ecr.eu-west-1.amazonaws.com/org.wellcome/ml-services:$(TAG)
