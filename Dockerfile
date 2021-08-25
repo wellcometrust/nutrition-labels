@@ -1,5 +1,6 @@
-# Base docker container for tornado service
-FROM 160358319781.dkr.ecr.eu-west-1.amazonaws.com/org.wellcome/ml-services:tornado-latest
+ARG AWS_ACCOUNT_ID
+
+FROM ${AWS_ACCOUNT_ID}.dkr.ecr.eu-west-1.amazonaws.com/org.wellcome/ml-services:tornado-latest
 # This docker assumes that models will mounted in a folder called mnt/vol/models
 
 WORKDIR /code
@@ -17,6 +18,5 @@ COPY api api/
 COPY configs configs/
 
 ENV MODELS_PATH=/mnt/vol/models
-
 
 CMD ["python", "api/entrypoint.py"]

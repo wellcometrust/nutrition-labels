@@ -7,7 +7,6 @@ ifeq ($(UNAME_S),Darwin)
 	OSFLAG := macosx_10_13
 endif
 
-AWS_ACCOUNT_ID := 160358319781
 IMAGE := org.wellcome/ml-services
 TAG := nutrition-labels
 VERSION := 2021.07.0
@@ -104,7 +103,8 @@ test:
 
 .PHONY: docker-build
 docker-build:
-	docker build -t $(ECR_IMAGE):$(TAG)-$(VERSION) \
+	docker build --build-arg AWS_ACCOUNT_ID=$(AWS_ACCOUNT_ID) \
+                     -t $(ECR_IMAGE):$(TAG)-$(VERSION) \
                      -t $(ECR_IMAGE):$(TAG) \
                      -f Dockerfile .
 
@@ -121,4 +121,4 @@ docker-push: docker-build
 
 .PHONY: run-debug
 run-debug: docker-build
-	docker run -it -v $(PWD)/models:/mnt/vol/models --publish 8080:8080 --env MODEL_VERSION=$(VERSION) $(AWS_ACCOUNT_ID).dkr.ecr.eu-west-1.amazonaws.com/org.wellcome/ml-services:$(TAG)
+	docker run  -v $(PWD)/$(LATEST_MODEL_PATH):/mnt/vol/models --publish 8080:8080 --env MODEL_VERSION=$(VERSION) $(AWS_ACCOUNT_ID).dkr.ecr.eu-west-1.amazonaws.com/org.wellcome/ml-services:$(TAG)
