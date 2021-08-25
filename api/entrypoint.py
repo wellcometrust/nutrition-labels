@@ -59,7 +59,8 @@ grant_tagger = GrantTagger(
     prediction_cols=config['prediction_data']['grant_text_cols'].split(',')
 )
 
-grant_tagger.load_model(os.path.join(models_path, config['model_parameters']['model_dirs']))
+logging.info(f"Reading form {models_path}")
+grant_tagger.load_model(models_path)
 
 
 # Modify with relevant prediction code
